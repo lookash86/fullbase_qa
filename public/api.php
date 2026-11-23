@@ -255,7 +255,7 @@ function upload_limit(): int
 /* ---------- zgłoszenia ---------- */
 
 if ($action === 'issues') {
-    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.severity,i.status,i.environment,i.version,i.device,i.browser,i.sys_role,i.sys_account,i.reject_reason,i.duplicate_of,
+    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.severity,i.status,i.environment,i.version,i.device,i.browser,i.sys_role,i.sys_account,i.reject_reason,i.duplicate_of,i.fixed_in,
             (SELECT dp.code FROM qa_issues d JOIN qa_projects dp ON dp.id=d.project_id WHERE d.id=i.duplicate_of) dup_code,
             i.reporter_id,i.assignee_id,i.created_at,i.updated_at,i.closed_at, p.code project_code, p.name project_name,
             r.display_name reporter_name, a.display_name assignee_name,
@@ -388,6 +388,12 @@ if ($action === 'issue_status') {
             if (!$dupOf || !$q->fetchColumn()) out(['error' => 'Podaj numer oryginalnego zgłoszenia, np. PZB-0012.'], 422);
         }
     }
+    $fixedIn = $issue['fixed_in'];
+    if ($to === 'fixed') {
+        $fixedIn = str_in($b, 'fixed_in', 60) ?: $fixedIn;
+        if ($fixedIn === '') out(['error' => 'Wpisz wersję, w której jest poprawka (np. 0.9.3). Ustawiaj „Do weryfikacji” dopiero po wgraniu poprawki na demo.'], 422);
+        if ($fixedIn !== $issue['fixed_in']) $p->prepare('UPDATE qa_issues SET fixed_in=? WHERE id=?')->execute([$fixedIn, $id]);
+    }
     $closed = in_array($to, ['closed', 'rejected'], true) ? qa_now() : null;
     // Ponowne otwarcie czyści powód odrzucenia; historia zostaje w dzienniku zmian.
     $p->prepare('UPDATE qa_issues SET status=?, closed_at=?, reject_reason=?, duplicate_of=?, updated_at=? WHERE id=?')->execute([$to, $closed, $reason, $dupOf, qa_now(), $id]);
@@ -399,6 +405,7 @@ if ($action === 'issue_status') {
             touch_issue($dupOf);
         }
     }
+    if ($to === 'fixed') $msg .= ' Poprawka w wersji ' . $fixedIn . '.';
     if ($from === 'fixed' && $to === 'closed') $msg = 'Weryfikacja OK — poprawka działa. Zgłoszenie zamknięte.';
     if ($from === 'fixed' && $to === 'reopened') $msg = 'Weryfikacja negatywna — poprawka nie działa. Ponownie otwarte.';
     log_act($id, $u['id'], $from === 'fixed' && in_array($to, ['closed', 'reopened'], true) ? 'verify' : 'status', $msg);
@@ -507,11 +514,11 @@ if ($action === 'export') {
     $o = fopen('php://output', 'w');
     fwrite($o, "\xEF\xBB\xBF");
     $safe = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v; // ochrona przed formułami w Excelu
-    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Powód odrzucenia', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
+    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Powód odrzucenia', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Naprawiono w wersji', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
     foreach ($rows as $r) {
         $r = cast_issue($r);
         fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_SEVERITIES[$r['severity']] ?? '', QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '', (QA_REJECT_REASONS[$r['reject_reason']] ?? '') . ($r['duplicate_of'] ? ' ' . ($r['duplicate_key'] ?? '#' . $r['duplicate_of']) : ''),
-            $r['description'], $r['steps'], $r['expected'], $r['environment'], $r['version'], $r['sys_role'], $r['sys_account'], $r['device'], $r['browser'], $r['url'], $r['solution'],
+            $r['description'], $r['steps'], $r['expected'], $r['environment'], $r['version'], $r['fixed_in'], $r['sys_role'], $r['sys_account'], $r['device'], $r['browser'], $r['url'], $r['solution'],
             $r['reporter_name'], $r['assignee_name'] ?? '', $r['created_at'], $r['updated_at'], $r['closed_at'] ?? '']), ';');
     }
     exit;

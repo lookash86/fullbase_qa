@@ -320,7 +320,7 @@ function drawIssueList() {
     return bindRowLinks(box);
   }
   box.innerHTML = `<div class="tablewrap">${list.length ? `<table><thead><tr><th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Waga / priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
-    ${list.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.sys_role || i.sys_account ? '👤 ' + esc([i.sys_role, i.sys_account].filter(Boolean).join(' · ')) + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}</div></td>
+    ${list.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.sys_role || i.sys_account ? '👤 ' + esc([i.sys_role, i.sys_account].filter(Boolean).join(' · ')) + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}${i.status === 'fixed' && i.fixed_in ? ' · sprawdzaj na ≥ ' + esc(i.fixed_in) : ''}</div></td>
       <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${svB(i.severity)}<div class="sub" style="margin-top:4px">${prB(i.priority)}</div></td><td>${stB(i.status)}${rejectInfo(i)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>Brak zgłoszeń dla tych filtrów</b>Zmień filtry${canWrite() ? ' albo <a href="#/nowe">dodaj nowe zgłoszenie</a>' : ''}.</div>`}
     <div class="listfoot"><span>${list.length} z ${S.issues.length}</span><span>Kliknij wiersz, aby otworzyć</span></div></div>`;
@@ -474,7 +474,7 @@ async function viewIssue(id) {
     <div class="badges">${stB(x.status)} ${svB(x.severity)} ${prB(x.priority)} ${kdB(x.kind)} ${x.module ? `<span class="badge">${esc(x.module)}</span>` : ''}</div></div>
   <div class="detail">
     <div class="stack">
-      ${canVerify ? `<div class="verify"><b>Poprawka czeka na weryfikację</b><p>Sprawdź na środowisku${x.environment ? ' <b>' + esc(x.environment) + '</b>' : ''}, czy problem zniknął.${x.solution ? ' Opis poprawki znajdziesz niżej.' : ''}</p>
+      ${canVerify ? `<div class="verify"><b>Poprawka czeka na weryfikację</b><p>${x.fixed_in ? `Sprawdzaj na wersji <b>≥ ${esc(x.fixed_in)}</b> (wersję widać w stopce systemu). ` : ''}Sprawdź na środowisku${x.environment ? ' <b>' + esc(x.environment) + '</b>' : ''}, czy problem zniknął.${x.solution ? ' Opis poprawki znajdziesz niżej.' : ''}</p>
         <div class="actions"><button class="btn ok" data-st="closed">✓ Działa — zamknij</button><button class="btn bad" data-st="reopened">✗ Nadal nie działa</button></div></div>` : ''}
       <div class="card">
         ${block('Co się dzieje', x.description)}${block('Kroki do odtworzenia problemu', x.steps)}${block('Oczekiwany wynik', x.expected)}
@@ -492,6 +492,7 @@ async function viewIssue(id) {
         <div><small>Naprawia</small><span>${esc(x.assignee_name || '—')}</span></div>
         <div><small>Rola i konto w testowanym systemie</small><span>${esc([x.sys_role, x.sys_account].filter(Boolean).join(' · ') || '—')}</span></div>
         <div><small>Środowisko</small><span>${esc(x.environment || '—')}${x.version ? ' · ' + esc(x.version) : ''}</span></div>
+        ${x.fixed_in ? `<div><small>Naprawiono w wersji</small><span>${esc(x.fixed_in)}</span></div>` : ''}
         <div><small>Urządzenie / przeglądarka</small><span>${esc([x.device, x.browser].filter(Boolean).join(' · ') || '—')}</span></div>
         ${x.url ? `<div><small>Adres</small><span><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.url)}</a></span></div>` : ''}
         ${x.status === 'rejected' && x.reject_reason ? `<div><small>Powód odrzucenia</small><span>${esc(S.meta.reject_reasons[x.reject_reason])}${x.duplicate_of ? ` — oryginał: <a href="#/z/${x.duplicate_of}">${esc(x.duplicate_key || '#' + x.duplicate_of)}</a>` : ''}</span></div>` : ''}
@@ -501,7 +502,7 @@ async function viewIssue(id) {
       </div></div>
       ${admin ? `<div class="card pad"><h3>Status (administrator)</h3><div class="field"><select id="stSel">${opts(Object.entries(S.meta.statuses), x.status)}</select></div>
         <button class="btn primary sm wide" id="stBtn" style="margin-top:8px">Zmień status</button>
-        <p class="hint" style="margin:8px 0 0">Po naprawie ustaw „Do weryfikacji” — tester potwierdzi albo otworzy ponownie.</p></div>` : ''}
+        <p class="hint" style="margin:8px 0 0">„Do weryfikacji” ustawiaj dopiero po wgraniu poprawki na demo — z numerem wersji. Tester potwierdzi albo otworzy ponownie.</p></div>` : ''}
       <div class="actions">${canEdit ? `<a class="btn secondary" href="#/edytuj/${x.id}">✎ Edytuj</a>` : ''}${canReopen ? '<button class="btn secondary" data-st="reopened">↺ Otwórz ponownie</button>' : ''}
         ${admin ? '<button class="btn danger" id="delBtn">Usuń</button>' : ''}</div>
     </div>
@@ -521,6 +522,7 @@ async function viewIssue(id) {
 function changeStatus(x, to, reload) {
   if (to === x.status) return;
   if (to === 'rejected') return rejectModal(x, reload);
+  if (to === 'fixed') return fixedModal(x, reload);
   const needs = to === 'reopened';
   const title = { closed: x.status === 'fixed' ? 'Potwierdzasz, że poprawka działa?' : 'Zamknąć zgłoszenie?', reopened: 'Co nadal nie działa?', rejected: 'Dlaczego odrzucasz?' }[to] || 'Zmiana statusu: ' + S.meta.statuses[to];
   modal(title, `<div class="field"><label for="mComment">Komentarz ${needs ? '<i>*</i>' : '(opcjonalnie)'}</label><textarea id="mComment" placeholder="${needs ? 'Opisz, co sprawdziłeś i co dalej jest nie tak.' : 'Np. sprawdzone na telefonie i komputerze.'}"></textarea></div>`,
@@ -531,6 +533,16 @@ function changeStatus(x, to, reload) {
     });
 }
 
+function fixedModal(x, reload) {
+  const o = modal('Poprawka gotowa do weryfikacji', `<p class="small" style="margin-top:0">Ustaw „Do weryfikacji” <b>dopiero po wgraniu poprawki na demo</b>. Tester zobaczy, na jakiej wersji ma sprawdzać.</p>
+    <div class="field"><label for="mFix">Naprawiono w wersji <i>*</i></label><input id="mFix" maxlength="60" value="${esc(x.fixed_in || '')}" placeholder="np. 0.9.3"></div>
+    <div class="field" style="margin-top:10px"><label for="mComment">Komentarz dla testera (opcjonalnie)</label><textarea id="mComment" placeholder="Co zmieniono i jak sprawdzić."></textarea></div>`,
+    'Do weryfikacji', async (btn, close) => {
+      const v = $('#mFix', o).value.trim();
+      if (!v) return toast('Wpisz wersję z poprawką.', true);
+      await busy(btn, async () => { await api('issue_status', { params: { id: x.id }, body: { status: 'fixed', fixed_in: v, comment: $('#mComment', o).value.trim() } }); close(); await reload('Do weryfikacji — wersja ' + v + '.'); });
+    });
+}
 function rejectModal(x, reload) {
   const o = modal('Odrzucenie zgłoszenia ' + x.key, `<div class="field"><label for="mReason">Powód <i>*</i></label><select id="mReason">${opts(Object.entries(S.meta.reject_reasons), '', '— wybierz —')}</select></div>
     <div class="field" id="mDupBox" hidden style="margin-top:10px"><label for="mDup">Numer oryginalnego zgłoszenia <i>*</i></label><input id="mDup" placeholder="np. ${esc(x.project_code)}-0012" autocapitalize="characters"><span class="hint">W oryginale pojawi się informacja o tym duplikacie.</span></div>

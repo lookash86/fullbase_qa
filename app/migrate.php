@@ -44,6 +44,10 @@ function qa_migrations(): array
             qa_add_column($pdo, $driver, 'qa_issues', 'duplicate_of', $driver === 'mysql' ? 'BIGINT UNSIGNED NULL' : 'INTEGER NULL');
             qa_add_index($pdo, $driver, 'qa_issues', 'qa_issues_duplicate', 'duplicate_of');
         },
+        // 6 — 1.3: wersja, w której wgrano poprawkę (wymagana przy przejściu na „Do weryfikacji”).
+        6 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_issues', 'fixed_in', "VARCHAR(60) NOT NULL DEFAULT ''");
+        },
     ];
 }
 
