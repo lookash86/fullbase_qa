@@ -1,0 +1,3 @@
+# Katalog aplikacji nie może być dostępny z WWW — domena ma wskazywać na public/.
+Options -Indexes
+Require all denied

@@ -1,0 +1,68 @@
+# FULLBASE QA — plan prac (od 24.11.2026)
+
+Cel: każdy błąd przechodzi tę samą drogę, od **zgłoszenia** przez **przegląd**, **naprawę**, **wdrożenie** i **weryfikację** aż po **test, który nie pozwoli mu wrócić**.
+Stan wyjściowy: wersja 2.0.1. Działa logowanie z rolami, zgłoszenia z załącznikami, weryfikacja przez testera, scenariusze, przebiegi testów, pulpit, tablica i CSV.
+
+Oznaczenia: **[Ł]** robi właściciel · **[C]** robi Claude w VS Code · **[Ł+C]** razem.
+Odhaczaj `[x]` od razu po zakończeniu punktu.
+
+---
+
+## Etap 0 — przygotowanie, zanim tester zacznie
+
+- [ ] **0.1 [Ł+C] Repozytorium.** W VS Code: `git init` w `kod\fullbase-qa`, pierwszy commit „FULLBASE QA 2.0.1”, prywatne repo GitHub `lookash86/fullbase-qa`.
+- [ ] **0.2 [Ł] Uruchomienie lokalne.** `narzedzia\uruchom-lokalnie.cmd` → instalacja na SQLite → przeklikanie: zgłoszenie, zrzut ekranu wklejony Ctrl+V, zmiana statusu.
+- [ ] **0.3 [Ł] Serwer.** Subdomena `testy.fullbase.pl` na home.pl → katalog `/testy.fullbase.pl/public` („bez separacji serwisu”) → SSL → wgranie plików → `install.php` od razu po wgraniu → konto administratora (szczegóły w README.md).
+- [ ] **0.4 [Ł] Konto testera** w rejestrze (Użytkownicy → rola Tester). Hasło tymczasowe przekazujesz SMS-em.
+- [ ] **0.5 [Ł+C] Konta testowe w demo PZBall** dla każdej roli: admin związku, wydział gier, klub, trener, sędzia (lokalnie istnieją już jako `*@pzball.test`). Hasła trzymamy w menedżerze haseł, **nie** w rejestrze.
+- [ ] **0.6 [C] 15–20 scenariuszy ścieżek krytycznych PZBall,** spisanych na podstawie `kod\fullbase-silnik` (moduły i role), jako plik do importu (zadanie 1.8). Minimum: logowanie każdej roli, dodanie osoby/zawodnika, licencja zawodnika, licencja klubowa, terminarz i zmiana terminu, wpisanie wyniku i zamknięcie meczu, przeliczenie tabeli, obsada sędziów, opłaty, uprawnienia (klub nie widzi danych innego klubu).
+- [ ] **0.7 [C] `docs/ZASADY_DLA_TESTERA.md`** — jedna strona: jak zgłaszać, co jest krytyczne, jedno zgłoszenie = jeden problem, zawsze zrzut ekranu, jak weryfikować poprawkę. Wersja do druku albo PDF dla testera.
+- [ ] **0.8 [Ł] Rytm pracy.** Codziennie ok. 10 minut na przegląd nowych zgłoszeń: potwierdź, odrzuć albo ustaw priorytet. Czas reakcji: krytyczny w 24 h, wysoki do najbliższej wersji, średni i niski według planu.
+
+**Gotowe, gdy:** tester ma działający login, konta w demo i listę scenariuszy do przejścia.
+
+---
+
+## Etap 1 — wersja 2.1 rejestru (Claude, 1–2 sesje)
+
+Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
+
+- [ ] **1.0 Migracje schematu.** Tabela `qa_meta.schema` zawiera numer wersji schematu. `app/migrate.php` przy każdym żądaniu porównuje go z kodem i dopisuje brakujące kolumny lub tabele (SQLite + MySQL). Instalacja 2.0 aktualizuje się sama po wgraniu nowych plików.
+  *Kryterium:* baza z 2.0 po podmianie plików działa bez ręcznego SQL, a dane zostają.
+- [ ] **1.1 Waga obok priorytetu.** Nowe pole `severity`: blokuje pracę / psuje dane / utrudnia / kosmetyka. Priorytet zostaje i oznacza, kiedy naprawiamy. Wagę ustawia tester, priorytet administrator. Pulpit pokazuje „Krytyczne” według wagi.
+- [ ] **1.2 Powody odrzucenia.** Przy statusie „Odrzucone” administrator wybiera powód: duplikat (wymaga numeru oryginału i tworzy link w obie strony) / nie da się odtworzyć / to nie błąd / przeniesione do pomysłów. Lista zgłoszeń pokazuje powód.
+- [ ] **1.3 „Naprawiono w wersji”.** Pole `fixed_in` jest wymagane przy przejściu na „Do weryfikacji”. Panel weryfikacji testera pokazuje: „sprawdzaj na wersji ≥ X”. Zasada: na „Do weryfikacji” przestawiamy dopiero po wgraniu poprawki na demo.
+- [ ] **1.4 Przycisk „Kopiuj dla programisty”.** Kopiuje do schowka zgłoszenie w Markdownie, gotowe dla Claude Code: numer, tytuł, rodzaj, waga, kroki do odtworzenia problemu, faktyczny i oczekiwany wynik, środowisko, wersja, adres, linki do załączników, ostatnie komentarze oraz na końcu „Po naprawie: commit `fix PZB-XXXX`, dodaj test”.
+- [ ] **1.5 „Utwórz scenariusz regresji”.** Na zamkniętym zgłoszeniu jeden przycisk tworzy scenariusz z tymi samymi krokami i oczekiwanym wynikiem, powiązany ze zgłoszeniem. Przy zamykaniu weryfikacji pojawia się propozycja tego kroku.
+- [ ] **1.6 Powiadomienia e-mail** (`mail()`; na home.pl działa, na VPS przez msmtp):
+  - do zgłaszającego: poprawka czeka na weryfikację;
+  - do administratora: nowe zgłoszenie o wadze „blokuje pracę” lub „psuje dane”, ponowne otwarcie;
+  - do przypisanego: przypisano Ci zgłoszenie.
+  Każdy użytkownik może wyłączyć powiadomienia w „Moim koncie”. Konfiguracja nadawcy w `config.php`.
+- [ ] **1.7 Reset hasła przez e-mail.** Link ważny 1 godzinę, jednorazowy, a komunikat nie zdradza, czy konto istnieje.
+- [ ] **1.8 Import scenariuszy z CSV** (administrator). Kolumny: projekt, obszar, tytuł, warunki wstępne, kroki, oczekiwany wynik, priorytet. Najpierw podgląd, potem zapis. Wczytujemy tu scenariusze z 0.6.
+- [ ] **1.9 Test automatyczny `narzedzia/test-e2e.php`.** Skrypt PHP CLI uruchamia serwer wbudowany na czystej bazie SQLite i przechodzi przez API całą ścieżkę: admin, tester, zgłoszenie, plik, statusy, uprawnienia (tester nie może zamknąć cudzego zgłoszenia z „Nowe”, bez logowania 401) i przebieg testów. Z parametrem `--mysql` powtarza to samo na bazie MySQL.
+- [ ] **1.10 Wydanie 2.1.** README, podbicie `QA_VERSION`, paczka ZIP w `Fullbase\wydania\`, wgranie na `testy.fullbase.pl`, notatka w projekcie Claude.
+
+**Gotowe, gdy:** 1.9 przechodzi na SQLite i MySQL, a serwer zaktualizował się bez ręcznego SQL.
+
+---
+
+## Etap 2 — zgłaszanie prosto z systemu (po ok. 2 tygodniach testów)
+
+- [ ] **2.1 Klucz API rejestru dla instalacji.** Osobny klucz dla demo, pzball i kluby, z ograniczeniem do jednej akcji `report`.
+- [ ] **2.2 Przycisk „Zgłoś problem” w silniku** (tylko środowisko „Próba”/demo, włączany w `config.php`). Okienko z polami „co się stało” i „czego oczekiwałeś”. Automatycznie dołącza adres strony, wersję silnika, rolę i ID użytkownika testowego, przeglądarkę, zrzut ekranu i ostatnie błędy JS. Wymaga zmian w `kod\fullbase-silnik` i ma przejść jego testy.
+- [ ] **2.3 Powiązanie z dziennikiem błędów silnika.** Jeśli w ciągu ±2 minut od zgłoszenia silnik zapisał wyjątek, jego treść trafia do zgłoszenia jako komentarz systemowy, widoczny tylko dla administratora.
+
+---
+
+## Etap 3 — proces wydań i miary
+
+- [ ] **3.1 Bramka wydania.** Przed każdą wersją PZBall robimy przebieg regresji (wszystkie scenariusze krytyczne). W rejestrze strona „Gotowość wydania”: otwarte zgłoszenia „blokuje pracę”/„psuje dane” = 0, a niezaliczone scenariusze krytyczne = 0.
+- [ ] **3.2 Miary na pulpicie:** średni czas od zgłoszenia do zamknięcia, odsetek ponownych otwarć, liczba błędów według obszaru w ostatnich 30 dniach. Pokazują, który moduł silnika wymaga przebudowy, a nie łatania. Przydadzą się też we wnioskach dotacyjnych jako opis procesu jakości.
+- [ ] **3.3 Przeniesienie na VPS OVH** razem z resztą instalacji (MySQL, kopie poza serwerem zgodnie z `Decyzje_technologiczne`).
+
+---
+
+## Dziennik
+- 2026-11-23 — wersja 2.0 / 2.0.1 gotowa i przetestowana (SQLite + MariaDB); plan spisany.

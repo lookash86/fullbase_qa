@@ -1,0 +1,7 @@
+# konfiguracja z danymi dostępu — tylko na serwerze
+config.php
+# dane lokalne: baza, załączniki, sesje
+data/*
+!data/.htaccess
+# paczki wydań
+*.zip
