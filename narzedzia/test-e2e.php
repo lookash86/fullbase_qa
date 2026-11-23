@@ -5,7 +5,12 @@ declare(strict_types=1);
  * FULLBASE QA — test całej ścieżki przez API (admin + tester + obserwator).
  *
  *   php narzedzia/test-e2e.php            test na czystej bazie SQLite
- *   php narzedzia/test-e2e.php --zachowaj nie usuwa katalogu tymczasowego (do oglądania bazy)
+ *   php narzedzia/test-e2e.php --mysql    to samo na MySQL 8 / MariaDB (tymczasowe bazy fbqa_e2e_*, usuwane na końcu)
+ *   php narzedzia/test-e2e.php --zachowaj nie usuwa katalogu tymczasowego ani baz (do oglądania)
+ *
+ * Dane MySQL tylko ze zmiennych środowiskowych (nigdy w repozytorium):
+ *   FBQA_MYSQL_HOST (127.0.0.1), FBQA_MYSQL_PORT (3306), FBQA_MYSQL_USER (root), FBQA_MYSQL_PASS (puste)
+ * Użytkownik musi móc zakładać i usuwać bazy (CREATE / DROP DATABASE).
  *
  * Skrypt kopiuje app/ i public/ do katalogu tymczasowego, uruchamia tam wbudowany serwer PHP,
  * instaluje aplikację przez install.php i przechodzi przez API. Twojej lokalnej bazy nie dotyka.
@@ -16,7 +21,35 @@ const ZRODLO = __DIR__ . '/..';
 const WERSJA_2_0_1 = '10b7c55'; // commit „FULLBASE QA 2.0.1” — punkt wyjścia testu migracji
 $opcje = array_slice($argv, 1);
 $zachowaj = in_array('--zachowaj', $opcje, true);
+$MYSQL = in_array('--mysql', $opcje, true);
 
+/* ---------- MySQL (opcja --mysql) ---------- */
+
+$MY = null;        // dane serwera MySQL
+$BAZY_MY = [];     // bazy tymczasowe do usunięcia
+if ($MYSQL) {
+    if (!in_array('mysql', PDO::getAvailableDrivers(), true)) {
+        fwrite(STDERR, "Brak rozszerzenia pdo_mysql w tym PHP (" . PHP_BINARY . ").\nWłącz je w php.ini (extension=pdo_mysql) i uruchom ponownie.\n");
+        exit(2);
+    }
+    $MY = ['host' => getenv('FBQA_MYSQL_HOST') ?: '127.0.0.1', 'port' => (int)(getenv('FBQA_MYSQL_PORT') ?: 3306),
+        'user' => getenv('FBQA_MYSQL_USER') ?: 'root', 'pass' => (string)(getenv('FBQA_MYSQL_PASS') ?: '')];
+    try {
+        $srvMy = new PDO("mysql:host={$MY['host']};port={$MY['port']};charset=utf8mb4", $MY['user'], $MY['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    } catch (Throwable $e) {
+        fwrite(STDERR, "Nie można połączyć się z MySQL ({$MY['host']}:{$MY['port']}, użytkownik {$MY['user']}): " . $e->getMessage() . "\n");
+        exit(2);
+    }
+}
+/** Zakłada pustą bazę MySQL dla jednego testu i zwraca dane do instalatora. */
+function nowaBazaMysql(): array
+{
+    global $MY, $srvMy, $BAZY_MY;
+    $name = 'fbqa_e2e_' . bin2hex(random_bytes(4));
+    $srvMy->exec("CREATE DATABASE `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    $BAZY_MY[] = $name;
+    return ['driver' => 'mysql'] + $MY + ['name' => $name];
+}
 /* ---------- przygotowanie środowiska ---------- */
 
 function kopiuj(string $z, string $do): void
@@ -81,7 +114,12 @@ function zatrzymajSerwer($p): void
 $KATALOGI = [];
 $SERWERY = [];
 register_shutdown_function(function () use (&$KATALOGI, &$SERWERY, $zachowaj) {
+    global $BAZY_MY, $srvMy;
     foreach ($SERWERY as $s) zatrzymajSerwer($s);
+    foreach ($BAZY_MY as $b) {
+        if ($zachowaj) echo "Baza testu zachowana: $b\n";
+        else try { $srvMy->exec("DROP DATABASE `$b`"); } catch (Throwable) { echo "Nie usunięto bazy $b\n"; }
+    }
     foreach ($KATALOGI as $k) {
         if ($zachowaj) echo "Katalog testu zachowany: $k\n";
         else usun($k);
@@ -160,13 +198,15 @@ function sekcja(string $t): void { echo "\n== $t\n"; }
 /* ---------- 1. instalacja ---------- */
 
 /** Instaluje aplikację przez install.php (SQLite). Zwraca HTML odpowiedzi. */
-function zainstaluj(string $baza, string $haslo): string
+function zainstaluj(string $baza, string $haslo, ?array $db = null): string
 {
+    $db ??= ['driver' => 'sqlite'];
     $inst = new Klient($baza, 'instalator');
     [$k, , $html] = $inst->zadanie('GET', '/install.php');
     if ($k !== 200 || !preg_match('/name="csrf" value="([0-9a-f]+)"/', $html, $m)) return 'brak formularza: HTTP ' . $k;
     return $inst->zadanie('POST', '/install.php', http_build_query([
-        'csrf' => $m[1], 'driver' => 'sqlite', 'admin_login' => 'admin', 'admin_name' => 'Admin Testowy',
+        'csrf' => $m[1], 'driver' => $db['driver'], 'host' => $db['host'] ?? '', 'port' => $db['port'] ?? '', 'name' => $db['name'] ?? '',
+        'user' => $db['user'] ?? '', 'pass' => $db['pass'] ?? '', 'admin_login' => 'admin', 'admin_name' => 'Admin Testowy',
         'admin_email' => 'admin@example.test', 'admin_pass' => $haslo, 'admin_pass2' => $haslo,
     ]), 'application/x-www-form-urlencoded')[2];
 }
@@ -176,9 +216,31 @@ $los = fn() => 'Los-' . bin2hex(random_bytes(8));
 $H = array_map(fn() => $los(), array_flip(['T1_TMP', 'T2_TMP', 'OBS_TMP', 'X_TMP', 'T1_NOWE', 'T2_NOWE', 'OBS_NOWE', 'ZLE']));
 $hasloAdmina = $los();
 
-sekcja('Instalacja (SQLite)');
+$DB = $MYSQL ? nowaBazaMysql() : ['driver' => 'sqlite'];
+/** Bezpośredni dostęp do bazy testu (np. żeby „przesunąć czas”). */
+function bazaTestu(): PDO
+{
+    global $DB, $kat;
+    return $DB['driver'] === 'mysql'
+        ? new PDO("mysql:host={$DB['host']};port={$DB['port']};dbname={$DB['name']};charset=utf8mb4", $DB['user'], $DB['pass'])
+        : new PDO('sqlite:' . $kat . '/data/qa.sqlite');
+}
+
+sekcja('Kod źródłowy');
+$node = trim((string)@shell_exec((PHP_OS_FAMILY === 'Windows' ? 'where node 2>NUL' : 'command -v node 2>/dev/null')));
+if ($node === '') echo "  —    brak node — pomijam sprawdzenie składni JS\n";
+else {
+    exec('node --check ' . escapeshellarg(ZRODLO . '/public/assets/app.js') . ' 2>&1', $wy, $kodJs);
+    sprawdz($kodJs === 0, 'składnia public/assets/app.js (node --check)', implode(' ', $wy));
+}
+foreach (['app/bootstrap.php', 'app/schema.php', 'app/migrate.php', 'app/mail.php', 'public/api.php', 'public/install.php', 'public/index.php'] as $plikPhp) {
+    exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg(ZRODLO . '/' . $plikPhp) . ' 2>&1', $wy2, $kodPhp);
+    sprawdz($kodPhp === 0, "składnia $plikPhp");
+}
+
+sekcja('Instalacja (' . ($MYSQL ? 'MySQL ' . $DB['name'] : 'SQLite') . ')');
 $inst = new Klient($BAZA, 'instalator');
-$html = zainstaluj($BAZA, $hasloAdmina);
+$html = zainstaluj($BAZA, $hasloAdmina, $DB);
 sprawdz(str_contains($html, 'Gotowe'), 'instalacja kończy się sukcesem', strip_tags(mb_substr($html, 0, 300)));
 // Poczta w teście trafia do plików data/mail (żadnych prawdziwych wysyłek).
 $cfg = require "$kat/config.php";
@@ -303,6 +365,8 @@ kod($tester2->post('file_delete&id=' . $idPliku), 403, 'cudzego załącznika nie
 
 sekcja('Uprawnienia');
 kod($tester->post('issue_status&id=' . $idZgl, ['status' => 'closed']), 403, 'tester nie zamyka zgłoszenia ze statusu Nowe');
+kod($tester2->post('issue_status&id=' . $idZgl, ['status' => 'closed']), 403, 'tester nie zamyka cudzego zgłoszenia ze statusu Nowe');
+kod($obs->post('issue_status&id=' . $idZgl, ['status' => 'confirmed']), 403, 'obserwator nie zmienia statusu');
 kod($tester2->post('issue_update&id=' . $idZgl, $noweZgl), 403, 'tester nie edytuje cudzego zgłoszenia');
 kod($tester->post('issue_update&id=' . $idZgl, ['title' => 'Wynik meczu nie zapisuje się po kliknięciu Zapisz'] + $noweZgl), 200, 'tester edytuje własne nowe zgłoszenie');
 kod($tester->get('users'), 403, 'tester nie widzi listy użytkowników');
@@ -383,7 +447,7 @@ $anon->post('reset_request', ['login' => 'tester2@example.test']);
 $m = poczta($kat);
 $tok2 = preg_match('~#/reset/([0-9a-f]{64})~', $m[0] ?? '', $x) ? $x[1] : '';
 sprawdz($tok2 !== '', 'reset po adresie e-mail też działa');
-(new PDO('sqlite:' . $kat . '/data/qa.sqlite'))->prepare('UPDATE qa_password_resets SET expires_at=? WHERE token_hash=?')->execute([date('Y-m-d H:i:s', time() - 1), hash('sha256', $tok2)]);
+bazaTestu()->prepare('UPDATE qa_password_resets SET expires_at=? WHERE token_hash=?')->execute([date('Y-m-d H:i:s', time() - 1), hash('sha256', $tok2)]);
 kod($anon->post('reset_confirm', ['token' => $tok2, 'new' => $los()]), 422, 'wygasły link (po 1 godzinie) odrzucony');
 for ($i = 0; $i < 3; $i++) $anon->post('reset_request', ['login' => 'tester2']);
 kod($anon->post('reset_request', ['login' => 'tester2']), 429, 'limit próśb o reset z jednego adresu');
@@ -487,7 +551,7 @@ if (!wgrajZGita($katS, WERSJA_2_0_1)) {
 } else {
     [$srv, $adr] = uruchomSerwer($katS);
     $SERWERY[] = $srv;
-    sprawdz(str_contains(zainstaluj($adr, $hasloAdmina), 'Gotowe'), 'instalacja wersji 2.0.1');
+    sprawdz(str_contains(zainstaluj($adr, $hasloAdmina, $MYSQL ? nowaBazaMysql() : null), 'Gotowe'), 'instalacja wersji 2.0.1');
     $a = new Klient($adr, 'admin');
     $a->zaloguj('admin', $hasloAdmina);
     $m = $a->get('meta')[1];
