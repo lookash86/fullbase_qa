@@ -53,6 +53,10 @@ function qa_migrations(): array
             qa_add_column($pdo, $driver, 'qa_cases', 'issue_id', $driver === 'mysql' ? 'BIGINT UNSIGNED NULL' : 'INTEGER NULL');
             qa_add_index($pdo, $driver, 'qa_cases', 'qa_cases_issue', 'issue_id');
         },
+        // 8 — 1.6: zgoda na powiadomienia e-mail (domyślnie włączone).
+        8 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_users', 'notify', 'SMALLINT NOT NULL DEFAULT 1');
+        },
     ];
 }
 

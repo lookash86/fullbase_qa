@@ -823,11 +823,16 @@ function viewProjects() {
 function viewAccount() {
   setNav('');
   view(`<div class="pagehead"><div><div class="eyebrow">Twoje konto</div><h1>${esc(S.user.name)}</h1><p>Login: <b>${esc(S.user.username)}</b> · rola: ${esc(S.meta.roles[S.user.role])}</p></div></div>
+  <div class="card pad" style="max-width:520px;margin-bottom:16px"><h3>Powiadomienia e-mail</h3>
+    <p class="small muted" style="margin-top:0">${S.user.email ? 'Wysyłamy na: <b>' + esc(S.user.email) + '</b>' : 'Nie masz adresu e-mail w koncie — poproś administratora o jego dopisanie.'}${S.meta.mail_enabled ? '' : ' Wysyłka e-maili nie jest jeszcze włączona na serwerze.'}</p>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="accNotify" ${S.user.notify ? 'checked' : ''}> Wysyłaj mi powiadomienia</label>
+    <p class="hint">Np. gdy poprawka Twojego zgłoszenia czeka na weryfikację albo gdy ktoś przypisze Ci zgłoszenie.</p></div>
   <form class="card pad" id="accForm" style="max-width:520px"><h3>Zmiana hasła</h3><div class="form" style="grid-template-columns:1fr">
     <div class="field"><label>Obecne hasło</label><input id="ac" type="password" autocomplete="current-password" required></div>
     <div class="field"><label>Nowe hasło (min. 10 znaków)</label><input id="an" type="password" minlength="10" autocomplete="new-password" required></div>
     <div class="field"><label>Powtórz nowe hasło</label><input id="an2" type="password" minlength="10" autocomplete="new-password" required></div></div>
     <div class="formbar"><span></span><button class="btn primary" type="submit">Zmień hasło</button></div></form>`);
+  $('#accNotify').onchange = async e => { const on = e.target.checked; try { await api('account_save', { body: { notify: on } }); S.user.notify = on; toast(on ? 'Powiadomienia włączone.' : 'Powiadomienia wyłączone.'); } catch (ex) { e.target.checked = !on; toast(ex.message, true); } };
   $('#accForm').onsubmit = e => { e.preventDefault(); if ($('#an').value !== $('#an2').value) return toast('Nowe hasła nie są takie same.', true);
     busy(e.submitter, async () => { await api('password', { body: { current: $('#ac').value, new: $('#an').value } }); e.target.reset(); toast('Hasło zmienione.'); }); };
 }

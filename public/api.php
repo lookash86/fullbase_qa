@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require dirname(__DIR__) . '/app/bootstrap.php';
+require dirname(__DIR__) . '/app/mail.php';
 
 qa_security_headers();
 if (!qa_config()) out(['error' => 'Aplikacja nie jest zainstalowana.', 'install' => true], 503);
@@ -52,12 +53,12 @@ function current_user(): ?array
     if ($u !== false) return $u;
     $u = null;
     if (!empty($_SESSION['uid'])) {
-        $q = db()->prepare('SELECT id,username,display_name,email,role,active,must_change_pw FROM qa_users WHERE id=?');
+        $q = db()->prepare('SELECT id,username,display_name,email,role,active,must_change_pw,notify FROM qa_users WHERE id=?');
         $q->execute([(int)$_SESSION['uid']]);
         $r = $q->fetch();
         if ($r && (int)$r['active'] === 1) {
             $u = ['id' => (int)$r['id'], 'username' => $r['username'], 'name' => $r['display_name'], 'email' => $r['email'],
-                'role' => $r['role'], 'must_change_pw' => (bool)$r['must_change_pw']];
+                'role' => $r['role'], 'must_change_pw' => (bool)$r['must_change_pw'], 'notify' => (bool)$r['notify']];
         } else {
             unset($_SESSION['uid']);
         }
@@ -159,6 +160,25 @@ function user_exists_active(?int $id): ?int
     $q->execute([$id]);
     return $q->fetchColumn() ? $id : null;
 }
+/* ---------- powiadomienia e-mail (1.6) ---------- */
+
+/** Wysyła powiadomienie do wskazanych osób (aktywne, z e-mailem, z włączonymi powiadomieniami), z pominięciem autora zmiany. */
+function notify(array $userIds, int $actorId, array $issue, string $subject, string $text): void
+{
+    $ids = array_values(array_unique(array_filter(array_map('intval', $userIds), fn($x) => $x > 0 && $x !== $actorId)));
+    if (!$ids || !qa_mail_enabled()) return;
+    $q = db()->prepare('SELECT email FROM qa_users WHERE id IN (' . implode(',', array_fill(0, count($ids), '?')) . ") AND active=1 AND notify=1 AND email<>''");
+    $q->execute($ids);
+    $link = qa_base_url() . '#/z/' . $issue['id'];
+    $body = $text . "\n\n" . $issue['key'] . ': ' . $issue['title'] . "\nWaga: " . (QA_SEVERITIES[$issue['severity'] ?? ''] ?? '—')
+        . ' · Status: ' . (QA_STATUSES[$issue['status']] ?? $issue['status']) . "\n\nOtwórz: $link";
+    foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $email) qa_mail((string)$email, '[' . $issue['key'] . '] ' . $subject, $body);
+}
+function admin_ids(): array
+{
+    return array_map('intval', db()->query("SELECT id FROM qa_users WHERE role='admin' AND active=1")->fetchAll(PDO::FETCH_COLUMN));
+}
+
 function lines(string $s): array
 {
     // Flaga /u jest konieczna: bez niej \R łapie bajt 0x85, który jest częścią litery „ą” (c4 85), i psuje UTF-8.
@@ -228,6 +248,13 @@ if ($action === 'password') {
     out(['ok' => true]);
 }
 
+if ($action === 'account_save') {
+    require_post();
+    $b = body();
+    $p->prepare('UPDATE qa_users SET notify=? WHERE id=?')->execute([!empty($b['notify']) ? 1 : 0, $u['id']]);
+    out(['ok' => true, 'notify' => !empty($b['notify'])]);
+}
+
 /* ---------- słowniki ---------- */
 
 if ($action === 'meta') {
@@ -242,7 +269,7 @@ if ($action === 'meta') {
     $users = $p->query("SELECT id, display_name name, role, active FROM qa_users ORDER BY display_name")->fetchAll();
     foreach ($users as &$x) { $x['id'] = (int)$x['id']; $x['active'] = (int)$x['active']; }
     out(['projects' => $projects, 'users' => $users, 'roles' => QA_ROLES, 'kinds' => QA_KINDS, 'severities' => QA_SEVERITIES, 'priorities' => QA_PRIORITIES,
-        'statuses' => QA_STATUSES, 'reject_reasons' => QA_REJECT_REASONS, 'results' => QA_RESULTS, 'upload_max' => min(QA_UPLOAD_MAX, upload_limit())]);
+        'statuses' => QA_STATUSES, 'reject_reasons' => QA_REJECT_REASONS, 'results' => QA_RESULTS, 'upload_max' => min(QA_UPLOAD_MAX, upload_limit()), 'mail_enabled' => qa_mail_enabled()]);
 }
 function upload_limit(): int
 {
@@ -313,7 +340,11 @@ if ($action === 'issue_create') {
         if ($q->rowCount()) log_act($id, $u['id'], 'field', 'Powiązano z przebiegiem testów #' . (int)$b['run_id'] . '.');
     }
     $p->commit();
-    out(['issue' => issue_row($id)]);
+    $new = issue_row($id);
+    if (in_array($new['severity'], ['blocker', 'data'], true)) {
+        notify(admin_ids(), $u['id'], $new, 'Nowe zgłoszenie: ' . QA_SEVERITIES[$new['severity']], $u['name'] . ' zgłosił(a) problem o wadze „' . QA_SEVERITIES[$new['severity']] . '”.');
+    }
+    out(['issue' => $new]);
 }
 
 if ($action === 'issue_update') {
@@ -353,6 +384,7 @@ if ($action === 'issue_update') {
         $n = '—';
         if ($sets['assignee_id']) { $q = $p->prepare('SELECT display_name FROM qa_users WHERE id=?'); $q->execute([$sets['assignee_id']]); $n = (string)$q->fetchColumn(); }
         log_act($id, $u['id'], 'field', 'Przypisano: ' . $n . '.');
+        if ($sets['assignee_id']) notify([$sets['assignee_id']], $u['id'], issue_row($id), 'Przypisano Ci zgłoszenie', $u['name'] . ' przypisał(a) Ci zgłoszenie do naprawy.');
         $changed = array_values(array_diff($changed, ['osoba naprawiająca']));
     }
     if ($changed) log_act($id, $u['id'], 'field', 'Zmieniono: ' . implode(', ', $changed) . '.');
@@ -413,7 +445,17 @@ if ($action === 'issue_status') {
     if ($from === 'fixed' && $to === 'reopened') $msg = 'Weryfikacja negatywna — poprawka nie działa. Ponownie otwarte.';
     log_act($id, $u['id'], $from === 'fixed' && in_array($to, ['closed', 'reopened'], true) ? 'verify' : 'status', $msg);
     if ($comment !== '') log_act($id, $u['id'], 'comment', $comment);
-    out(['issue' => issue_row($id)]);
+    $after = issue_row($id);
+    if ($to === 'fixed') {
+        notify([$after['reporter_id']], $u['id'], $after, 'Poprawka czeka na Twoją weryfikację',
+            'Poprawka Twojego zgłoszenia jest gotowa' . ($after['fixed_in'] ? ' (wersja ' . $after['fixed_in'] . ')' : '') . '. Sprawdź ją i kliknij „Działa — zamknij” albo „Nadal nie działa”.'
+            . ($comment !== '' ? "\n\nKomentarz: " . $comment : ''));
+    }
+    if ($to === 'reopened') {
+        notify([...admin_ids(), (int)$after['assignee_id']], $u['id'], $after, 'Zgłoszenie otwarte ponownie',
+            $u['name'] . ' otworzył(a) zgłoszenie ponownie.' . ($comment !== '' ? "\n\nKomentarz: " . $comment : ''));
+    }
+    out(['issue' => $after]);
 }
 
 if ($action === 'comment') {

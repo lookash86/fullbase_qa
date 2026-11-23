@@ -167,7 +167,7 @@ function zainstaluj(string $baza, string $haslo): string
     if ($k !== 200 || !preg_match('/name="csrf" value="([0-9a-f]+)"/', $html, $m)) return 'brak formularza: HTTP ' . $k;
     return $inst->zadanie('POST', '/install.php', http_build_query([
         'csrf' => $m[1], 'driver' => 'sqlite', 'admin_login' => 'admin', 'admin_name' => 'Admin Testowy',
-        'admin_email' => '', 'admin_pass' => $haslo, 'admin_pass2' => $haslo,
+        'admin_email' => 'admin@example.test', 'admin_pass' => $haslo, 'admin_pass2' => $haslo,
     ]), 'application/x-www-form-urlencoded')[2];
 }
 
@@ -180,6 +180,21 @@ sekcja('Instalacja (SQLite)');
 $inst = new Klient($BAZA, 'instalator');
 $html = zainstaluj($BAZA, $hasloAdmina);
 sprawdz(str_contains($html, 'Gotowe'), 'instalacja kończy się sukcesem', strip_tags(mb_substr($html, 0, 300)));
+// Poczta w teście trafia do plików data/mail (żadnych prawdziwych wysyłek).
+$cfg = require "$kat/config.php";
+$cfg['mail'] = ['transport' => 'file', 'from' => 'testy@example.test', 'base_url' => 'https://testy.example.test/'];
+file_put_contents("$kat/config.php", "<?php\nreturn " . var_export($cfg, true) . ";\n");
+/** Zwraca e-maile zapisane od ostatniego wywołania (i czyści skrzynkę). */
+function poczta(string $kat): array
+{
+    $out = [];
+    foreach (glob("$kat/data/mail/*.eml") ?: [] as $p) { $out[] = file_get_contents($p); unlink($p); }
+    return $out;
+}
+function doKogo(array $maile): array
+{
+    return array_map(fn($m) => preg_match('/^To: (\S+)/m', $m, $x) ? $x[1] : '?', $maile);
+}
 [, , $html] = $inst->zadanie('GET', '/install.php');
 sprawdz(str_contains($html, 'już zainstalowana'), 'instalator blokuje się po instalacji');
 [$k, , $html] = $inst->zadanie('GET', '/');
@@ -207,8 +222,8 @@ $pzb = null;
 foreach ($meta['projects'] ?? [] as $pr) if ($pr['code'] === 'PZB') $pzb = $pr;
 sprawdz($pzb !== null, 'projekt startowy PZB istnieje');
 $pzbId = (int)($pzb['id'] ?? 0);
-kod($admin->post('user_save', ['username' => 'tester1', 'display_name' => 'Tester Jeden', 'role' => 'tester', 'active' => 1, 'password' => $H['T1_TMP']]), 200, 'admin zakłada testera');
-kod($admin->post('user_save', ['username' => 'tester2', 'display_name' => 'Tester Dwa', 'role' => 'tester', 'active' => 1, 'password' => $H['T2_TMP']]), 200, 'admin zakłada drugiego testera');
+kod($admin->post('user_save', ['username' => 'tester1', 'display_name' => 'Tester Jeden', 'email' => 'tester1@example.test', 'role' => 'tester', 'active' => 1, 'password' => $H['T1_TMP']]), 200, 'admin zakłada testera');
+kod($admin->post('user_save', ['username' => 'tester2', 'display_name' => 'Tester Dwa', 'email' => 'tester2@example.test', 'role' => 'tester', 'active' => 1, 'password' => $H['T2_TMP']]), 200, 'admin zakłada drugiego testera');
 kod($admin->post('user_save', ['username' => 'obserwator', 'display_name' => 'Obserwator', 'role' => 'viewer', 'active' => 1, 'password' => $H['OBS_TMP']]), 200, 'admin zakłada obserwatora');
 kod($admin->post('user_save', ['username' => 'x1', 'display_name' => 'X', 'role' => 'tester', 'active' => 1, 'password' => $H['X_TMP']], false), 419, 'zapis bez tokenu CSRF odrzucony');
 
@@ -313,6 +328,34 @@ $z = kod($tester->post('issue_status&id=' . $idZgl, ['status' => 'closed']), 200
 sprawdz(($z['issue']['status'] ?? '') === 'closed' && !empty($z['issue']['closed_at']), 'zgłoszenie zamknięte z datą');
 $hist = $tester->get('issue&id=' . $idZgl)[1]['issue']['activity'] ?? [];
 sprawdz(count(array_filter($hist, fn($a) => $a['kind'] === 'verify')) === 2, 'historia zawiera obie weryfikacje');
+
+/* ---------- 1.6 powiadomienia e-mail ---------- */
+
+sekcja('1.6 Powiadomienia e-mail');
+poczta($kat);
+$t2id = 0;
+foreach ($admin->get('users')[1]['users'] ?? [] as $x) if ($x['username'] === 'tester2') $t2id = $x['id'];
+$zn = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Dane zawodnika znikają', 'description' => 'x', 'severity' => 'data']), 200, 'zgłoszenie z wagą „psuje dane”')['issue'] ?? [];
+$m = poczta($kat);
+sprawdz(doKogo($m) === ['admin@example.test'] && str_contains($m[0] ?? '', '[' . ($zn['key'] ?? '') . ']') && str_contains($m[0] ?? '', 'https://testy.example.test/#/z/'), 'administrator dostaje e-mail o krytycznym zgłoszeniu (z linkiem)');
+kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Literówka', 'description' => 'x', 'severity' => 'cosmetic']), 200, 'zgłoszenie kosmetyczne');
+sprawdz(poczta($kat) === [], 'kosmetyka nie wysyła e-maila');
+kod($admin->post('issue_update&id=' . ($zn['id'] ?? 0), ['assignee_id' => $t2id, 'project_id' => $pzbId, 'title' => $zn['title'] ?? 'x', 'description' => 'x', 'severity' => 'data']), 200, 'admin przypisuje zgłoszenie');
+sprawdz(doKogo(poczta($kat)) === ['tester2@example.test'], 'przypisany dostaje e-mail');
+kod($admin->post('issue_status&id=' . ($zn['id'] ?? 0), ['status' => 'fixed', 'fixed_in' => '1.0']), 200, 'admin: do weryfikacji');
+$m = poczta($kat);
+sprawdz(doKogo($m) === ['tester1@example.test'] && str_contains($m[0] ?? '', 'weryfikacj') && str_contains($m[0] ?? '', '1.0'), 'zgłaszający dostaje e-mail „poprawka czeka na weryfikację”');
+kod($tester->post('issue_status&id=' . ($zn['id'] ?? 0), ['status' => 'reopened', 'comment' => 'Dalej znika.']), 200, 'tester otwiera ponownie');
+$k = doKogo(poczta($kat)); sort($k);
+sprawdz($k === ['admin@example.test', 'tester2@example.test'], 'ponowne otwarcie: e-mail do administratora i przypisanego', implode(',', $k));
+kod($gosc->post('account_save', ['notify' => false]), 401, 'ustawienia konta wymagają logowania');
+kod($tester->post('account_save', ['notify' => false], false), 419, 'ustawienia konta bez tokenu CSRF odrzucone');
+kod($tester->post('account_save', ['notify' => false]), 200, 'tester wyłącza powiadomienia');
+sprawdz(($tester->get('session')[1]['user']['notify'] ?? true) === false, 'wyłączenie zapisane');
+$admin->post('issue_status&id=' . ($zn['id'] ?? 0), ['status' => 'fixed', 'fixed_in' => '1.1']);
+sprawdz(poczta($kat) === [], 'po wyłączeniu powiadomień tester nie dostaje e-maili');
+kod($tester->post('account_save', ['notify' => true]), 200, 'tester włącza powiadomienia z powrotem');
+kod($obs->post('account_save', ['notify' => false]), 200, 'obserwator też może wyłączyć powiadomienia');
 
 /* ---------- 1.5 scenariusz regresji ---------- */
 
