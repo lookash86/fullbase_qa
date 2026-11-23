@@ -39,6 +39,7 @@ const badge = (cls, txt) => `<span class="badge ${cls}">${esc(txt)}</span>`;
 const stB = s => badge('st-' + s, S.meta.statuses[s] || s);
 const prB = p => badge('pr-' + p, S.meta.priorities[p] || p);
 const svB = s => badge('sv-' + s, S.meta.severities[s] || s);
+const rejectInfo = i => i.status === 'rejected' && i.reject_reason ? `<div class="sub" style="margin-top:4px">${esc(S.meta.reject_reasons[i.reject_reason] || '')}${i.duplicate_key ? ' ' + esc(i.duplicate_key) : ''}</div>` : '';
 const CRIT = ['blocker', 'data']; // waga „krytyczna”: blokuje pracę albo psuje dane
 const kdB = k => badge('kd-' + k, S.meta.kinds[k] || k);
 const rsB = r => badge('rs-' + r, S.meta.results[r] || r);
@@ -320,7 +321,7 @@ function drawIssueList() {
   }
   box.innerHTML = `<div class="tablewrap">${list.length ? `<table><thead><tr><th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Waga / priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
     ${list.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.sys_role || i.sys_account ? '👤 ' + esc([i.sys_role, i.sys_account].filter(Boolean).join(' · ')) + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}</div></td>
-      <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${svB(i.severity)}<div class="sub" style="margin-top:4px">${prB(i.priority)}</div></td><td>${stB(i.status)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
+      <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${svB(i.severity)}<div class="sub" style="margin-top:4px">${prB(i.priority)}</div></td><td>${stB(i.status)}${rejectInfo(i)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>Brak zgłoszeń dla tych filtrów</b>Zmień filtry${canWrite() ? ' albo <a href="#/nowe">dodaj nowe zgłoszenie</a>' : ''}.</div>`}
     <div class="listfoot"><span>${list.length} z ${S.issues.length}</span><span>Kliknij wiersz, aby otworzyć</span></div></div>`;
   bindRowLinks(box);
@@ -493,6 +494,8 @@ async function viewIssue(id) {
         <div><small>Środowisko</small><span>${esc(x.environment || '—')}${x.version ? ' · ' + esc(x.version) : ''}</span></div>
         <div><small>Urządzenie / przeglądarka</small><span>${esc([x.device, x.browser].filter(Boolean).join(' · ') || '—')}</span></div>
         ${x.url ? `<div><small>Adres</small><span><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.url)}</a></span></div>` : ''}
+        ${x.status === 'rejected' && x.reject_reason ? `<div><small>Powód odrzucenia</small><span>${esc(S.meta.reject_reasons[x.reject_reason])}${x.duplicate_of ? ` — oryginał: <a href="#/z/${x.duplicate_of}">${esc(x.duplicate_key || '#' + x.duplicate_of)}</a>` : ''}</span></div>` : ''}
+        ${x.duplicates.length ? `<div><small>Duplikaty tego zgłoszenia</small>${x.duplicates.map(d => `<span><a href="#/z/${d.id}">${esc(d.key)}</a> — ${esc(d.title)}</span>`).join('<br>')}</div>` : ''}
         ${x.test_links.length ? `<div><small>Z przebiegu testów</small>${x.test_links.map(t => `<span><a href="#/przebieg/${t.run_id}">${esc(t.run_name)}</a> — ${esc(t.case_title)}</span>`).join('<br>')}</div>` : ''}
         <div><small>Ostatnia zmiana</small><span>${fmtDate(x.updated_at)}</span></div>
       </div></div>
@@ -517,7 +520,8 @@ async function viewIssue(id) {
 }
 function changeStatus(x, to, reload) {
   if (to === x.status) return;
-  const needs = ['reopened', 'rejected'].includes(to);
+  if (to === 'rejected') return rejectModal(x, reload);
+  const needs = to === 'reopened';
   const title = { closed: x.status === 'fixed' ? 'Potwierdzasz, że poprawka działa?' : 'Zamknąć zgłoszenie?', reopened: 'Co nadal nie działa?', rejected: 'Dlaczego odrzucasz?' }[to] || 'Zmiana statusu: ' + S.meta.statuses[to];
   modal(title, `<div class="field"><label for="mComment">Komentarz ${needs ? '<i>*</i>' : '(opcjonalnie)'}</label><textarea id="mComment" placeholder="${needs ? 'Opisz, co sprawdziłeś i co dalej jest nie tak.' : 'Np. sprawdzone na telefonie i komputerze.'}"></textarea></div>`,
     'Zapisz', async (btn, close) => {
@@ -525,6 +529,19 @@ function changeStatus(x, to, reload) {
       if (needs && !comment) return toast('Dopisz komentarz.', true);
       await busy(btn, async () => { await api('issue_status', { params: { id: x.id }, body: { status: to, comment } }); close(); await reload('Status: ' + S.meta.statuses[to] + '.'); });
     });
+}
+
+function rejectModal(x, reload) {
+  const o = modal('Odrzucenie zgłoszenia ' + x.key, `<div class="field"><label for="mReason">Powód <i>*</i></label><select id="mReason">${opts(Object.entries(S.meta.reject_reasons), '', '— wybierz —')}</select></div>
+    <div class="field" id="mDupBox" hidden style="margin-top:10px"><label for="mDup">Numer oryginalnego zgłoszenia <i>*</i></label><input id="mDup" placeholder="np. ${esc(x.project_code)}-0012" autocapitalize="characters"><span class="hint">W oryginale pojawi się informacja o tym duplikacie.</span></div>
+    <div class="field" style="margin-top:10px"><label for="mComment">Komentarz (opcjonalnie)</label><textarea id="mComment" placeholder="Np. dlaczego to nie błąd albo gdzie zapisano pomysł."></textarea></div>`,
+    'Odrzuć', async (btn, close) => {
+      const reason = $('#mReason', o).value, dup = $('#mDup', o).value.trim();
+      if (!reason) return toast('Wybierz powód odrzucenia.', true);
+      if (reason === 'duplicate' && !dup) return toast('Podaj numer oryginalnego zgłoszenia.', true);
+      await busy(btn, async () => { await api('issue_status', { params: { id: x.id }, body: { status: 'rejected', reject_reason: reason, duplicate_of: dup, comment: $('#mComment', o).value.trim() } }); close(); await reload('Zgłoszenie odrzucone.'); });
+    });
+  $('#mReason', o).onchange = e => { $('#mDupBox', o).hidden = e.target.value !== 'duplicate'; };
 }
 
 /* ---------- okno modalne ---------- */

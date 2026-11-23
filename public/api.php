@@ -98,7 +98,8 @@ function project_row(int $id): array
 }
 function issue_row(int $id): array
 {
-    $q = db()->prepare('SELECT i.*, p.code project_code, p.name project_name, r.display_name reporter_name, a.display_name assignee_name
+    $q = db()->prepare('SELECT i.*, p.code project_code, p.name project_name, r.display_name reporter_name, a.display_name assignee_name,
+        (SELECT dp.code FROM qa_issues d JOIN qa_projects dp ON dp.id=d.project_id WHERE d.id=i.duplicate_of) dup_code
         FROM qa_issues i JOIN qa_projects p ON p.id=i.project_id JOIN qa_users r ON r.id=i.reporter_id LEFT JOIN qa_users a ON a.id=i.assignee_id WHERE i.id=?');
     $q->execute([$id]);
     $r = $q->fetch();
@@ -109,6 +110,9 @@ function cast_issue(array $r): array
 {
     foreach (['id', 'project_id', 'reporter_id'] as $k) $r[$k] = (int)$r[$k];
     $r['assignee_id'] = $r['assignee_id'] === null ? null : (int)$r['assignee_id'];
+    if (array_key_exists('duplicate_of', $r)) $r['duplicate_of'] = $r['duplicate_of'] === null ? null : (int)$r['duplicate_of'];
+    if (!empty($r['dup_code'])) $r['duplicate_key'] = $r['dup_code'] . '-' . str_pad((string)$r['duplicate_of'], 4, '0', STR_PAD_LEFT);
+    unset($r['dup_code']);
     $r['key'] = $r['project_code'] . '-' . str_pad((string)$r['id'], 4, '0', STR_PAD_LEFT);
     return $r;
 }
@@ -135,6 +139,18 @@ function issue_fields(array $b): array
     if ($f['title'] === '' || $f['description'] === '') out(['error' => 'Uzupełnij tytuł i opis problemu.'], 422);
     if ($f['url'] !== '' && !preg_match('~^https?://~i', $f['url'])) out(['error' => 'Adres strony musi zaczynać się od http:// lub https://'], 422);
     return $f;
+}
+/** Zamienia „PZB-0012”, „#12” albo „12” na id zgłoszenia (0, gdy nie da się odczytać). */
+function issue_id_from_key(string $key): int
+{
+    return preg_match('/(\d+)\s*$/', trim($key), $m) ? (int)$m[1] : 0;
+}
+function issue_key_of(int $id): string
+{
+    $q = db()->prepare('SELECT p.code FROM qa_issues i JOIN qa_projects p ON p.id=i.project_id WHERE i.id=?');
+    $q->execute([$id]);
+    $c = $q->fetchColumn();
+    return $c === false ? '#' . $id : $c . '-' . str_pad((string)$id, 4, '0', STR_PAD_LEFT);
 }
 function user_exists_active(?int $id): ?int
 {
@@ -226,7 +242,7 @@ if ($action === 'meta') {
     $users = $p->query("SELECT id, display_name name, role, active FROM qa_users ORDER BY display_name")->fetchAll();
     foreach ($users as &$x) { $x['id'] = (int)$x['id']; $x['active'] = (int)$x['active']; }
     out(['projects' => $projects, 'users' => $users, 'roles' => QA_ROLES, 'kinds' => QA_KINDS, 'severities' => QA_SEVERITIES, 'priorities' => QA_PRIORITIES,
-        'statuses' => QA_STATUSES, 'results' => QA_RESULTS, 'upload_max' => min(QA_UPLOAD_MAX, upload_limit())]);
+        'statuses' => QA_STATUSES, 'reject_reasons' => QA_REJECT_REASONS, 'results' => QA_RESULTS, 'upload_max' => min(QA_UPLOAD_MAX, upload_limit())]);
 }
 function upload_limit(): int
 {
@@ -239,7 +255,8 @@ function upload_limit(): int
 /* ---------- zgłoszenia ---------- */
 
 if ($action === 'issues') {
-    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.severity,i.status,i.environment,i.version,i.device,i.browser,i.sys_role,i.sys_account,
+    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.severity,i.status,i.environment,i.version,i.device,i.browser,i.sys_role,i.sys_account,i.reject_reason,i.duplicate_of,
+            (SELECT dp.code FROM qa_issues d JOIN qa_projects dp ON dp.id=d.project_id WHERE d.id=i.duplicate_of) dup_code,
             i.reporter_id,i.assignee_id,i.created_at,i.updated_at,i.closed_at, p.code project_code, p.name project_name,
             r.display_name reporter_name, a.display_name assignee_name,
             (SELECT COUNT(*) FROM qa_attachments t WHERE t.issue_id=i.id) attachments,
@@ -265,6 +282,9 @@ if ($action === 'issue') {
     $q = $p->prepare('SELECT r.run_id, r.case_id, c.title case_title, n.name run_name FROM qa_results r JOIN qa_cases c ON c.id=r.case_id JOIN qa_runs n ON n.id=r.run_id WHERE r.issue_id=?');
     $q->execute([$issue['id']]);
     $issue['test_links'] = $q->fetchAll();
+    $q = $p->prepare('SELECT i.id, i.title, i.status, p.code FROM qa_issues i JOIN qa_projects p ON p.id=i.project_id WHERE i.duplicate_of=? ORDER BY i.id');
+    $q->execute([$issue['id']]);
+    $issue['duplicates'] = array_map(fn($d) => ['id' => (int)$d['id'], 'key' => $d['code'] . '-' . str_pad((string)$d['id'], 4, '0', STR_PAD_LEFT), 'title' => $d['title'], 'status' => $d['status']], $q->fetchAll());
     out(['issue' => $issue]);
 }
 
@@ -354,10 +374,31 @@ if ($action === 'issue_status') {
             || (in_array($from, ['closed', 'rejected'], true) && $to === 'reopened');
     }
     if (!$allowed) out(['error' => 'Nie możesz zmienić statusu z „' . QA_STATUSES[$from] . '” na „' . QA_STATUSES[$to] . '”.'], 403);
-    if (in_array($to, ['reopened', 'rejected'], true) && $comment === '') out(['error' => 'Dopisz komentarz — co dalej nie działa albo dlaczego odrzucasz.'], 422);
+    if ($to === 'reopened' && $comment === '') out(['error' => 'Dopisz komentarz — co dalej nie działa.'], 422);
+    $reason = '';
+    $dupOf = null;
+    if ($to === 'rejected') {
+        $reason = (string)($b['reject_reason'] ?? '');
+        if (!array_key_exists($reason, QA_REJECT_REASONS)) out(['error' => 'Wybierz powód odrzucenia.'], 422);
+        if ($reason === 'duplicate') {
+            $dupOf = issue_id_from_key((string)($b['duplicate_of'] ?? ''));
+            if ($dupOf === $id) out(['error' => 'Zgłoszenie nie może być duplikatem samego siebie.'], 422);
+            $q = $p->prepare('SELECT id FROM qa_issues WHERE id=?');
+            $q->execute([$dupOf]);
+            if (!$dupOf || !$q->fetchColumn()) out(['error' => 'Podaj numer oryginalnego zgłoszenia, np. PZB-0012.'], 422);
+        }
+    }
     $closed = in_array($to, ['closed', 'rejected'], true) ? qa_now() : null;
-    $p->prepare('UPDATE qa_issues SET status=?, closed_at=?, updated_at=? WHERE id=?')->execute([$to, $closed, qa_now(), $id]);
+    // Ponowne otwarcie czyści powód odrzucenia; historia zostaje w dzienniku zmian.
+    $p->prepare('UPDATE qa_issues SET status=?, closed_at=?, reject_reason=?, duplicate_of=?, updated_at=? WHERE id=?')->execute([$to, $closed, $reason, $dupOf, qa_now(), $id]);
     $msg = 'Status: ' . QA_STATUSES[$from] . ' → ' . QA_STATUSES[$to] . '.';
+    if ($to === 'rejected') {
+        $msg = 'Odrzucone — powód: ' . QA_REJECT_REASONS[$reason] . ($dupOf ? ' ' . issue_key_of($dupOf) : '') . '.';
+        if ($dupOf) {
+            log_act($dupOf, $u['id'], 'field', 'Zgłoszenie ' . $issue['key'] . ' oznaczono jako duplikat tego zgłoszenia.');
+            touch_issue($dupOf);
+        }
+    }
     if ($from === 'fixed' && $to === 'closed') $msg = 'Weryfikacja OK — poprawka działa. Zgłoszenie zamknięte.';
     if ($from === 'fixed' && $to === 'reopened') $msg = 'Weryfikacja negatywna — poprawka nie działa. Ponownie otwarte.';
     log_act($id, $u['id'], $from === 'fixed' && in_array($to, ['closed', 'reopened'], true) ? 'verify' : 'status', $msg);
@@ -458,17 +499,18 @@ if ($action === 'file_delete') {
 /* ---------- eksport ---------- */
 
 if ($action === 'export') {
-    $rows = $p->query('SELECT i.*, p.code project_code, p.name project_name, r.display_name reporter_name, a.display_name assignee_name
+    $rows = $p->query('SELECT i.*, p.code project_code, p.name project_name, r.display_name reporter_name, a.display_name assignee_name,
+        (SELECT dp.code FROM qa_issues d JOIN qa_projects dp ON dp.id=d.project_id WHERE d.id=i.duplicate_of) dup_code
         FROM qa_issues i JOIN qa_projects p ON p.id=i.project_id JOIN qa_users r ON r.id=i.reporter_id LEFT JOIN qa_users a ON a.id=i.assignee_id ORDER BY i.id')->fetchAll();
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="zgloszenia-' . date('Y-m-d') . '.csv"');
     $o = fopen('php://output', 'w');
     fwrite($o, "\xEF\xBB\xBF");
     $safe = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v; // ochrona przed formułami w Excelu
-    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
+    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Powód odrzucenia', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
     foreach ($rows as $r) {
         $r = cast_issue($r);
-        fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_SEVERITIES[$r['severity']] ?? '', QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '',
+        fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_SEVERITIES[$r['severity']] ?? '', QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '', (QA_REJECT_REASONS[$r['reject_reason']] ?? '') . ($r['duplicate_of'] ? ' ' . ($r['duplicate_key'] ?? '#' . $r['duplicate_of']) : ''),
             $r['description'], $r['steps'], $r['expected'], $r['environment'], $r['version'], $r['sys_role'], $r['sys_account'], $r['device'], $r['browser'], $r['url'], $r['solution'],
             $r['reporter_name'], $r['assignee_name'] ?? '', $r['created_at'], $r['updated_at'], $r['closed_at'] ?? '']), ';');
     }

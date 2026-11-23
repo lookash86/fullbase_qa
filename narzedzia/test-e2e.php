@@ -309,6 +309,30 @@ sprawdz(($z['issue']['status'] ?? '') === 'closed' && !empty($z['issue']['closed
 $hist = $tester->get('issue&id=' . $idZgl)[1]['issue']['activity'] ?? [];
 sprawdz(count(array_filter($hist, fn($a) => $a['kind'] === 'verify')) === 2, 'historia zawiera obie weryfikacje');
 
+/* ---------- 1.2 powody odrzucenia ---------- */
+
+sekcja('1.2 Powody odrzucenia');
+$oryg = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Oryginał', 'description' => 'x']), 200, 'zgłoszenie-oryginał')['issue'] ?? [];
+$dup = kod($tester2->post('issue_create', ['project_id' => $pzbId, 'title' => 'To samo jeszcze raz', 'description' => 'x']), 200, 'zgłoszenie-duplikat')['issue'] ?? [];
+$idO = (int)($oryg['id'] ?? 0); $idD = (int)($dup['id'] ?? 0);
+kod($admin->post('issue_status&id=' . $idD, ['status' => 'rejected']), 422, 'odrzucenie bez powodu odrzucone');
+kod($admin->post('issue_status&id=' . $idD, ['status' => 'rejected', 'reject_reason' => 'duplicate']), 422, 'duplikat wymaga numeru oryginału');
+kod($admin->post('issue_status&id=' . $idD, ['status' => 'rejected', 'reject_reason' => 'duplicate', 'duplicate_of' => 'PZB-9999']), 422, 'nieistniejący oryginał odrzucony');
+kod($admin->post('issue_status&id=' . $idD, ['status' => 'rejected', 'reject_reason' => 'duplicate', 'duplicate_of' => $dup['key'] ?? '']), 422, 'duplikat samego siebie odrzucony');
+kod($tester->post('issue_status&id=' . $idD, ['status' => 'rejected', 'reject_reason' => 'not_bug']), 403, 'tester nie odrzuca zgłoszeń');
+$z = kod($admin->post('issue_status&id=' . $idD, ['status' => 'rejected', 'reject_reason' => 'duplicate', 'duplicate_of' => $oryg['key'] ?? '']), 200, 'admin oznacza duplikat');
+sprawdz(($z['issue']['reject_reason'] ?? '') === 'duplicate' && ($z['issue']['duplicate_of'] ?? 0) === $idO && ($z['issue']['duplicate_key'] ?? '') === ($oryg['key'] ?? '-'), 'duplikat wskazuje oryginał');
+$o = $admin->get('issue&id=' . $idO)[1]['issue'] ?? [];
+sprawdz(($o['duplicates'][0]['id'] ?? 0) === $idD, 'oryginał pokazuje swój duplikat (link w obie strony)');
+sprawdz(str_contains(implode(' ', array_column($o['activity'] ?? [], 'message')), 'duplikat'), 'historia oryginału zawiera wpis o duplikacie');
+$l = array_values(array_filter($admin->get('issues')[1]['issues'] ?? [], fn($i) => $i['id'] === $idD))[0] ?? [];
+sprawdz(($l['reject_reason'] ?? '') === 'duplicate' && ($l['duplicate_key'] ?? '') === ($oryg['key'] ?? '-'), 'lista pokazuje powód odrzucenia');
+[, , $csv] = $admin->get('export');
+sprawdz(str_contains($csv, 'Duplikat ' . ($oryg['key'] ?? '-')), 'eksport CSV zawiera powód odrzucenia');
+$z = kod($tester2->post('issue_status&id=' . $idD, ['status' => 'reopened', 'comment' => 'To jednak inny problem.']), 200, 'tester otwiera odrzucone ponownie');
+sprawdz(($z['issue']['reject_reason'] ?? 'x') === '' && array_key_exists('duplicate_of', $z['issue'] ?? []) && $z['issue']['duplicate_of'] === null, 'ponowne otwarcie czyści powód');
+kod($admin->post('issue_status&id=' . $idD, ['status' => 'rejected', 'reject_reason' => 'cannot_reproduce']), 200, 'odrzucenie bez komentarza, z powodem');
+
 /* ---------- 8. scenariusze i przebieg testów ---------- */
 
 sekcja('Scenariusze i przebieg testów');

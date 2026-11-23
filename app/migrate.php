@@ -38,6 +38,12 @@ function qa_migrations(): array
             $q = $pdo->prepare("UPDATE qa_projects SET tested_roles=? WHERE code=? AND tested_roles=''");
             foreach ($roles as $code => $list) $q->execute([$list, $code]);
         },
+        // 5 — 1.2: powód odrzucenia i powiązanie duplikatu z oryginałem.
+        5 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_issues', 'reject_reason', "VARCHAR(20) NOT NULL DEFAULT ''");
+            qa_add_column($pdo, $driver, 'qa_issues', 'duplicate_of', $driver === 'mysql' ? 'BIGINT UNSIGNED NULL' : 'INTEGER NULL');
+            qa_add_index($pdo, $driver, 'qa_issues', 'qa_issues_duplicate', 'duplicate_of');
+        },
     ];
 }
 
