@@ -128,7 +128,10 @@ function issue_fields(array $b): array
         'device' => str_in($b, 'device', 80),
         'browser' => str_in($b, 'browser', 80),
         'url' => str_in($b, 'url', 1000),
+        'sys_role' => str_in($b, 'sys_role', 80),
+        'sys_account' => str_in($b, 'sys_account', 120),
     ];
+    if (preg_match('/has(ł|l)o|password|pass\s*[:=]/iu', $f['sys_account'])) out(['error' => 'W polu „Konto testowe” wpisz tylko nazwę konta (np. klub@pzball.test), bez hasła.'], 422);
     if ($f['title'] === '' || $f['description'] === '') out(['error' => 'Uzupełnij tytuł i opis problemu.'], 422);
     if ($f['url'] !== '' && !preg_match('~^https?://~i', $f['url'])) out(['error' => 'Adres strony musi zaczynać się od http:// lub https://'], 422);
     return $f;
@@ -142,7 +145,8 @@ function user_exists_active(?int $id): ?int
 }
 function lines(string $s): array
 {
-    return array_values(array_filter(array_map('trim', preg_split('/\R/', $s) ?: []), fn($x) => $x !== ''));
+    // Flaga /u jest konieczna: bez niej \R łapie bajt 0x85, który jest częścią litery „ą” (c4 85), i psuje UTF-8.
+    return array_values(array_filter(array_map('trim', preg_split('/\R/u', $s) ?: []), fn($x) => $x !== ''));
 }
 
 /* ---------- sesja i logowanie ---------- */
@@ -217,6 +221,7 @@ if ($action === 'meta') {
         $pr['active'] = (int)$pr['active'];
         $pr['modules'] = lines($pr['modules']);
         $pr['environments'] = lines($pr['environments']);
+        $pr['tested_roles'] = lines((string)($pr['tested_roles'] ?? ''));
     }
     $users = $p->query("SELECT id, display_name name, role, active FROM qa_users ORDER BY display_name")->fetchAll();
     foreach ($users as &$x) { $x['id'] = (int)$x['id']; $x['active'] = (int)$x['active']; }
@@ -234,7 +239,7 @@ function upload_limit(): int
 /* ---------- zgłoszenia ---------- */
 
 if ($action === 'issues') {
-    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.severity,i.status,i.environment,i.version,i.device,i.browser,
+    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.severity,i.status,i.environment,i.version,i.device,i.browser,i.sys_role,i.sys_account,
             i.reporter_id,i.assignee_id,i.created_at,i.updated_at,i.closed_at, p.code project_code, p.name project_name,
             r.display_name reporter_name, a.display_name assignee_name,
             (SELECT COUNT(*) FROM qa_attachments t WHERE t.issue_id=i.id) attachments,
@@ -272,10 +277,10 @@ if ($action === 'issue_create') {
     $project = project_row((int)($b['project_id'] ?? 0));
     $now = qa_now();
     $p->beginTransaction();
-    $q = $p->prepare('INSERT INTO qa_issues(project_id,kind,title,module,priority,severity,status,description,steps,expected,environment,version,device,browser,url,solution,reporter_id,assignee_id,created_at,updated_at)
-        VALUES(?,?,?,?,?,?,\'new\',?,?,?,?,?,?,?,?,\'\',?,NULL,?,?)');
+    $q = $p->prepare('INSERT INTO qa_issues(project_id,kind,title,module,priority,severity,status,description,steps,expected,environment,version,device,browser,url,sys_role,sys_account,solution,reporter_id,assignee_id,created_at,updated_at)
+        VALUES(?,?,?,?,?,?,\'new\',?,?,?,?,?,?,?,?,?,?,\'\',?,NULL,?,?)');
     $q->execute([$project['id'], $f['kind'], $f['title'], $f['module'], $f['priority'], $f['severity'], $f['description'], $f['steps'], $f['expected'],
-        $f['environment'], $f['version'], $f['device'], $f['browser'], $f['url'], $u['id'], $now, $now]);
+        $f['environment'], $f['version'], $f['device'], $f['browser'], $f['url'], $f['sys_role'], $f['sys_account'], $u['id'], $now, $now]);
     $id = (int)$p->lastInsertId();
     log_act($id, $u['id'], 'created', 'Utworzono zgłoszenie.');
     // powiązanie z wynikiem testu
@@ -306,7 +311,7 @@ if ($action === 'issue_update') {
     }
     $labels = ['title' => 'tytuł', 'kind' => 'rodzaj', 'module' => 'obszar', 'priority' => 'priorytet', 'severity' => 'waga', 'description' => 'opis', 'steps' => 'kroki do odtworzenia problemu',
         'expected' => 'oczekiwany wynik', 'environment' => 'środowisko', 'version' => 'wersja', 'device' => 'urządzenie', 'browser' => 'przeglądarka',
-        'url' => 'adres', 'solution' => 'rozwiązanie', 'assignee_id' => 'osoba naprawiająca', 'project_id' => 'projekt'];
+        'url' => 'adres', 'sys_role' => 'rola w testowanym systemie', 'sys_account' => 'konto testowe', 'solution' => 'rozwiązanie', 'assignee_id' => 'osoba naprawiająca', 'project_id' => 'projekt'];
     $changed = [];
     foreach ($sets as $k => $v) if ((string)$before[$k] !== (string)$v) $changed[] = $labels[$k] ?? $k;
     if (!$changed) out(['issue' => $before]);
@@ -460,11 +465,11 @@ if ($action === 'export') {
     $o = fopen('php://output', 'w');
     fwrite($o, "\xEF\xBB\xBF");
     $safe = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v; // ochrona przed formułami w Excelu
-    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
+    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
     foreach ($rows as $r) {
         $r = cast_issue($r);
         fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_SEVERITIES[$r['severity']] ?? '', QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '',
-            $r['description'], $r['steps'], $r['expected'], $r['environment'], $r['version'], $r['device'], $r['browser'], $r['url'], $r['solution'],
+            $r['description'], $r['steps'], $r['expected'], $r['environment'], $r['version'], $r['sys_role'], $r['sys_account'], $r['device'], $r['browser'], $r['url'], $r['solution'],
             $r['reporter_name'], $r['assignee_name'] ?? '', $r['created_at'], $r['updated_at'], $r['closed_at'] ?? '']), ';');
     }
     exit;
@@ -527,12 +532,13 @@ if ($action === 'project_save') {
     if ($q->fetchColumn()) out(['error' => 'Taki skrót już istnieje.'], 422);
     $modules = implode("\n", array_slice(lines((string)($b['modules'] ?? '')), 0, 200));
     $envs = implode("\n", array_slice(lines((string)($b['environments'] ?? '')), 0, 50));
+    $roles = mb_substr(implode("\n", array_map(fn($x) => mb_substr($x, 0, 80), array_slice(lines((string)($b['tested_roles'] ?? '')), 0, 60))), 0, 2000);
     $active = !empty($b['active']) ? 1 : 0;
-    if ($id) $p->prepare('UPDATE qa_projects SET code=?,name=?,modules=?,environments=?,active=? WHERE id=?')->execute([$code, $name, $modules, $envs, $active, $id]);
+    if ($id) $p->prepare('UPDATE qa_projects SET code=?,name=?,modules=?,environments=?,tested_roles=?,active=? WHERE id=?')->execute([$code, $name, $modules, $envs, $roles, $active, $id]);
     else {
         $pos = (int)$p->query('SELECT COALESCE(MAX(position),0) FROM qa_projects')->fetchColumn() + 1;
-        $p->prepare('INSERT INTO qa_projects(code,name,modules,environments,active,position) VALUES(?,?,?,?,?,?)')
-            ->execute([$code, $name, $modules, $envs, $active, $pos]);
+        $p->prepare('INSERT INTO qa_projects(code,name,modules,environments,tested_roles,active,position) VALUES(?,?,?,?,?,?,?)')
+            ->execute([$code, $name, $modules, $envs, $roles, $active, $pos]);
     }
     out(['ok' => true]);
 }

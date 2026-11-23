@@ -234,7 +234,8 @@ $obs->post('password', ['current' => $H['OBS_TMP'], 'new' => $H['OBS_NOWE']]);
 sekcja('Zgłoszenie z załącznikiem');
 $noweZgl = ['project_id' => $pzbId, 'kind' => 'bug', 'title' => 'Wynik meczu nie zapisuje się', 'module' => 'Mecze i wyniki', 'priority' => 'critical', 'severity' => 'blocker',
     'description' => 'Po kliknięciu Zapisz wynik znika.', 'steps' => "1. Otwórz mecz\n2. Wpisz 80:75\n3. Zapisz", 'expected' => 'Wynik zapisany.',
-    'environment' => 'demo.fullbase.pl', 'version' => '0.9', 'url' => 'https://demo.fullbase.pl/mecze/1'];
+    'environment' => 'demo.fullbase.pl', 'version' => '0.9', 'url' => 'https://demo.fullbase.pl/mecze/1',
+    'sys_role' => 'Zarząd klubu', 'sys_account' => 'klub@pzball.test'];
 $z = kod($tester->post('issue_create', $noweZgl), 200, 'tester tworzy zgłoszenie');
 $idZgl = (int)($z['issue']['id'] ?? 0);
 sprawdz(($z['issue']['key'] ?? '') === sprintf('PZB-%04d', $idZgl), 'numer zgłoszenia w formacie PZB-0001');
@@ -253,6 +254,22 @@ $l = $admin->get('issues')[1]['issues'] ?? [];
 sprawdz(($l[1]['severity'] ?? $l[0]['severity'] ?? '') !== '', 'lista zgłoszeń zawiera wagę');
 [, , $csv] = $admin->get('export');
 sprawdz(str_contains($csv, ';Waga;') && str_contains($csv, 'Blokuje pracę'), 'eksport CSV zawiera wagę');
+
+sekcja('1.1b Rola i konto w testowanym systemie');
+sprawdz(in_array('Zarząd klubu', $pzb['tested_roles'] ?? [], true) && in_array('Sędzia', $pzb['tested_roles'] ?? [], true), 'projekt PZB ma startową listę ról');
+$d = $tester->get('issue&id=' . $idZgl)[1]['issue'] ?? [];
+sprawdz(($d['sys_role'] ?? '') === 'Zarząd klubu' && ($d['sys_account'] ?? '') === 'klub@pzball.test', 'zgłoszenie zapamiętuje rolę i konto');
+$l = $tester->get('issues')[1]['issues'] ?? [];
+sprawdz(in_array('klub@pzball.test', array_column($l, 'sys_account'), true), 'lista zawiera konto testowe');
+kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'x', 'description' => 'x', 'sys_account' => 'klub@pzball.test hasło: abc']), 422, 'hasło w polu konta odrzucone');
+[, , $csv] = $admin->get('export');
+sprawdz(str_contains($csv, 'Rola w testowanym systemie') && str_contains($csv, 'klub@pzball.test'), 'eksport CSV zawiera rolę i konto');
+$pzbZapis = ['id' => $pzbId, 'code' => 'PZB', 'name' => $pzb['name'] ?? 'PZB', 'modules' => implode("\n", $pzb['modules'] ?? []),
+    'environments' => implode("\n", $pzb['environments'] ?? []), 'tested_roles' => "Zarząd klubu\nSędzia\nNowa rola", 'active' => 1];
+kod($tester->post('project_save', $pzbZapis), 403, 'tester nie zmienia listy ról projektu');
+kod($admin->post('project_save', $pzbZapis), 200, 'admin zmienia listę ról projektu');
+$pp = array_values(array_filter($admin->get('meta')[1]['projects'] ?? [], fn($p) => $p['id'] === $pzbId))[0] ?? [];
+sprawdz(($pp['tested_roles'] ?? []) === ['Zarząd klubu', 'Sędzia', 'Nowa rola'], 'lista ról zapisana');
 kod($obs->post('issue_create', $noweZgl), 403, 'obserwator nie może zgłaszać');
 kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => '', 'description' => '']), 422, 'puste zgłoszenie odrzucone');
 

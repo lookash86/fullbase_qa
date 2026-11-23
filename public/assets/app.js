@@ -262,13 +262,14 @@ function viewIssues(kind) {
   const saved = store.get('filters', {});
   const F = S.view.filters = {
     text: q.get('q') ?? '', project: q.get('project') ?? saved.project ?? '', status: q.get('status') ?? (kind === 'weryfikacja' ? 'fixed' : (kind === 'moje' ? '' : 'open*')),
-    kind: q.get('kind') ?? '', severity: q.get('severity') ?? '', priority: q.get('priority') ?? '', module: q.get('module') ?? '', who: kind === 'moje' ? 'me' : (q.get('who') ?? ''),
+    kind: q.get('kind') ?? '', role: q.get('role') ?? '', severity: q.get('severity') ?? '', priority: q.get('priority') ?? '', module: q.get('module') ?? '', who: kind === 'moje' ? 'me' : (q.get('who') ?? ''),
   };
   const titles = { zgloszenia: ['Rejestr', 'Zgłoszenia', 'Błędy, braki funkcji i usprawnienia zgłoszone przez zespół.'],
     weryfikacja: ['Weryfikacja', 'Do weryfikacji', 'Poprawki gotowe do sprawdzenia. Sprawdź i potwierdź albo otwórz ponownie z komentarzem.'],
     moje: ['Twoja praca', 'Moje zgłoszenia', 'Zgłoszenia, które dodałeś lub które są do Ciebie przypisane.'] }[kind];
   const mode = store.get('mode', 'list');
   const modules = [...new Set(S.meta.projects.filter(p => !F.project || p.id === Number(F.project)).flatMap(p => p.modules))];
+  const roles = [...new Set([...S.meta.projects.filter(p => !F.project || p.id === Number(F.project)).flatMap(p => p.tested_roles || []), ...S.issues.map(i => i.sys_role).filter(Boolean)])];
   view(`
   <div class="pagehead"><div><div class="eyebrow">${titles[0]}</div><h1>${titles[1]}</h1><p>${titles[2]}</p></div>
     <div class="actions"><div class="seg"><button data-mode="list" class="${mode === 'list' ? 'on' : ''}">Lista</button><button data-mode="board" class="${mode === 'board' ? 'on' : ''}">Tablica</button></div>
@@ -282,11 +283,12 @@ function viewIssues(kind) {
     <select class="control" id="fSeverity">${opts([['crit*', 'Krytyczne (blokuje / psuje dane)'], ...Object.entries(S.meta.severities)], F.severity, 'Każda waga')}</select>
     <select class="control" id="fPriority">${opts(Object.entries(S.meta.priorities), F.priority, 'Każdy priorytet')}</select>
     <select class="control" id="fModule">${opts(modules, F.module, 'Każdy obszar')}</select>
+    <select class="control" id="fRole">${opts(roles, F.role, 'Każda rola')}</select>
     ${kind === 'moje' ? '' : `<select class="control" id="fWho">${opts([['me', 'Moje'], ['assigned', 'Przypisane do mnie']], F.who, 'Wszyscy')}</select>`}
   </div>
   <div id="issueList"></div>`);
   const bind = (id, key) => { const el = $('#' + id); if (!el) return; el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', () => { F[key] = el.value; if (key === 'project') store.set('filters', { project: el.value }); drawIssueList(); }); };
-  bind('fText', 'text'); bind('fProject', 'project'); bind('fStatus', 'status'); bind('fKind', 'kind'); bind('fSeverity', 'severity'); bind('fPriority', 'priority'); bind('fModule', 'module'); bind('fWho', 'who');
+  bind('fText', 'text'); bind('fProject', 'project'); bind('fStatus', 'status'); bind('fKind', 'kind'); bind('fSeverity', 'severity'); bind('fPriority', 'priority'); bind('fModule', 'module'); bind('fRole', 'role'); bind('fWho', 'who');
   $$('[data-mode]').forEach(b => b.onclick = () => { store.set('mode', b.dataset.mode); $$('[data-mode]').forEach(x => x.classList.toggle('on', x === b)); drawIssueList(); });
   drawIssueList();
 }
@@ -299,9 +301,10 @@ function filteredIssues() {
     if (F.severity === 'crit*' ? !CRIT.includes(i.severity) : F.severity && i.severity !== F.severity) return false;
     if (F.priority && i.priority !== F.priority) return false;
     if (F.module && i.module !== F.module) return false;
+    if (F.role && i.sys_role !== F.role) return false;
     if (F.who === 'me' && i.reporter_id !== S.user.id && i.assignee_id !== S.user.id) return false;
     if (F.who === 'assigned' && i.assignee_id !== S.user.id) return false;
-    if (t && ![i.key, i.title, i.module, i.reporter_name, i.assignee_name, i.environment, i.version].join(' ').toLowerCase().includes(t)) return false;
+    if (t && ![i.key, i.title, i.module, i.reporter_name, i.assignee_name, i.environment, i.version, i.sys_role, i.sys_account].join(' ').toLowerCase().includes(t)) return false;
     return true;
   });
 }
@@ -316,7 +319,7 @@ function drawIssueList() {
     return bindRowLinks(box);
   }
   box.innerHTML = `<div class="tablewrap">${list.length ? `<table><thead><tr><th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Waga / priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
-    ${list.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}</div></td>
+    ${list.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.sys_role || i.sys_account ? '👤 ' + esc([i.sys_role, i.sys_account].filter(Boolean).join(' · ')) + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}</div></td>
       <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${svB(i.severity)}<div class="sub" style="margin-top:4px">${prB(i.priority)}</div></td><td>${stB(i.status)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>Brak zgłoszeń dla tych filtrów</b>Zmień filtry${canWrite() ? ' albo <a href="#/nowe">dodaj nowe zgłoszenie</a>' : ''}.</div>`}
     <div class="listfoot"><span>${list.length} z ${S.issues.length}</span><span>Kliknij wiersz, aby otworzyć</span></div></div>`;
@@ -338,7 +341,7 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
       steps: [caseInfo.preconditions ? 'Warunki wstępne:\n' + caseInfo.preconditions : '', caseInfo.steps].filter(Boolean).join('\n\n'), expected: caseInfo.expected,
       description: caseInfo.note || '', _run: run.id, _case: caseInfo.case_id, _caseTitle: caseInfo.title };
   }
-  const v = x || { project_id: last.project || activeProjects()[0]?.id, kind: 'bug', priority: 'medium', severity: 'annoying', environment: last.environment || '', version: last.version || '', device: guessDevice(), browser: guessBrowser(), url: q.get('url') || '' };
+  const v = x || { project_id: last.project || activeProjects()[0]?.id, kind: 'bug', priority: 'medium', severity: 'annoying', environment: last.environment || '', version: last.version || '', sys_role: last.sys_role || '', sys_account: last.sys_account || '', device: guessDevice(), browser: guessBrowser(), url: q.get('url') || '' };
   const editing = !!(x && x.id);
   S.pendingFiles = [];
   const projectOptions = (editing && !isAdmin() ? S.meta.projects.filter(p => p.id === v.project_id) : S.meta.projects.filter(p => p.active || p.id === v.project_id)).map(p => [p.id, p.code + ' · ' + p.name]);
@@ -359,6 +362,8 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
       <div class="field"><label for="fsv">Waga — jak bardzo przeszkadza</label><select id="fsv" name="severity">${opts(Object.entries(S.meta.severities), v.severity || 'annoying')}</select><span class="hint">Blokuje pracę: nie da się dokończyć czynności. Psuje dane: dane znikają, są złe albo widzi je ktoś niepowołany.</span></div>
       ${isAdmin() ? `<div class="field"><label for="fpr">Priorytet — kiedy naprawiamy</label><select id="fpr" name="priority">${opts(Object.entries(S.meta.priorities), v.priority)}</select><span class="hint">Ustawia administrator.</span></div>` : ''}
       <div class="field"><label for="fen">Środowisko</label><select id="fen" name="environment"></select></div>
+      <div class="field"><label for="frole">Rola w testowanym systemie</label><select id="frole" name="sys_role"></select><span class="hint">Na jakiej roli byłeś zalogowany, gdy pojawił się problem.</span></div>
+      <div class="field"><label for="facc">Konto testowe (bez hasła)</label><input id="facc" name="sys_account" maxlength="120" value="${esc(v.sys_account)}" placeholder="np. klub@pzball.test" autocomplete="off" autocapitalize="none"><span class="hint">Tylko nazwa konta. Nigdy nie wpisuj hasła.</span></div>
       <div class="field"><label for="fv">Wersja systemu (jeśli widać)</label><input id="fv" name="version" maxlength="60" value="${esc(v.version)}" placeholder="np. v0.8-demo"></div>
       <div class="field"><label for="fu">Adres strony</label><input id="fu" name="url" type="url" maxlength="1000" value="${esc(v.url)}" placeholder="https://…"></div>
       <div class="field"><label for="fdev">Urządzenie</label><select id="fdev" name="device">${opts(DEVICES, v.device, '—')}</select></div>
@@ -371,8 +376,10 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
     <div class="formbar"><a class="btn secondary" href="${editing ? '#/z/' + x.id : '#/zgloszenia'}">Anuluj</a><button class="btn primary" type="submit">${editing ? 'Zapisz zmiany' : 'Wyślij zgłoszenie'}</button></div>
   </form>`);
   const fillProject = () => {
-    const p = project($('#fp').value) || { modules: [], environments: [] };
-    const curM = $('#fm').value || v.module, curE = $('#fen').value || v.environment;
+    const p = project($('#fp').value) || { modules: [], environments: [], tested_roles: [] };
+    const curM = $('#fm').value || v.module, curE = $('#fen').value || v.environment, curR = $('#frole').value || v.sys_role;
+    const rs = [...(p.tested_roles || [])]; if (curR && !rs.includes(curR)) rs.push(curR);
+    $('#frole').innerHTML = opts(rs, curR, '— wybierz —');
     const ms = [...p.modules]; if (curM && !ms.includes(curM)) ms.push(curM);
     const es = [...p.environments]; if (curE && !es.includes(curE)) es.push(curE);
     $('#fm').innerHTML = opts(ms, curM, '— wybierz —'); $('#fen').innerHTML = opts(es, curE, '—');
@@ -392,7 +399,7 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
       if (editing) issue = (await api('issue_update', { params: { id: x.id }, body: data })).issue;
       else {
         issue = (await api('issue_create', { body: data })).issue;
-        store.set('last', { project: data.project_id, environment: data.environment, version: data.version });
+        store.set('last', { project: data.project_id, environment: data.environment, version: data.version, sys_role: data.sys_role, sys_account: data.sys_account });
         if (S.pendingFiles.length) await uploadFiles(issue.id).catch(err => toast('Zgłoszenie zapisane, ale pliki nie: ' + err.message, true));
       }
       await loadIssues(); updateCounts();
@@ -482,6 +489,7 @@ async function viewIssue(id) {
       <div class="card pad"><div class="kv">
         <div><small>Zgłosił/a</small><span>${esc(x.reporter_name)}</span><div class="sub">${fmtDate(x.created_at)}</div></div>
         <div><small>Naprawia</small><span>${esc(x.assignee_name || '—')}</span></div>
+        <div><small>Rola i konto w testowanym systemie</small><span>${esc([x.sys_role, x.sys_account].filter(Boolean).join(' · ') || '—')}</span></div>
         <div><small>Środowisko</small><span>${esc(x.environment || '—')}${x.version ? ' · ' + esc(x.version) : ''}</span></div>
         <div><small>Urządzenie / przeglądarka</small><span>${esc([x.device, x.browser].filter(Boolean).join(' · ') || '—')}</span></div>
         ${x.url ? `<div><small>Adres</small><span><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.url)}</a></span></div>` : ''}
@@ -723,7 +731,7 @@ function viewProjects() {
   view(`
   <div class="pagehead"><div><div class="eyebrow">Ustawienia</div><h1>Projekty i obszary</h1><p>Systemy, które testujemy. Skrót tworzy numer zgłoszenia (np. PZB-0012). Obszary i środowiska pojawiają się na listach w formularzach.</p></div>
     <div class="actions"><button class="btn primary" id="newProj">＋ Dodaj projekt</button></div></div>
-  ${S.meta.projects.map(p => `<div class="card runcard" data-p="${p.id}" style="cursor:pointer"><div><div class="ttl">${esc(p.code)} · ${esc(p.name)} ${p.active ? '' : badge('st-rejected', 'nieaktywny')}</div><div class="sub">${p.modules.length} obszarów · środowiska: ${esc(p.environments.join(', ') || '—')}</div></div>
+  ${S.meta.projects.map(p => `<div class="card runcard" data-p="${p.id}" style="cursor:pointer"><div><div class="ttl">${esc(p.code)} · ${esc(p.name)} ${p.active ? '' : badge('st-rejected', 'nieaktywny')}</div><div class="sub">${p.modules.length} obszarów · ${(p.tested_roles || []).length} ról · środowiska: ${esc(p.environments.join(', ') || '—')}</div></div>
     <div class="sub">${S.issues.filter(i => i.project_id === p.id).length} zgłoszeń</div></div>`).join('')}`);
   const edit = p => {
     const o = modal(p.id ? 'Edycja projektu' : 'Nowy projekt', `<div class="form">
@@ -731,9 +739,10 @@ function viewProjects() {
       <div class="field"><label>Nazwa <i>*</i></label><input id="pn" value="${esc(p.name)}"></div>
       <div class="field full"><label>Obszary systemu — jeden w linii</label><textarea id="pm" style="min-height:200px">${esc((p.modules || []).join('\n'))}</textarea></div>
       <div class="field full"><label>Środowiska — jedno w linii</label><textarea id="pe" style="min-height:80px">${esc((p.environments || []).join('\n'))}</textarea></div>
+      <div class="field full"><label>Role w testowanym systemie — jedna w linii</label><textarea id="pr" style="min-height:120px" placeholder="np. Administrator związku&#10;Zarząd klubu&#10;Trener&#10;Sędzia">${esc((p.tested_roles || []).join('\n'))}</textarea><span class="hint">Tester wybiera z tej listy, na jakiej roli był zalogowany, gdy pojawił się problem.</span></div>
       <div class="field full"><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="pa" ${p.active ? 'checked' : ''}> Aktywny (widoczny w formularzach)</label></div></div>`,
       'Zapisz', async (btn, close) => {
-        await busy(btn, async () => { await api('project_save', { body: { id: p.id || 0, code: $('#pc', o).value, name: $('#pn', o).value, modules: $('#pm', o).value, environments: $('#pe', o).value, active: $('#pa', o).checked } });
+        await busy(btn, async () => { await api('project_save', { body: { id: p.id || 0, code: $('#pc', o).value, name: $('#pn', o).value, modules: $('#pm', o).value, environments: $('#pe', o).value, tested_roles: $('#pr', o).value, active: $('#pa', o).checked } });
           close(); toast('Zapisano projekt.'); await Promise.all([loadMeta(), loadIssues()]); viewProjects(); });
       }, true);
   };

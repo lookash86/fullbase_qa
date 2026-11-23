@@ -26,6 +26,18 @@ function qa_migrations(): array
             $pdo->exec("UPDATE qa_issues SET severity='blocker' WHERE priority='critical'");
             qa_add_index($pdo, $driver, 'qa_issues', 'qa_issues_severity', 'severity');
         },
+        // 4 — 1.1b: rola i konto w testowanym systemie; lista ról definiowana w projekcie.
+        4 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_projects', 'tested_roles', "VARCHAR(2000) NOT NULL DEFAULT ''");
+            qa_add_column($pdo, $driver, 'qa_issues', 'sys_role', "VARCHAR(80) NOT NULL DEFAULT ''");
+            qa_add_column($pdo, $driver, 'qa_issues', 'sys_account', "VARCHAR(120) NOT NULL DEFAULT ''");
+            $roles = [
+                'PZB' => "Administrator związku\nWydział gier (biuro)\nWydział ds. Sędziów\nWydział Dyscypliny\nZarząd związku\nKomisja licencyjna\nRedaktor strony\nSelekcjoner kadry\nZarząd klubu\nTrener\nAsystent trenera\nSędzia\nRodzic\nZawodnik / osoba\nKonto bez roli\nNiezalogowany (kibic)",
+                'KLB' => "Prezes\nSekretarz\nSkarbnik\nTrener\nRodzic\nCzłonek / zawodnik\nNiezalogowany",
+            ];
+            $q = $pdo->prepare("UPDATE qa_projects SET tested_roles=? WHERE code=? AND tested_roles=''");
+            foreach ($roles as $code => $list) $q->execute([$list, $code]);
+        },
     ];
 }
 
