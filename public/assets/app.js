@@ -741,7 +741,8 @@ async function viewRuns() {
       <div class="field"><label>Projekt</label><select id="rp">${opts(activeProjects().map(p => [p.id, p.code + ' · ' + p.name]), last.project)}</select></div>
       <div class="field"><label>Środowisko</label><select id="re"></select></div>
       <div class="field"><label>Wersja</label><input id="rv" maxlength="60" value="${esc(last.version || '')}" placeholder="np. v0.8-demo"></div><div class="field"></div>
-      <div class="field full"><span class="lbl">Obszary (puste = wszystkie aktywne scenariusze)</span><div id="rmods" class="filters" style="margin:0"></div><div class="hint" id="rcount"></div></div></div>`,
+      <div class="field full"><div class="pickhead"><span class="lbl">Zakres — obszary do sprawdzenia</span><span><button type="button" class="linkbtn" id="rall">Zaznacz wszystkie</button> · <button type="button" class="linkbtn" id="rnone">Wyczyść</button></span></div>
+        <div id="rmods" class="picklist"></div><div class="picksum" id="rcount"></div></div></div>`,
       'Utwórz przebieg', async (btn, close) => {
         const modules = $$('#rmods input:checked', o).map(i => i.value);
         await busy(btn, async () => { const r = await api('run_create', { body: { name: $('#rn', o).value, project_id: Number($('#rp', o).value), environment: $('#re', o).value, version: $('#rv', o).value, modules } });
@@ -749,10 +750,20 @@ async function viewRuns() {
       }, true);
     const fill = () => { const p = project($('#rp', o).value), cs = S.cases.filter(c => c.active && c.project_id === p?.id);
       $('#re', o).innerHTML = opts(p?.environments || [], last.environment, '—');
-      const mods = [...new Set(cs.map(c => c.module || ''))];
-      $('#rmods', o).innerHTML = mods.length ? mods.map(m => `<label class="control" style="display:flex;gap:6px;align-items:center"><input type="checkbox" value="${esc(m)}"> ${esc(m || 'Bez obszaru')} <span class="muted">(${cs.filter(c => (c.module || '') === m).length})</span></label>`).join('') : '<span class="muted small">Ten projekt nie ma jeszcze aktywnych scenariuszy — dodaj je w zakładce Scenariusze.</span>';
-      const cnt = () => { const sel = $$('#rmods input:checked', o).map(i => i.value); $('#rcount', o).textContent = 'Scenariuszy w przebiegu: ' + cs.filter(c => !sel.length || sel.includes(c.module || '')).length; };
-      $$('#rmods input', o).forEach(i => i.onchange = cnt); cnt(); };
+      // Obszary w kolejności z projektu (jak w menu systemu), potem ewentualne spoza listy.
+      const order = p?.modules || [], used = [...new Set(cs.map(c => c.module || ''))];
+      const mods = [...order.filter(m => used.includes(m)), ...used.filter(m => !order.includes(m))];
+      $('#rmods', o).innerHTML = mods.length ? mods.map(m => `<label class="pickrow"><input type="checkbox" value="${esc(m)}"><span class="pickname">${esc(m || 'Bez obszaru')}</span><span class="pickcount">${cs.filter(c => (c.module || '') === m).length}</span></label>`).join('')
+        : '<div class="muted small" style="padding:12px">Ten projekt nie ma jeszcze aktywnych scenariuszy — dodaj je w zakładce Scenariusze.</div>';
+      const cnt = () => {
+        const sel = $$('#rmods input:checked', o).map(i => i.value), n = cs.filter(c => !sel.length || sel.includes(c.module || '')).length;
+        $$('#rmods .pickrow', o).forEach(r => r.classList.toggle('on', $('input', r).checked));
+        $('#rcount', o).innerHTML = sel.length ? `Wybrane obszary: <b>${sel.length}</b> · scenariuszy w przebiegu: <b>${n}</b>` : `Nic nie zaznaczono — w przebiegu będą <b>wszystkie</b> aktywne scenariusze (<b>${n}</b>).`;
+      };
+      $$('#rmods input', o).forEach(i => i.onchange = cnt);
+      $('#rall', o).onclick = () => { $$('#rmods input', o).forEach(i => { i.checked = true; }); cnt(); };
+      $('#rnone', o).onclick = () => { $$('#rmods input', o).forEach(i => { i.checked = false; }); cnt(); };
+      cnt(); };
     fill(); $('#rp', o).onchange = fill;
   });
 }
