@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Katalog app/ i data/ NIE mogą być dostępne z WWW (domena wskazuje na public/).
  */
 
-const QA_VERSION = '2.0.1';
+const QA_VERSION = '2.1.0';
 define('QA_ROOT', dirname(__DIR__));
 define('QA_DATA', QA_ROOT . '/data');
 date_default_timezone_set('Europe/Warsaw');

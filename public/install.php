@@ -46,6 +46,8 @@ if (!$installed && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($aname === '') $errors[] = 'Wpisz imię i nazwisko administratora.';
     if ($e = qa_password_problem($pw)) $errors[] = $e;
     if ($pw !== (string)($_POST['admin_pass2'] ?? '')) $errors[] = 'Hasła nie są takie same.';
+    $mailFrom = trim((string)($_POST['mail_from'] ?? ''));
+    if ($mailFrom !== '' && !filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) $errors[] = 'Adres nadawcy e-maili jest nieprawidłowy.';
     foreach ($checks as $label => $ok) if (!$ok) $errors[] = 'Wymaganie niespełnione: ' . $label;
 
     if (!$errors) {
@@ -64,7 +66,7 @@ if (!$installed && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $pdo->commit();
             qa_migrate($pdo, $driver); // schemat bazowy (wersja 1) + wszystkie migracje
             $config = "<?php\n// FULLBASE QA — konfiguracja. Plik zawiera dane dostępu: nie publikuj, nie wysyłaj w czacie.\n"
-                . "date_default_timezone_set('Europe/Warsaw');\nreturn " . var_export(['db' => $db, 'installed' => qa_now()], true) . ";\n";
+                . "date_default_timezone_set('Europe/Warsaw');\nreturn " . var_export(['db' => $db, 'installed' => qa_now()] + ($mailFrom !== '' ? ['mail' => ['from' => $mailFrom, 'from_name' => 'FULLBASE QA', 'transport' => 'mail']] : []), true) . ";\n";
             if (file_put_contents(QA_ROOT . '/config.php', $config, LOCK_EX) === false) throw new RuntimeException('Nie udało się zapisać config.php.');
             @chmod(QA_ROOT . '/config.php', 0640);
             $done = true;
@@ -116,6 +118,10 @@ if (!$installed && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         <label>Hasło (min. 10 znaków)<input name="admin_pass" type="password" required minlength="10" autocomplete="new-password"></label>
         <label>Powtórz hasło<input name="admin_pass2" type="password" required minlength="10" autocomplete="new-password"></label>
       </div>
+    </fieldset>
+    <fieldset><legend>Powiadomienia e-mail (opcjonalnie)</legend>
+      <label>Adres nadawcy<input name="mail_from" type="email" value="<?= $v('mail_from') ?>" placeholder="np. testy@fullbase.pl"></label>
+      <p class="muted" style="margin:6px 0 0">Skrzynka w domenie serwera (na home.pl załóż ją w panelu). Puste = bez e-maili i bez resetu hasła przez e-mail; można dopisać później w <code>config.php</code>.</p>
     </fieldset>
     <button class="btn primary wide" type="submit">Zainstaluj</button>
   </form>

@@ -207,7 +207,7 @@ function zainstaluj(string $baza, string $haslo, ?array $db = null): string
     return $inst->zadanie('POST', '/install.php', http_build_query([
         'csrf' => $m[1], 'driver' => $db['driver'], 'host' => $db['host'] ?? '', 'port' => $db['port'] ?? '', 'name' => $db['name'] ?? '',
         'user' => $db['user'] ?? '', 'pass' => $db['pass'] ?? '', 'admin_login' => 'admin', 'admin_name' => 'Admin Testowy',
-        'admin_email' => 'admin@example.test', 'admin_pass' => $haslo, 'admin_pass2' => $haslo,
+        'admin_email' => 'admin@example.test', 'mail_from' => $db['mail_from'] ?? '', 'admin_pass' => $haslo, 'admin_pass2' => $haslo,
     ]), 'application/x-www-form-urlencoded')[2];
 }
 
@@ -240,10 +240,11 @@ foreach (['app/bootstrap.php', 'app/schema.php', 'app/migrate.php', 'app/mail.ph
 
 sekcja('Instalacja (' . ($MYSQL ? 'MySQL ' . $DB['name'] : 'SQLite') . ')');
 $inst = new Klient($BAZA, 'instalator');
-$html = zainstaluj($BAZA, $hasloAdmina, $DB);
+$html = zainstaluj($BAZA, $hasloAdmina, $DB + ['mail_from' => 'testy@example.test']);
 sprawdz(str_contains($html, 'Gotowe'), 'instalacja kończy się sukcesem', strip_tags(mb_substr($html, 0, 300)));
 // Poczta w teście trafia do plików data/mail (żadnych prawdziwych wysyłek).
 $cfg = require "$kat/config.php";
+sprawdz(($cfg['mail']['from'] ?? '') === 'testy@example.test' && $cfg['mail']['transport'] === 'mail', 'instalator zapisuje adres nadawcy e-maili');
 $cfg['mail'] = ['transport' => 'file', 'from' => 'testy@example.test', 'base_url' => 'https://testy.example.test/'];
 file_put_contents("$kat/config.php", "<?php\nreturn " . var_export($cfg, true) . ";\n");
 /** Zwraca e-maile zapisane od ostatniego wywołania (i czyści skrzynkę). */
