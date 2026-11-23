@@ -1,0 +1,66 @@
+﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet
+PZB;"Sędziowie i obsada";"Obsada: ręczne wyznaczenie sędziego głównego i pomocniczego";"Konto kolegium@; mecz bez obsady; sędziowie z dostępnością na ten dzień.";"1. Obsada meczów → wybierz mecz.
+2. Wyznacz sędziego głównego z grupy „Polecani”.
+3. Wyznacz sędziego pomocniczego.
+4. Zapisz i wyślij do potwierdzenia.";"Obaj sędziowie są w obsadzie ze stanem „czeka na potwierdzenie” i dostają powiadomienie (dzwonek).";Krytyczny
+PZB;"Sędziowie i obsada";"Obsada: system nie podpowiada sędziego niedostępnego";"Konto kolegium@; sędzia2@ zgłosił niedostępność w dniu meczu.";"1. Obsada meczów → mecz w dniu niedostępności sędzia2@.
+2. Sprawdź listę kandydatów.";"sędzia2@ jest w grupie „Niezalecani” z powodem „niedostępny”, nie w „Polecani”.";Wysoki
+PZB;"Sędziowie i obsada";"Obsada: ten sam sędzia na dwa mecze w tym samym czasie";"Konto kolegium@; dwa mecze o tej samej godzinie w różnych miastach.";"1. Wyznacz sedzia@ na pierwszy mecz.
+2. Spróbuj wyznaczyć go na drugi mecz.";"System ostrzega o kolizji albo nie pozwala zapisać.";Wysoki
+PZB;"Sędziowie i obsada";"Sędzia odmawia obsady z powodem";"Konto sedzia@ z obsadą do potwierdzenia.";"1. Moje obsady → mecz → „Odmów”.
+2. Spróbuj bez powodu, potem z powodem.
+3. Jako kolegium@ sprawdź obsadę meczu.";"Bez powodu — odmowa zapisu. Z powodem — kolegium widzi odmowę i powód; mecz wraca do listy „bez potwierdzonego sędziego”.";Wysoki
+PZB;"Sędziowie i obsada";"Zastępstwo za sędziego, który zrezygnował";"Konto kolegium@; sędzia zrezygnował z potwierdzonej obsady.";"1. Obsada → mecz z rezygnacją → „Zastępstwo”.
+2. Wyznacz innego sędziego i wyślij.";"Nowy sędzia dostaje prośbę; poprzedni znika z obsady; historia pokazuje zmianę.";Wysoki
+PZB;"Sędziowie i obsada";"Obsada telefoniczna (bez potwierdzenia w systemie)";"Konto kolegium@.";"1. Wyznacz sędziego i zaznacz „telefonicznie”.
+2. Sprawdź stan obsady.";"Obsada od razu potwierdzona z adnotacją „telefonicznie”.";Średni
+PZB;"Sędziowie i obsada";"Zmiana terminu meczu wraca obsadę do potwierdzenia";"Mecz z potwierdzoną obsadą; zatwierdzona zmiana terminu.";"1. Jako biuro zatwierdź nowy termin meczu.
+2. Jako sedzia@ otwórz „Moje obsady”.";"Obsada ma stan „czeka na potwierdzenie” z nowym terminem; sędzia dostał powiadomienie.";Krytyczny
+PZB;"Sędziowie i obsada";"Pulpit: mecze bez potwierdzonego sędziego";"Konto admin@ albo kolegium@.";"1. Otwórz pulpit.
+2. Kliknij „Mecze bez potwierdzonego sędziego”.";"Lista zawiera dokładnie mecze bez pełnej potwierdzonej obsady.";Średni
+PZB;"Sędziowie i obsada";"Koszt składu sędziowskiego";"Konto kolegium@; mecz z obsadą.";"1. Obsada → mecz → sprawdź koszt składu.
+2. Zmień sędziego na mieszkającego dalej.";"Koszt (ryczałt + dojazd) przelicza się po zmianie.";Średni
+PZB;"Licencje zawodników";"E-licencja: pierwsza aktywacja na Androidzie";"Zawodnik z aktywną licencją; telefon Android z Chrome; demo przez HTTPS.";"1. Jako klub@ → kartoteka → Licencje → „E-licencja w telefonie” → kod.
+2. Na telefonie otwórz adres aktywacji, wpisz kod.
+3. Dodaj do ekranu głównego.";"Karta aktywna; kod QR zmienia się co 30 sekund z odliczaniem; ikona na ekranie głównym działa.";Krytyczny
+PZB;"Licencje zawodników";"E-licencja: pierwsza aktywacja na iPhonie";"Jak wyżej, iPhone z Safari.";"1. Aktywuj kartę kodem w Safari.
+2. Dodaj do ekranu głównego.
+3. Otwórz z ikony.";"Działa jak na Androidzie.";Krytyczny
+PZB;"Licencje zawodników";"E-licencja działa w trybie samolotowym";"Aktywna e-licencja w telefonie.";"1. Włącz tryb samolotowy.
+2. Otwórz e-licencję.
+3. Zeskanuj kod telefonem sędziego.";"Kod QR się wyświetla i zmienia bez sieci; skan u sędziego go przyjmuje.";Krytyczny
+PZB;"Licencje zawodników";"Skan zrzutu ekranu e-licencji jest odrzucony";"Aktywna e-licencja; zrzut ekranu kodu sprzed ponad minuty.";"1. Zrób zrzut ekranu kodu.
+2. Po 2 minutach zeskanuj zrzut („Sprawdź e-licencję” albo telefon sędziego).";"Komunikat „Kod odrzucony” (kod nieaktualny).";Krytyczny
+PZB;"Licencje zawodników";"E-licencja zawodnika zawieszonego";"Zawodnik z aktywnym zawieszeniem.";"1. Zeskanuj jego e-licencję na „Sprawdź e-licencję”.
+2. Sprawdź go na liście startowej.";"Skan pokazuje, że zawodnik jest nieuprawniony (zawieszony); na liście startowej to samo.";Krytyczny
+PZB;"Licencje zawodników";"E-licencja po wygaśnięciu licencji";"Zawodnik z licencją z poprzedniego sezonu, bez odnowienia.";"1. Zeskanuj jego e-licencję.";"Skan pokazuje brak ważnej licencji na bieżący sezon.";Wysoki
+PZB;"Licencje zawodników";"Przeniesienie e-licencji na nowy telefon";"Zawodnik zmienia telefon.";"1. Jako klub@ wycofaj stary telefon i wygeneruj nowy kod.
+2. Aktywuj na nowym telefonie.
+3. Otwórz kartę na starym telefonie.";"Nowy telefon działa; stary pokazuje, że karta jest nieaktywna.";Wysoki
+PZB;"Mecze i wyniki";"Sędzia: protokół na telefonie od początku do podpisu";"Konto sedzia@ w obsadzie meczu na dziś; telefon przez HTTPS.";"1. Weryfikacja zawodników → pobierz mecz → zweryfikuj obie drużyny.
+2. Protokół: wpisz zdarzenia (kara z momentem, interwencja medyczna).
+3. „Zakończ mecz” → wpisz wynik → podpisz.";"Protokół zapisany z wynikiem i podpisem; mecz ma stan „zakończony”.";Krytyczny
+PZB;"Mecze i wyniki";"Wynik ze zdjęciem karty wyników i warunkami";"Jak wyżej.";"1. Przy zakończeniu meczu dodaj zdjęcie karty wyników.
+2. Wpisz warunki gry.
+3. Jako biuro otwórz kartę meczu.";"Zdjęcie i warunki są widoczne na karcie meczu.";Wysoki
+PZB;"Mecze i wyniki";"Wynik wpisany bez sieci wysyła się później";"Konto sedzia@; telefon bez zasięgu na boisku.";"1. W trybie samolotowym zakończ mecz i podpisz protokół.
+2. Wyłącz tryb samolotowy.
+3. Jako biuro sprawdź mecz.";"Po powrocie sieci wynik i protokół trafiają na serwer bez ponownego wpisywania.";Krytyczny
+PZB;"Mecze i wyniki";"Korekta wyniku przez biuro po zamknięciu";"Konto biura; zamknięty mecz.";"1. Otwórz mecz → popraw wynik (np. 7:5 → 7:6) z uzasadnieniem.
+2. Sprawdź tabelę i historię meczu.";"Wynik poprawiony; tabela przeliczona; historia pokazuje kto, kiedy i dlaczego.";Wysoki
+PZB;"Mecze i wyniki";Walkower;"Konto biura; drużyna nie stawiła się.";"1. Ustaw walkower dla meczu.
+2. Sprawdź wynik, tabelę i należności klubu.";"Wynik walkowerowy (np. 9:0), tabela przeliczona, kara w należnościach klubu.";Wysoki
+PZB;"Mecze i wyniki";"Import statystyk z iScore";"Konto biura; zakończony mecz; plik iScore (CSV) z box score.";"1. Mecz → import pliku iScore.
+2. Sprawdź „Weryfikacja po meczu” (box score a kadra meczowa).";"Statystyki zawodników zaimportowane; rozbieżności (zawodnik spoza kadry, nieuprawniony) są pokazane.";Krytyczny
+PZB;"Strona rozgrywek / redakcja";"Wynik pojawia się na stronie rozgrywek";"Mecz z zatwierdzonym wynikiem; brak logowania.";"1. Otwórz stronę rozgrywek → Start i Terminarz.
+2. Otwórz stronę meczu.";"Wynik widoczny w „ostatnich wynikach”, w terminarzu i na stronie meczu — bez ręcznego przepisywania.";Krytyczny
+PZB;"Strona rozgrywek / redakcja";"Tabela na stronie rozgrywek po nowym wyniku";"Jak wyżej.";"1. Zapisz miejsca w tabeli przed wynikiem.
+2. Po zatwierdzeniu wyniku odśwież Tabele.";"Tabela i wykres miejsc uwzględniają nowy wynik.";Krytyczny
+PZB;"Strona rozgrywek / redakcja";"Statystyki zawodników po imporcie iScore";"Mecz z zaimportowanym plikiem iScore.";"1. Strona rozgrywek → Statystyki.
+2. Otwórz stronę zawodnika z tego meczu.";"Liderzy i statystyki zawodnika zawierają dane z meczu; baseball i softball osobno.";Krytyczny
+PZB;"Strona rozgrywek / redakcja";"Strona meczu: grafika wyniku do pobrania";"Mecz z wynikiem.";"1. Strona meczu → pobierz grafikę meczu.
+2. Otwórz plik.";"Grafika ma poprawne drużyny, wynik i datę; nadaje się do mediów społecznościowych.";Średni
+PZB;"Strona rozgrywek / redakcja";"Strona rozgrywek nie pokazuje danych osobowych";"Brak logowania.";"1. Otwórz strony: zawodnika, drużyny, kadry narodowej, meczu.
+2. Szukaj daty urodzenia, PESEL-u, adresu, telefonu.";"Żadnych danych osobowych poza imieniem, nazwiskiem, klubem i statystykami.";Krytyczny
+PZB;"Strona rozgrywek / redakcja";"Podsumowanie kolejki z wynikami";"Konto redaktor@; rozegrana kolejka.";"1. Redakcja → szkic podsumowania kolejki.
+2. Sprawdź wyniki w szkicu i opublikuj.";"Szkic zawiera wszystkie wyniki kolejki; po publikacji jest w Aktualnościach.";Średni
