@@ -57,6 +57,21 @@ function qa_migrations(): array
         8 => function (PDO $pdo, string $driver): void {
             qa_add_column($pdo, $driver, 'qa_users', 'notify', 'SMALLINT NOT NULL DEFAULT 1');
         },
+        // 9 — 1.7: jednorazowe linki do resetu hasła (w bazie tylko skrót SHA-256 tokenu).
+        9 => function (PDO $pdo, string $driver): void {
+            if (qa_has_table($pdo, $driver, 'qa_password_resets')) return;
+            $my = $driver === 'mysql';
+            $id = $my ? 'BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+            $ref = $my ? 'BIGINT UNSIGNED' : 'INTEGER';
+            $tail = $my ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
+            $pdo->exec("CREATE TABLE qa_password_resets (
+                id $id, user_id $ref NULL, token_hash CHAR(64) NOT NULL, ip VARCHAR(64) NOT NULL DEFAULT '',
+                created_at VARCHAR(19) NOT NULL, expires_at VARCHAR(19) NOT NULL, used_at VARCHAR(19) NULL,
+                FOREIGN KEY (user_id) REFERENCES qa_users(id) ON DELETE CASCADE
+            )$tail");
+            $pdo->exec('CREATE INDEX qa_resets_token ON qa_password_resets(token_hash)');
+            $pdo->exec('CREATE INDEX qa_resets_ip ON qa_password_resets(ip)');
+        },
     ];
 }
 

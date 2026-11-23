@@ -231,6 +231,60 @@ if ($action === 'logout') {
     out(['ok' => true, 'csrf' => $_SESSION['csrf']]);
 }
 
+/* ---------- reset hasła (1.7) — bez logowania ---------- */
+
+if ($action === 'reset_request') {
+    require_post(); // token CSRF z sesji niezalogowanej (akcja session)
+    $who = mb_strtolower(str_in(body(), 'login', 190));
+    $same = ['ok' => true, 'message' => 'Jeśli konto istnieje i ma adres e-mail, wysłaliśmy na niego link do ustawienia nowego hasła. Link jest ważny 1 godzinę.'];
+    if ($who === '') out(['error' => 'Wpisz login albo adres e-mail.'], 422);
+    $p = db();
+    $q = $p->prepare('SELECT COUNT(*) FROM qa_password_resets WHERE ip=? AND created_at>?');
+    $q->execute([client_ip(), date('Y-m-d H:i:s', time() - 900)]);
+    if ((int)$q->fetchColumn() >= 5) out(['error' => 'Zbyt wiele prób. Spróbuj ponownie za 15 minut.'], 429);
+    $q = $p->prepare("SELECT id, email, display_name FROM qa_users WHERE active=1 AND email<>'' AND (username=? OR LOWER(email)=?)");
+    $q->execute([$who, $who]);
+    $user = $q->fetch();
+    $userId = $user ? (int)$user['id'] : 0;
+    // Dla nieistniejącego konta też zapisujemy próbę (user_id NULL, token nieużywalny) — ten sam limit i podobny czas odpowiedzi.
+    $token = bin2hex(random_bytes(32));
+    if ($user) $p->prepare('UPDATE qa_password_resets SET used_at=? WHERE user_id=? AND used_at IS NULL')->execute([qa_now(), $userId]);
+    if ($user) {
+        $p->prepare('INSERT INTO qa_password_resets(user_id,token_hash,ip,created_at,expires_at) VALUES(?,?,?,?,?)')
+            ->execute([$userId, hash('sha256', $token), client_ip(), qa_now(), date('Y-m-d H:i:s', time() + 3600)]);
+        qa_mail((string)$user['email'], 'Ustawienie nowego hasła — FULLBASE QA',
+            "Dzień dobry,\n\nktoś (prawdopodobnie Ty) poprosił o ustawienie nowego hasła do FULLBASE QA.\n\nOtwórz link, aby ustawić nowe hasło (ważny 1 godzinę, działa jeden raz):\n"
+            . qa_base_url() . '#/reset/' . $token . "\n\nJeśli to nie Ty — zignoruj tę wiadomość; hasło się nie zmieni.");
+    } else {
+        $p->prepare('INSERT INTO qa_password_resets(user_id,token_hash,ip,created_at,expires_at,used_at) VALUES(NULL,?,?,?,?,?)')
+            ->execute([hash('sha256', $token), client_ip(), qa_now(), qa_now(), qa_now()]);
+        usleep(150000);
+    }
+    out($same);
+}
+
+if ($action === 'reset_confirm') {
+    require_post();
+    $b = body();
+    $token = (string)($b['token'] ?? '');
+    $new = (string)($b['new'] ?? '');
+    $bad = 'Link jest nieważny albo wygasł. Poproś o nowy na stronie logowania („Nie pamiętasz hasła?”).';
+    if (!preg_match('/^[0-9a-f]{64}$/', $token)) out(['error' => $bad], 422);
+    if ($e = qa_password_problem($new)) out(['error' => $e], 422);
+    $p = db();
+    $q = $p->prepare('SELECT r.id, r.user_id FROM qa_password_resets r JOIN qa_users u ON u.id=r.user_id
+        WHERE r.token_hash=? AND r.used_at IS NULL AND r.expires_at>? AND u.active=1');
+    $q->execute([hash('sha256', $token), qa_now()]);
+    $r = $q->fetch();
+    if (!$r) out(['error' => $bad], 422);
+    $p->beginTransaction();
+    $p->prepare('UPDATE qa_password_resets SET used_at=? WHERE id=?')->execute([qa_now(), $r['id']]);
+    $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=0 WHERE id=?')->execute([qa_hash_password($new), $r['user_id']]);
+    $p->prepare('DELETE FROM qa_login_attempts WHERE username=(SELECT username FROM qa_users WHERE id=?)')->execute([$r['user_id']]);
+    $p->commit();
+    out(['ok' => true]);
+}
+
 $u = auth();
 $p = db();
 

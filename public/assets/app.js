@@ -93,6 +93,8 @@ async function boot() {
   try {
     const s = await api('session');
     S.csrf = s.csrf; S.user = s.user;
+    const reset = location.hash.match(/^#\/reset\/([0-9a-f]{64})$/);
+    if (reset) return renderReset(reset[1]);
     if (!S.user) return renderLogin();
     if (S.user.must_change_pw) return renderMustChange();
     await startApp();
@@ -114,7 +116,9 @@ function renderLogin(msg = '') {
     <form id="loginForm"><label>Login<input id="lgUser" autocomplete="username" autocapitalize="none" required></label>
     <label>Hasło<input id="lgPass" type="password" autocomplete="current-password" required></label>
     <div class="authError ${msg ? 'show' : ''}" id="lgErr" role="alert">${esc(msg)}</div>
-    <button class="btn primary wide" type="submit">Zaloguj</button></form>`);
+    <button class="btn primary wide" type="submit">Zaloguj</button></form>
+    <p class="small" style="text-align:center;margin:14px 0 0"><a href="#" id="forgot">Nie pamiętasz hasła?</a></p>`);
+  $('#forgot').onclick = e => { e.preventDefault(); renderForgot(); };
   $('#lgUser').focus();
   $('#loginForm').onsubmit = async e => {
     e.preventDefault();
@@ -125,6 +129,33 @@ function renderLogin(msg = '') {
       if (S.user.must_change_pw) return renderMustChange();
       document.body.className = ''; await startApp();
     } catch (ex) { err.textContent = ex.message; err.className = 'authError show'; btn.disabled = false; }
+  };
+}
+function renderForgot() {
+  authFrame(`<h1>Nowe hasło</h1><p class="muted">Wpisz login albo adres e-mail z konta. Wyślemy link do ustawienia nowego hasła.</p>
+    <form id="fgForm"><label>Login albo e-mail<input id="fgWho" autocomplete="username" autocapitalize="none" required></label>
+    <div class="authError" id="fgErr" role="alert"></div><button class="btn primary wide" type="submit">Wyślij link</button>
+    <button class="btn ghost wide" type="button" id="fgBack">Wróć do logowania</button></form>`);
+  $('#fgWho').focus(); $('#fgBack').onclick = () => renderLogin();
+  $('#fgForm').onsubmit = async e => {
+    e.preventDefault(); const err = $('#fgErr'), btn = e.submitter; btn.disabled = true;
+    try { const r = await api('reset_request', { body: { login: $('#fgWho').value } });
+      authFrame(`<h1>Sprawdź pocztę</h1><p class="muted">${esc(r.message)} Sprawdź też folder spam.</p><button class="btn primary wide" id="fgOk">Wróć do logowania</button>`);
+      $('#fgOk').onclick = () => renderLogin();
+    } catch (ex) { err.textContent = ex.message; err.className = 'authError show'; btn.disabled = false; }
+  };
+}
+function renderReset(token) {
+  authFrame(`<h1>Ustaw nowe hasło</h1><p class="muted">Co najmniej 10 znaków. Link działa jeden raz.</p>
+    <form id="rsForm"><label>Nowe hasło<input id="rsNew" type="password" minlength="10" autocomplete="new-password" required></label>
+    <label>Powtórz nowe hasło<input id="rsNew2" type="password" minlength="10" autocomplete="new-password" required></label>
+    <div class="authError" id="rsErr" role="alert"></div><button class="btn primary wide" type="submit">Zapisz hasło</button></form>`);
+  $('#rsNew').focus();
+  $('#rsForm').onsubmit = async e => {
+    e.preventDefault(); const err = $('#rsErr');
+    if ($('#rsNew').value !== $('#rsNew2').value) { err.textContent = 'Hasła nie są takie same.'; err.className = 'authError show'; return; }
+    try { await api('reset_confirm', { body: { token, new: $('#rsNew').value } }); history.replaceState(null, '', location.pathname); renderLogin(); toast('Hasło zmienione — zaloguj się nowym hasłem.'); }
+    catch (ex) { err.textContent = ex.message; err.className = 'authError show'; }
   };
 }
 function renderMustChange() {

@@ -357,6 +357,38 @@ sprawdz(poczta($kat) === [], 'po wyłączeniu powiadomień tester nie dostaje e-
 kod($tester->post('account_save', ['notify' => true]), 200, 'tester włącza powiadomienia z powrotem');
 kod($obs->post('account_save', ['notify' => false]), 200, 'obserwator też może wyłączyć powiadomienia');
 
+/* ---------- 1.7 reset hasła ---------- */
+
+sekcja('1.7 Reset hasła przez e-mail');
+poczta($kat);
+$anon = new Klient($BAZA, 'anonim');
+$anon->csrf = $anon->get('session')[1]['csrf'] ?? '';
+kod($anon->post('reset_request', ['login' => 'tester2'], false), 419, 'prośba o reset bez tokenu CSRF odrzucona');
+$r1 = kod($anon->post('reset_request', ['login' => 'tester2']), 200, 'prośba o reset (istniejące konto)');
+$r2 = kod($anon->post('reset_request', ['login' => 'nie-ma-takiego']), 200, 'prośba o reset (nieistniejące konto)');
+sprawdz(($r1['message'] ?? 'a') === ($r2['message'] ?? 'b'), 'odpowiedź nie zdradza, czy konto istnieje');
+$m = poczta($kat);
+sprawdz(doKogo($m) === ['tester2@example.test'], 'e-mail z linkiem tylko do istniejącego konta');
+$tok = preg_match('~#/reset/([0-9a-f]{64})~', $m[0] ?? '', $x) ? $x[1] : '';
+sprawdz($tok !== '', 'e-mail zawiera link z tokenem');
+kod($anon->post('reset_confirm', ['token' => $tok, 'new' => 'krotkie']), 422, 'za krótkie hasło odrzucone');
+kod($anon->post('reset_confirm', ['token' => str_repeat('a', 64), 'new' => 'Nowe-Haslo-Reset-1']), 422, 'zmyślony token odrzucony');
+$noweH = $los();
+kod($anon->post('reset_confirm', ['token' => $tok, 'new' => $noweH]), 200, 'ustawienie nowego hasła z linku');
+kod($anon->post('reset_confirm', ['token' => $tok, 'new' => $los()]), 422, 'link działa tylko raz');
+$t2b = new Klient($BAZA, 'tester2b');
+kod($t2b->zaloguj('tester2', $noweH), 200, 'logowanie nowym hasłem');
+// link po godzinie
+$anon->post('reset_request', ['login' => 'tester2@example.test']);
+$m = poczta($kat);
+$tok2 = preg_match('~#/reset/([0-9a-f]{64})~', $m[0] ?? '', $x) ? $x[1] : '';
+sprawdz($tok2 !== '', 'reset po adresie e-mail też działa');
+(new PDO('sqlite:' . $kat . '/data/qa.sqlite'))->prepare('UPDATE qa_password_resets SET expires_at=? WHERE token_hash=?')->execute([date('Y-m-d H:i:s', time() - 1), hash('sha256', $tok2)]);
+kod($anon->post('reset_confirm', ['token' => $tok2, 'new' => $los()]), 422, 'wygasły link (po 1 godzinie) odrzucony');
+for ($i = 0; $i < 3; $i++) $anon->post('reset_request', ['login' => 'tester2']);
+kod($anon->post('reset_request', ['login' => 'tester2']), 429, 'limit próśb o reset z jednego adresu');
+poczta($kat);
+
 /* ---------- 1.5 scenariusz regresji ---------- */
 
 sekcja('1.5 Scenariusz regresji');
