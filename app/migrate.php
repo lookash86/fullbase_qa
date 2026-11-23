@@ -72,6 +72,10 @@ function qa_migrations(): array
             $pdo->exec('CREATE INDEX qa_resets_token ON qa_password_resets(token_hash)');
             $pdo->exec('CREATE INDEX qa_resets_ip ON qa_password_resets(ip)');
         },
+        // 10 — 1.11: sugestia testera, jak naprawić problem (VARCHAR z domyślną wartością działa w SQLite i MySQL).
+        10 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_issues', 'suggestion', "VARCHAR(4000) NOT NULL DEFAULT ''");
+        },
     ];
 }
 

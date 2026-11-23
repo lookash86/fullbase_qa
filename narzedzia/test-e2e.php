@@ -313,7 +313,7 @@ sekcja('Zgłoszenie z załącznikiem');
 $noweZgl = ['project_id' => $pzbId, 'kind' => 'bug', 'title' => 'Wynik meczu nie zapisuje się', 'module' => 'Mecze i wyniki', 'priority' => 'critical', 'severity' => 'blocker',
     'description' => 'Po kliknięciu Zapisz wynik znika.', 'steps' => "1. Otwórz mecz\n2. Wpisz 80:75\n3. Zapisz", 'expected' => 'Wynik zapisany.',
     'environment' => 'demo.fullbase.pl', 'version' => '0.9', 'url' => 'https://demo.fullbase.pl/mecze/1',
-    'sys_role' => 'Zarząd klubu', 'sys_account' => 'klub@pzball.test'];
+    'sys_role' => 'Zarząd klubu', 'sys_account' => 'klub@pzball.test', 'suggestion' => 'Zapisuj wynik także przy remisie.'];
 $z = kod($tester->post('issue_create', $noweZgl), 200, 'tester tworzy zgłoszenie');
 $idZgl = (int)($z['issue']['id'] ?? 0);
 sprawdz(($z['issue']['key'] ?? '') === sprintf('PZB-%04d', $idZgl), 'numer zgłoszenia w formacie PZB-0001');
@@ -332,6 +332,12 @@ $l = $admin->get('issues')[1]['issues'] ?? [];
 sprawdz(($l[1]['severity'] ?? $l[0]['severity'] ?? '') !== '', 'lista zgłoszeń zawiera wagę');
 [, , $csv] = $admin->get('export');
 sprawdz(str_contains($csv, ';Waga;') && str_contains($csv, 'Blokuje pracę'), 'eksport CSV zawiera wagę');
+
+sekcja('1.11 Sugestia naprawy');
+$d = $tester->get('issue&id=' . $idZgl)[1]['issue'] ?? [];
+sprawdz(($d['suggestion'] ?? '') === 'Zapisuj wynik także przy remisie.', 'zgłoszenie zapamiętuje sugestię naprawy');
+[, , $csv] = $admin->get('export');
+sprawdz(str_contains($csv, 'Sugestia naprawy') && str_contains($csv, 'przy remisie'), 'eksport CSV zawiera sugestię');
 
 sekcja('1.1b Rola i konto w testowanym systemie');
 sprawdz(in_array('Zarząd klubu', $pzb['tested_roles'] ?? [], true) && in_array('Sędzia', $pzb['tested_roles'] ?? [], true), 'projekt PZB ma startową listę ról');

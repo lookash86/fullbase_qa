@@ -391,6 +391,7 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
       <div class="field full"><label for="fd">Co się dzieje? (faktyczny wynik) <i>*</i></label><textarea id="fd" name="description" required placeholder="Co zobaczyłeś? Treść komunikatu błędu, co się nie zapisało, czego brakuje…">${esc(v.description)}</textarea></div>
       <div class="field"><label for="fs">Kroki do odtworzenia problemu</label><textarea id="fs" name="steps" placeholder="1. Zaloguj się jako…&#10;2. Wejdź w…&#10;3. Kliknij…">${esc(v.steps)}</textarea><span class="hint">Co klikałeś po kolei, aż pojawił się problem — tak, żeby ktoś inny mógł to powtórzyć.</span></div>
       <div class="field"><label for="fe">Czego się spodziewałeś? (oczekiwany wynik)</label><textarea id="fe" name="expected" placeholder="Co powinno się wydarzyć?">${esc(v.expected)}</textarea></div>
+      <div class="field full"><label for="fsug">Sugestia, jak to naprawić (opcjonalnie)</label><textarea id="fsug" name="suggestion" maxlength="4000" style="min-height:70px" placeholder="Jeśli masz pomysł — np. „przycisk Zapisz powinien być też na dole formularza”.">${esc(v.suggestion)}</textarea></div>
       <div class="field"><label for="fsv">Waga — jak bardzo przeszkadza</label><select id="fsv" name="severity">${opts(Object.entries(S.meta.severities), v.severity || 'annoying')}</select><span class="hint">Blokuje pracę: nie da się dokończyć czynności. Psuje dane: dane znikają, są złe albo widzi je ktoś niepowołany.</span></div>
       ${isAdmin() ? `<div class="field"><label for="fpr">Priorytet — kiedy naprawiamy</label><select id="fpr" name="priority">${opts(Object.entries(S.meta.priorities), v.priority)}</select><span class="hint">Ustawia administrator.</span></div>` : ''}
       <div class="field"><label for="fen">Środowisko</label><select id="fen" name="environment"></select></div>
@@ -508,7 +509,7 @@ async function viewIssue(id) {
       ${canVerify ? `<div class="verify"><b>Poprawka czeka na weryfikację</b><p>${x.fixed_in ? `Sprawdzaj na wersji <b>≥ ${esc(x.fixed_in)}</b> (wersję widać w stopce systemu). ` : ''}Sprawdź na środowisku${x.environment ? ' <b>' + esc(x.environment) + '</b>' : ''}, czy problem zniknął.${x.solution ? ' Opis poprawki znajdziesz niżej.' : ''}</p>
         <div class="actions"><button class="btn ok" data-st="closed">✓ Działa — zamknij</button><button class="btn bad" data-st="reopened">✗ Nadal nie działa</button></div></div>` : ''}
       <div class="card">
-        ${block('Co się dzieje', x.description)}${block('Kroki do odtworzenia problemu', x.steps)}${block('Oczekiwany wynik', x.expected)}
+        ${block('Co się dzieje', x.description)}${block('Kroki do odtworzenia problemu', x.steps)}${block('Oczekiwany wynik', x.expected)}${block('Sugestia naprawy (od zgłaszającego)', x.suggestion)}
         ${x.solution ? `<div class="section" style="background:#f7fbf9"><h3>Rozwiązanie</h3><div class="prose">${esc(x.solution)}</div></div>` : ''}
         <div class="section"><h3>Załączniki ${x.files.length ? '(' + x.files.length + ')' : ''}</h3>${files ? `<div class="files">${files}</div>` : '<p class="muted small" style="margin:0 0 10px">Brak załączników.</p>'}
           ${canWrite() ? `<div style="margin-top:12px">${dropZone()}<div class="actions" style="margin-top:8px;justify-content:flex-end"><button class="btn soft sm" id="upBtn" hidden>Wyślij pliki</button></div></div>` : ''}</div>
@@ -571,7 +572,7 @@ function issueMarkdown(x) {
     + row('Środowisko', x.environment) + row('Wersja', x.version) + row('Naprawiono w wersji', x.fixed_in)
     + row('Urządzenie / przeglądarka', [x.device, x.browser].filter(Boolean).join(' · ')) + row('Adres', x.url)
     + row('Zgłoszenie w rejestrze', base + '#/z/' + x.id)
-    + sec('Co się dzieje (faktyczny wynik)', x.description) + sec('Kroki do odtworzenia problemu', x.steps) + sec('Oczekiwany wynik', x.expected)
+    + sec('Co się dzieje (faktyczny wynik)', x.description) + sec('Kroki do odtworzenia problemu', x.steps) + sec('Oczekiwany wynik', x.expected) + sec('Sugestia naprawy od testera', x.suggestion)
     + sec('Załączniki', x.files.map(f => `- [${f.orig_name}](${base}api.php?action=file&id=${f.id})`).join('\n'))
     + sec('Ostatnie komentarze', comments.map(c => `- **${c.user_name}** (${c.created_at.slice(0, 16)}): ${c.message.replace(/\n+/g, ' ')}`).join('\n'))
     + `\n---\nPo naprawie: commit \`fix ${x.key}: …\`, dodaj test, który nie pozwoli temu błędowi wrócić.\n`;

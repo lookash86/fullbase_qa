@@ -128,6 +128,7 @@ function issue_fields(array $b): array
         'description' => str_in($b, 'description', 20000),
         'steps' => str_in($b, 'steps', 20000),
         'expected' => str_in($b, 'expected', 20000),
+        'suggestion' => str_in($b, 'suggestion', 4000),
         'environment' => str_in($b, 'environment', 80),
         'version' => str_in($b, 'version', 60),
         'device' => str_in($b, 'device', 80),
@@ -381,9 +382,9 @@ if ($action === 'issue_create') {
     $project = project_row((int)($b['project_id'] ?? 0));
     $now = qa_now();
     $p->beginTransaction();
-    $q = $p->prepare('INSERT INTO qa_issues(project_id,kind,title,module,priority,severity,status,description,steps,expected,environment,version,device,browser,url,sys_role,sys_account,solution,reporter_id,assignee_id,created_at,updated_at)
-        VALUES(?,?,?,?,?,?,\'new\',?,?,?,?,?,?,?,?,?,?,\'\',?,NULL,?,?)');
-    $q->execute([$project['id'], $f['kind'], $f['title'], $f['module'], $f['priority'], $f['severity'], $f['description'], $f['steps'], $f['expected'],
+    $q = $p->prepare('INSERT INTO qa_issues(project_id,kind,title,module,priority,severity,status,description,steps,expected,suggestion,environment,version,device,browser,url,sys_role,sys_account,solution,reporter_id,assignee_id,created_at,updated_at)
+        VALUES(?,?,?,?,?,?,\'new\',?,?,?,?,?,?,?,?,?,?,?,\'\',?,NULL,?,?)');
+    $q->execute([$project['id'], $f['kind'], $f['title'], $f['module'], $f['priority'], $f['severity'], $f['description'], $f['steps'], $f['expected'], $f['suggestion'],
         $f['environment'], $f['version'], $f['device'], $f['browser'], $f['url'], $f['sys_role'], $f['sys_account'], $u['id'], $now, $now]);
     $id = (int)$p->lastInsertId();
     log_act($id, $u['id'], 'created', 'Utworzono zgłoszenie.');
@@ -418,7 +419,7 @@ if ($action === 'issue_update') {
         $sets['assignee_id'] = user_exists_active(isset($b['assignee_id']) ? (int)$b['assignee_id'] : null);
     }
     $labels = ['title' => 'tytuł', 'kind' => 'rodzaj', 'module' => 'obszar', 'priority' => 'priorytet', 'severity' => 'waga', 'description' => 'opis', 'steps' => 'kroki do odtworzenia problemu',
-        'expected' => 'oczekiwany wynik', 'environment' => 'środowisko', 'version' => 'wersja', 'device' => 'urządzenie', 'browser' => 'przeglądarka',
+        'expected' => 'oczekiwany wynik', 'suggestion' => 'sugestia naprawy', 'environment' => 'środowisko', 'version' => 'wersja', 'device' => 'urządzenie', 'browser' => 'przeglądarka',
         'url' => 'adres', 'sys_role' => 'rola w testowanym systemie', 'sys_account' => 'konto testowe', 'solution' => 'rozwiązanie', 'assignee_id' => 'osoba naprawiająca', 'project_id' => 'projekt'];
     $changed = [];
     foreach ($sets as $k => $v) if ((string)$before[$k] !== (string)$v) $changed[] = $labels[$k] ?? $k;
@@ -613,11 +614,11 @@ if ($action === 'export') {
     $o = fopen('php://output', 'w');
     fwrite($o, "\xEF\xBB\xBF");
     $safe = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v; // ochrona przed formułami w Excelu
-    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Powód odrzucenia', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Naprawiono w wersji', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
+    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Powód odrzucenia', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Sugestia naprawy', 'Środowisko', 'Wersja', 'Naprawiono w wersji', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
     foreach ($rows as $r) {
         $r = cast_issue($r);
         fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_SEVERITIES[$r['severity']] ?? '', QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '', (QA_REJECT_REASONS[$r['reject_reason']] ?? '') . ($r['duplicate_of'] ? ' ' . ($r['duplicate_key'] ?? '#' . $r['duplicate_of']) : ''),
-            $r['description'], $r['steps'], $r['expected'], $r['environment'], $r['version'], $r['fixed_in'], $r['sys_role'], $r['sys_account'], $r['device'], $r['browser'], $r['url'], $r['solution'],
+            $r['description'], $r['steps'], $r['expected'], $r['suggestion'], $r['environment'], $r['version'], $r['fixed_in'], $r['sys_role'], $r['sys_account'], $r['device'], $r['browser'], $r['url'], $r['solution'],
             $r['reporter_name'], $r['assignee_name'] ?? '', $r['created_at'], $r['updated_at'], $r['closed_at'] ?? '']), ';');
     }
     exit;
