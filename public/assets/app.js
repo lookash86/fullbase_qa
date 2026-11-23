@@ -497,18 +497,20 @@ async function viewIssue(id) {
         ${x.url ? `<div><small>Adres</small><span><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.url)}</a></span></div>` : ''}
         ${x.status === 'rejected' && x.reject_reason ? `<div><small>Powód odrzucenia</small><span>${esc(S.meta.reject_reasons[x.reject_reason])}${x.duplicate_of ? ` — oryginał: <a href="#/z/${x.duplicate_of}">${esc(x.duplicate_key || '#' + x.duplicate_of)}</a>` : ''}</span></div>` : ''}
         ${x.duplicates.length ? `<div><small>Duplikaty tego zgłoszenia</small>${x.duplicates.map(d => `<span><a href="#/z/${d.id}">${esc(d.key)}</a> — ${esc(d.title)}</span>`).join('<br>')}</div>` : ''}
+        ${x.regression_case ? `<div><small>Scenariusz regresji</small><span><a href="#/scenariusze">TC-${String(x.regression_case).padStart(3, '0')}</a></span></div>` : ''}
         ${x.test_links.length ? `<div><small>Z przebiegu testów</small>${x.test_links.map(t => `<span><a href="#/przebieg/${t.run_id}">${esc(t.run_name)}</a> — ${esc(t.case_title)}</span>`).join('<br>')}</div>` : ''}
         <div><small>Ostatnia zmiana</small><span>${fmtDate(x.updated_at)}</span></div>
       </div></div>
       ${admin ? `<div class="card pad"><h3>Status (administrator)</h3><div class="field"><select id="stSel">${opts(Object.entries(S.meta.statuses), x.status)}</select></div>
         <button class="btn primary sm wide" id="stBtn" style="margin-top:8px">Zmień status</button>
         <p class="hint" style="margin:8px 0 0">„Do weryfikacji” ustawiaj dopiero po wgraniu poprawki na demo — z numerem wersji. Tester potwierdzi albo otworzy ponownie.</p></div>` : ''}
-      <div class="actions"><button class="btn secondary" id="mdBtn" title="Kopiuje zgłoszenie w Markdownie — do wklejenia w Claude Code">⧉ Kopiuj dla programisty</button>${canEdit ? `<a class="btn secondary" href="#/edytuj/${x.id}">✎ Edytuj</a>` : ''}${canReopen ? '<button class="btn secondary" data-st="reopened">↺ Otwórz ponownie</button>' : ''}
+      <div class="actions"><button class="btn secondary" id="mdBtn" title="Kopiuje zgłoszenie w Markdownie — do wklejenia w Claude Code">⧉ Kopiuj dla programisty</button>${canEdit ? `<a class="btn secondary" href="#/edytuj/${x.id}">✎ Edytuj</a>` : ''}${canReopen ? '<button class="btn secondary" data-st="reopened">↺ Otwórz ponownie</button>' : ''}${canWrite() && x.status === 'closed' && !x.regression_case ? '<button class="btn soft" id="regBtn" title="Scenariusz z tymi samymi krokami, żeby błąd nie wrócił">＋ Utwórz scenariusz regresji</button>' : ''}
         ${admin ? '<button class="btn danger" id="delBtn">Usuń</button>' : ''}</div>
     </div>
   </div>`);
   const reload = async msg => { await loadIssues(); updateCounts(); if (msg) toast(msg); await viewIssue(id); };
   $$('[data-st]').forEach(b => b.onclick = () => changeStatus(x, b.dataset.st, reload));
+  $('#regBtn') && ($('#regBtn').onclick = e => busy(e.currentTarget, () => createRegression(x, reload)));
   $('#mdBtn').onclick = async () => {
     const md = issueMarkdown(x);
     if (await copyText(md)) return toast('Skopiowano ' + x.key + ' — wklej w Claude Code.');
@@ -543,6 +545,11 @@ function issueMarkdown(x) {
     + sec('Ostatnie komentarze', comments.map(c => `- **${c.user_name}** (${c.created_at.slice(0, 16)}): ${c.message.replace(/\n+/g, ' ')}`).join('\n'))
     + `\n---\nPo naprawie: commit \`fix ${x.key}: …\`, dodaj test, który nie pozwoli temu błędowi wrócić.\n`;
 }
+async function createRegression(x, reload) {
+  const r = await api('case_from_issue', { params: { id: x.id }, body: {} });
+  S.cases = null;
+  await reload(r.existed ? 'Scenariusz regresji już istnieje: TC-' + String(r.id).padStart(3, '0') + '.' : 'Utworzono scenariusz regresji TC-' + String(r.id).padStart(3, '0') + '.');
+}
 async function copyText(t) {
   try { await navigator.clipboard.writeText(t); return true; } catch { /* np. strona bez HTTPS — próbujemy starszym sposobem */ }
   const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select();
@@ -558,7 +565,11 @@ function changeStatus(x, to, reload) {
     'Zapisz', async (btn, close) => {
       const comment = $('#mComment').value.trim();
       if (needs && !comment) return toast('Dopisz komentarz.', true);
-      await busy(btn, async () => { await api('issue_status', { params: { id: x.id }, body: { status: to, comment } }); close(); await reload('Status: ' + S.meta.statuses[to] + '.'); });
+      await busy(btn, async () => {
+        await api('issue_status', { params: { id: x.id }, body: { status: to, comment } }); close();
+        if (to === 'closed' && x.status === 'fixed' && confirm('Poprawka potwierdzona. Utworzyć scenariusz regresji z tymi samymi krokami, żeby ten błąd nie wrócił?')) return createRegression(x, reload).catch(e => toast(e.message, true));
+        await reload('Status: ' + S.meta.statuses[to] + '.');
+      });
     });
 }
 

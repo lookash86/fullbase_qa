@@ -282,9 +282,12 @@ if ($action === 'issue') {
     $q = $p->prepare('SELECT r.run_id, r.case_id, c.title case_title, n.name run_name FROM qa_results r JOIN qa_cases c ON c.id=r.case_id JOIN qa_runs n ON n.id=r.run_id WHERE r.issue_id=?');
     $q->execute([$issue['id']]);
     $issue['test_links'] = $q->fetchAll();
+    $q = $p->prepare('SELECT id FROM qa_cases WHERE issue_id=?');
+    $q->execute([$issue['id']]);
+    $issue['regression_case'] = ($c = $q->fetchColumn()) ? (int)$c : null;
     $q = $p->prepare('SELECT i.id, i.title, i.status, p.code FROM qa_issues i JOIN qa_projects p ON p.id=i.project_id WHERE i.duplicate_of=? ORDER BY i.id');
     $q->execute([$issue['id']]);
-    $issue['duplicates'] = array_map(fn($d) => ['id' => (int)$d['id'], 'key' => $d['code'] . '-' . str_pad((string)$d['id'], 4, '0', STR_PAD_LEFT), 'title' => $d['title'], 'status' => $d['status']], $q->fetchAll());
+    $issue['duplicates'] =array_map(fn($d) => ['id' => (int)$d['id'], 'key' => $d['code'] . '-' . str_pad((string)$d['id'], 4, '0', STR_PAD_LEFT), 'title' => $d['title'], 'status' => $d['status']], $q->fetchAll());
     out(['issue' => $issue]);
 }
 
@@ -596,7 +599,7 @@ if ($action === 'project_save') {
 
 if ($action === 'cases') {
     $rows = $p->query('SELECT c.*, u.display_name author FROM qa_cases c JOIN qa_users u ON u.id=c.created_by ORDER BY c.project_id, c.module, c.id')->fetchAll();
-    foreach ($rows as &$r) { foreach (['id', 'project_id', 'active', 'created_by'] as $k) $r[$k] = (int)$r[$k]; }
+    foreach ($rows as &$r) { foreach (['id', 'project_id', 'active', 'created_by'] as $k) $r[$k] = (int)$r[$k]; $r['issue_id'] = $r['issue_id'] === null ? null : (int)$r['issue_id']; }
     out(['cases' => $rows]);
 }
 
@@ -622,6 +625,29 @@ if ($action === 'case_save') {
         $id = (int)$p->lastInsertId();
     }
     out(['ok' => true, 'id' => $id]);
+}
+
+if ($action === 'case_from_issue') {
+    require_post();
+    need_role($u, 'admin', 'tester');
+    $issue = issue_row((int)($_GET['id'] ?? 0));
+    if ($issue['status'] !== 'closed') out(['error' => 'Scenariusz regresji tworzymy z zamkniętego zgłoszenia (po potwierdzeniu poprawki).'], 422);
+    $q = $p->prepare('SELECT id FROM qa_cases WHERE issue_id=?');
+    $q->execute([$issue['id']]);
+    if ($existing = $q->fetchColumn()) out(['ok' => true, 'id' => (int)$existing, 'existed' => true]);
+    $pre = array_filter([
+        $issue['sys_role'] || $issue['sys_account'] ? 'Konto: ' . implode(' · ', array_filter([$issue['sys_role'], $issue['sys_account']])) : '',
+        $issue['environment'] ? 'Środowisko: ' . $issue['environment'] . ($issue['fixed_in'] ? ', wersja ≥ ' . $issue['fixed_in'] : '') : '',
+        'Regresja zgłoszenia ' . $issue['key'] . '.',
+    ]);
+    $now = qa_now();
+    $p->prepare('INSERT INTO qa_cases(project_id,module,title,preconditions,steps,expected,priority,active,created_by,created_at,updated_at,issue_id) VALUES(?,?,?,?,?,?,?,1,?,?,?,?)')
+        ->execute([$issue['project_id'], $issue['module'], mb_substr('Regresja ' . $issue['key'] . ': ' . $issue['title'], 0, 200), implode("\n", $pre),
+            $issue['steps'] !== '' ? $issue['steps'] : $issue['description'], $issue['expected'], in_array($issue['severity'], ['blocker', 'data'], true) ? 'high' : $issue['priority'],
+            $u['id'], $now, $now, $issue['id']]);
+    $cid = (int)$p->lastInsertId();
+    log_act($issue['id'], $u['id'], 'field', 'Utworzono scenariusz regresji TC-' . str_pad((string)$cid, 3, '0', STR_PAD_LEFT) . '.');
+    out(['ok' => true, 'id' => $cid, 'existed' => false]);
 }
 
 if ($action === 'case_delete') {

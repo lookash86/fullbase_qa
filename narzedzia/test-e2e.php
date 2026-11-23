@@ -314,6 +314,21 @@ sprawdz(($z['issue']['status'] ?? '') === 'closed' && !empty($z['issue']['closed
 $hist = $tester->get('issue&id=' . $idZgl)[1]['issue']['activity'] ?? [];
 sprawdz(count(array_filter($hist, fn($a) => $a['kind'] === 'verify')) === 2, 'historia zawiera obie weryfikacje');
 
+/* ---------- 1.5 scenariusz regresji ---------- */
+
+sekcja('1.5 Scenariusz regresji');
+kod($obs->post('case_from_issue&id=' . $idZgl), 403, 'obserwator nie tworzy scenariusza regresji');
+kod($tester->post('case_from_issue&id=' . $idZgl, [], false), 419, 'bez tokenu CSRF odrzucone');
+$nz = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Otwarte', 'description' => 'x']), 200, 'zgłoszenie otwarte (pomocnicze)')['issue']['id'] ?? 0;
+kod($tester->post('case_from_issue&id=' . $nz), 422, 'z otwartego zgłoszenia nie tworzy scenariusza');
+$rc = kod($tester->post('case_from_issue&id=' . $idZgl), 200, 'tester tworzy scenariusz regresji z zamkniętego zgłoszenia');
+$cs = array_values(array_filter($tester->get('cases')[1]['cases'] ?? [], fn($c) => $c['id'] === ($rc['id'] ?? -1)))[0] ?? [];
+sprawdz(($cs['issue_id'] ?? 0) === $idZgl && str_contains($cs['title'] ?? '', 'PZB-') && str_contains($cs['steps'] ?? '', 'Wpisz 80:75'), 'scenariusz ma kroki zgłoszenia i powiązanie');
+sprawdz(str_contains($cs['preconditions'] ?? '', 'klub@pzball.test'), 'warunki wstępne zawierają konto testowe');
+$rc2 = kod($tester->post('case_from_issue&id=' . $idZgl), 200, 'drugie kliknięcie');
+sprawdz(($rc2['existed'] ?? false) === true && ($rc2['id'] ?? 0) === ($rc['id'] ?? -1), 'drugie kliknięcie nie tworzy kopii');
+sprawdz(($tester->get('issue&id=' . $idZgl)[1]['issue']['regression_case'] ?? 0) === ($rc['id'] ?? -1), 'zgłoszenie wskazuje swój scenariusz regresji');
+
 /* ---------- 1.2 powody odrzucenia ---------- */
 
 sekcja('1.2 Powody odrzucenia');
@@ -351,7 +366,8 @@ kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'res
 $z2 = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Niezaliczony: Wpisanie wyniku meczu', 'description' => 'Wynik znika',
     'steps' => '1. Otwórz mecz', 'run_id' => $idRun, 'case_id' => $idCase]), 200, 'zgłoszenie z niezaliczonego scenariusza');
 $r = kod($tester->get('run&id=' . $idRun), 200, 'szczegóły przebiegu');
-sprawdz((int)($r['run']['results'][0]['issue_id'] ?? 0) === (int)($z2['issue']['id'] ?? -1), 'wynik testu powiązany ze zgłoszeniem');
+$wynik = array_values(array_filter($r['run']['results'] ?? [], fn($x) => $x['case_id'] === $idCase))[0] ?? [];
+sprawdz((int)($wynik['issue_id'] ?? 0) === (int)($z2['issue']['id'] ?? -1), 'wynik testu powiązany ze zgłoszeniem');
 kod($tester->post('run_status', ['id' => $idRun, 'status' => 'closed']), 200, 'tester zamyka przebieg');
 kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'pass']), 422, 'zamknięty przebieg nie przyjmuje wyników');
 kod($tester->post('case_delete&id=' . $idCase), 403, 'tester nie usuwa scenariuszy');

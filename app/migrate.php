@@ -48,6 +48,11 @@ function qa_migrations(): array
         6 => function (PDO $pdo, string $driver): void {
             qa_add_column($pdo, $driver, 'qa_issues', 'fixed_in', "VARCHAR(60) NOT NULL DEFAULT ''");
         },
+        // 7 — 1.5: scenariusz regresji powiązany ze zgłoszeniem, z którego powstał.
+        7 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_cases', 'issue_id', $driver === 'mysql' ? 'BIGINT UNSIGNED NULL' : 'INTEGER NULL');
+            qa_add_index($pdo, $driver, 'qa_cases', 'qa_cases_issue', 'issue_id');
+        },
     ];
 }
 
