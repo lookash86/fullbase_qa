@@ -503,12 +503,18 @@ async function viewIssue(id) {
       ${admin ? `<div class="card pad"><h3>Status (administrator)</h3><div class="field"><select id="stSel">${opts(Object.entries(S.meta.statuses), x.status)}</select></div>
         <button class="btn primary sm wide" id="stBtn" style="margin-top:8px">Zmień status</button>
         <p class="hint" style="margin:8px 0 0">„Do weryfikacji” ustawiaj dopiero po wgraniu poprawki na demo — z numerem wersji. Tester potwierdzi albo otworzy ponownie.</p></div>` : ''}
-      <div class="actions">${canEdit ? `<a class="btn secondary" href="#/edytuj/${x.id}">✎ Edytuj</a>` : ''}${canReopen ? '<button class="btn secondary" data-st="reopened">↺ Otwórz ponownie</button>' : ''}
+      <div class="actions"><button class="btn secondary" id="mdBtn" title="Kopiuje zgłoszenie w Markdownie — do wklejenia w Claude Code">⧉ Kopiuj dla programisty</button>${canEdit ? `<a class="btn secondary" href="#/edytuj/${x.id}">✎ Edytuj</a>` : ''}${canReopen ? '<button class="btn secondary" data-st="reopened">↺ Otwórz ponownie</button>' : ''}
         ${admin ? '<button class="btn danger" id="delBtn">Usuń</button>' : ''}</div>
     </div>
   </div>`);
   const reload = async msg => { await loadIssues(); updateCounts(); if (msg) toast(msg); await viewIssue(id); };
   $$('[data-st]').forEach(b => b.onclick = () => changeStatus(x, b.dataset.st, reload));
+  $('#mdBtn').onclick = async () => {
+    const md = issueMarkdown(x);
+    if (await copyText(md)) return toast('Skopiowano ' + x.key + ' — wklej w Claude Code.');
+    modal('Skopiuj ręcznie', `<div class="field"><textarea id="mdText" style="min-height:300px;font-family:monospace;font-size:12px">${esc(md)}</textarea></div>`, null, null, true);
+    $('#mdText').select();
+  };
   $('#stBtn') && ($('#stBtn').onclick = () => changeStatus(x, $('#stSel').value, reload));
   $('#cForm').onsubmit = async e => { e.preventDefault(); const t = $('#cText').value.trim(); if (!t) return;
     await busy(e.submitter, async () => { await api('comment', { params: { id }, body: { message: t } }); await reload('Dodano komentarz.'); }); };
@@ -518,6 +524,29 @@ async function viewIssue(id) {
     await busy(b, async () => { await api('file_delete', { params: { id: b.dataset.delfile }, body: {} }); await reload('Usunięto plik.'); }); });
   $('#delBtn') && ($('#delBtn').onclick = async e => { if (!confirm(`Usunąć ${x.key} na stałe razem z komentarzami i plikami? Tego nie da się cofnąć.`)) return;
     await busy(e.currentTarget, async () => { await api('issue_delete', { params: { id }, body: {} }); await loadIssues(); updateCounts(); toast('Usunięto zgłoszenie.'); location.hash = '#/zgloszenia'; }); });
+}
+/* Zgłoszenie w Markdownie dla programisty (Claude Code): wszystko, czego trzeba do naprawy, bez dopytywania. */
+function issueMarkdown(x) {
+  const base = location.href.split('#')[0].replace(/[^/]*$/, '');
+  const sec = (t, v) => v ? `\n## ${t}\n${v}\n` : '';
+  const row = (k, v) => v ? `- **${k}:** ${v}\n` : '';
+  const comments = x.activity.filter(a => a.kind === 'comment').slice(-5);
+  return `# ${x.key}: ${x.title}\n\n`
+    + row('Rodzaj', S.meta.kinds[x.kind]) + row('Waga', S.meta.severities[x.severity]) + row('Priorytet', S.meta.priorities[x.priority])
+    + row('Status', S.meta.statuses[x.status]) + row('Projekt / obszar', [x.project_name, x.module].filter(Boolean).join(' / '))
+    + row('Rola i konto w testowanym systemie', [x.sys_role, x.sys_account].filter(Boolean).join(' · '))
+    + row('Środowisko', x.environment) + row('Wersja', x.version) + row('Naprawiono w wersji', x.fixed_in)
+    + row('Urządzenie / przeglądarka', [x.device, x.browser].filter(Boolean).join(' · ')) + row('Adres', x.url)
+    + row('Zgłoszenie w rejestrze', base + '#/z/' + x.id)
+    + sec('Co się dzieje (faktyczny wynik)', x.description) + sec('Kroki do odtworzenia problemu', x.steps) + sec('Oczekiwany wynik', x.expected)
+    + sec('Załączniki', x.files.map(f => `- [${f.orig_name}](${base}api.php?action=file&id=${f.id})`).join('\n'))
+    + sec('Ostatnie komentarze', comments.map(c => `- **${c.user_name}** (${c.created_at.slice(0, 16)}): ${c.message.replace(/\n+/g, ' ')}`).join('\n'))
+    + `\n---\nPo naprawie: commit \`fix ${x.key}: …\`, dodaj test, który nie pozwoli temu błędowi wrócić.\n`;
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch { /* np. strona bez HTTPS — próbujemy starszym sposobem */ }
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch { ok = false; } ta.remove(); return ok;
 }
 function changeStatus(x, to, reload) {
   if (to === x.status) return;
