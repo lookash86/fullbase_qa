@@ -66,3 +66,4 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 
 ## Dziennik
 - 2026-11-23 — wersja 2.0 / 2.0.1 gotowa i przetestowana (SQLite + MariaDB); plan spisany.
+- 2026-11-23 — 0.1 (część C): `git init` (gałąź `main`), commit „FULLBASE QA 2.0.1”. Brak `gh` na komputerze, więc repo GitHub `lookash86/fullbase-qa` zakłada właściciel (instrukcja w czacie); po `git push` odhaczyć 0.1. Następny punkt: 0.6.
