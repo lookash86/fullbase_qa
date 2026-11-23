@@ -389,6 +389,28 @@ for ($i = 0; $i < 3; $i++) $anon->post('reset_request', ['login' => 'tester2']);
 kod($anon->post('reset_request', ['login' => 'tester2']), 429, 'limit próśb o reset z jednego adresu');
 poczta($kat);
 
+/* ---------- 1.8 import scenariuszy z CSV ---------- */
+
+sekcja('1.8 Import scenariuszy z CSV');
+$plik = file_get_contents(ZRODLO . '/docs/scenariusze_krytyczne_PZBall.csv');
+kod($tester->post('cases_import', ['csv' => $plik]), 403, 'tester nie importuje scenariuszy');
+kod($admin->post('cases_import', ['csv' => $plik], false), 419, 'import bez tokenu CSRF odrzucony');
+$przed = count($admin->get('cases')[1]['cases'] ?? []);
+$pg = kod($admin->post('cases_import', ['csv' => $plik]), 200, 'podgląd importu scenariuszy z 0.6');
+sprawdz(($pg['valid'] ?? 0) === 18 && ($pg['saved'] ?? -1) === 0, 'podgląd: 18 do zapisu, nic nie zapisano', json_encode(array_slice(array_filter($pg['rows'] ?? [], fn($x) => $x['status'] !== 'ok'), 0, 2), JSON_UNESCAPED_UNICODE));
+sprawdz(count($admin->get('cases')[1]['cases'] ?? []) === $przed, 'podgląd niczego nie zapisuje');
+sprawdz(!array_filter($pg['rows'] ?? [], fn($x) => str_contains($x['note'], 'Obszaru nie ma')), 'wszystkie obszary z pliku są na liście projektu PZB');
+$zp = kod($admin->post('cases_import', ['csv' => $plik, 'commit' => true]), 200, 'zapis importu');
+sprawdz(($zp['saved'] ?? 0) === 18 && count($admin->get('cases')[1]['cases'] ?? []) === $przed + 18, 'zapisano 18 scenariuszy');
+$c1 = array_values(array_filter($admin->get('cases')[1]['cases'] ?? [], fn($c) => $c['title'] === 'Klub nie widzi danych innego klubu'))[0] ?? [];
+sprawdz(($c1['priority'] ?? '') === 'critical' && str_contains($c1['steps'] ?? '', "\n2. "), 'priorytet z polskiej nazwy i wieloliniowe kroki zachowane');
+$po = kod($admin->post('cases_import', ['csv' => $plik, 'commit' => true]), 200, 'ponowny import tego samego pliku');
+sprawdz(($po['saved'] ?? -1) === 0 && count(array_filter($po['rows'] ?? [], fn($x) => $x['status'] === 'duplicate')) === 18, 'ponowny import pomija duplikaty');
+$zly = "projekt,tytuł,kroki,priorytet\nXYZ,Coś,1. a,Wysoki\nPZB,,1. a,Wysoki\nPZB,Dobry,1. a,Pilne\n";
+$zw = kod($admin->post('cases_import', ['csv' => $zly]), 200, 'plik z błędami (przecinki)');
+sprawdz(array_column($zw['rows'] ?? [], 'status') === ['error', 'error', 'ok'] && ($zw['separator'] ?? '') === ',', 'błędne wiersze oznaczone, separator przecinek wykryty');
+kod($admin->post('cases_import', ['csv' => "a;b\n1;2\n"]), 422, 'plik bez wymaganych kolumn odrzucony');
+
 /* ---------- 1.5 scenariusz regresji ---------- */
 
 sekcja('1.5 Scenariusz regresji');

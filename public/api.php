@@ -723,6 +723,75 @@ if ($action === 'case_save') {
     out(['ok' => true, 'id' => $id]);
 }
 
+if ($action === 'cases_import') {
+    require_post();
+    need_role($u, 'admin');
+    $b = body();
+    $csv = (string)($b['csv'] ?? '');
+    $commit = !empty($b['commit']);
+    if ($csv === '') out(['error' => 'Plik jest pusty.'], 422);
+    if (strlen($csv) > 1048576) out(['error' => 'Plik jest za duży (najwyżej 1 MB).'], 413);
+    if (!mb_check_encoding($csv, 'UTF-8')) $csv = mb_convert_encoding($csv, 'UTF-8', 'Windows-1250'); // CSV z polskiego Excela
+    $csv = preg_replace('/^\xEF\xBB\xBF/', '', $csv);
+    $first = strtok($csv, "\n");
+    $sep = substr_count((string)$first, ';') >= substr_count((string)$first, ',') ? ';' : ',';
+    $h = fopen('php://temp', 'r+');
+    fwrite($h, $csv);
+    rewind($h);
+    $norm = fn($s) => strtr(mb_strtolower(trim((string)$s)), ['ą' => 'a', 'ć' => 'c', 'ę' => 'e', 'ł' => 'l', 'ń' => 'n', 'ó' => 'o', 'ś' => 's', 'ź' => 'z', 'ż' => 'z']);
+    $names = ['projekt' => 'project', 'obszar' => 'module', 'tytul' => 'title', 'warunki wstepne' => 'preconditions', 'kroki' => 'steps',
+        'oczekiwany wynik' => 'expected', 'priorytet' => 'priority'];
+    $head = fgetcsv($h, 0, $sep, '"', '');
+    $cols = [];
+    foreach ((array)$head as $i => $name) if (isset($names[$norm($name)])) $cols[$names[$norm($name)]] = $i;
+    foreach (['project', 'title', 'steps'] as $need) {
+        if (!isset($cols[$need])) out(['error' => 'Brak kolumny „' . array_search($need, $names, true) . '”. Wymagane nagłówki: projekt, obszar, tytuł, warunki wstępne, kroki, oczekiwany wynik, priorytet.'], 422);
+    }
+    $projects = $p->query('SELECT id, code, name, modules FROM qa_projects')->fetchAll();
+    $prioByLabel = [];
+    foreach (QA_PRIORITIES as $k => $l) { $prioByLabel[$norm($l)] = $k; $prioByLabel[$k] = $k; }
+    $exists = $p->prepare('SELECT COUNT(*) FROM qa_cases WHERE project_id=? AND title=?');
+    $rows = [];
+    $seen = [];
+    $n = 1;
+    while (($r = fgetcsv($h, 0, $sep, '"', '')) !== false) {
+        $n++;
+        if ($r === [null] || implode('', $r) === '') continue;
+        $g = fn($k, $max) => mb_substr(trim((string)($r[$cols[$k] ?? -1] ?? '')), 0, $max);
+        $row = ['line' => $n, 'project' => $g('project', 120), 'module' => $g('module', 120), 'title' => $g('title', 200), 'preconditions' => $g('preconditions', 10000),
+            'steps' => $g('steps', 20000), 'expected' => $g('expected', 10000), 'priority' => 'medium', 'status' => 'ok', 'note' => ''];
+        $pr = null;
+        foreach ($projects as $x) if ($norm($x['code']) === $norm($row['project']) || $norm($x['name']) === $norm($row['project'])) $pr = $x;
+        $pl = $norm($g('priority', 30));
+        if ($pl !== '' && !isset($prioByLabel[$pl])) $row['note'] = 'Nieznany priorytet „' . $g('priority', 30) . '” — ustawiono Średni. ';
+        $row['priority'] = $prioByLabel[$pl] ?? 'medium';
+        if (!$pr) { $row['status'] = 'error'; $row['note'] = 'Nieznany projekt „' . $row['project'] . '”.'; }
+        elseif ($row['title'] === '' || $row['steps'] === '') { $row['status'] = 'error'; $row['note'] = 'Brak tytułu albo kroków.'; }
+        else {
+            $row['project_id'] = (int)$pr['id'];
+            $row['project'] = $pr['code'];
+            if ($row['module'] !== '' && !in_array($row['module'], lines($pr['modules']), true)) $row['note'] .= 'Obszaru nie ma na liście projektu (zapiszemy go mimo to).';
+            $exists->execute([$pr['id'], $row['title']]);
+            $key = $pr['id'] . '|' . $row['title'];
+            if ((int)$exists->fetchColumn() > 0 || isset($seen[$key])) { $row['status'] = 'duplicate'; $row['note'] = 'Taki scenariusz już jest — pominiemy.'; }
+            $seen[$key] = true;
+        }
+        $rows[] = $row;
+        if (count($rows) > 500) out(['error' => 'Najwyżej 500 scenariuszy w jednym pliku.'], 422);
+    }
+    fclose($h);
+    $ok = array_values(array_filter($rows, fn($x) => $x['status'] === 'ok'));
+    $saved = 0;
+    if ($commit && $ok) {
+        $now = qa_now();
+        $ins = $p->prepare('INSERT INTO qa_cases(project_id,module,title,preconditions,steps,expected,priority,active,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,1,?,?,?)');
+        $p->beginTransaction();
+        foreach ($ok as $x) { $ins->execute([$x['project_id'], $x['module'], $x['title'], $x['preconditions'], $x['steps'], $x['expected'], $x['priority'], $u['id'], $now, $now]); $saved++; }
+        $p->commit();
+    }
+    out(['rows' => $rows, 'valid' => count($ok), 'saved' => $saved, 'separator' => $sep]);
+}
+
 if ($action === 'case_from_issue') {
     require_post();
     need_role($u, 'admin', 'tester');

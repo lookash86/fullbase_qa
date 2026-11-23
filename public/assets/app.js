@@ -651,7 +651,7 @@ async function viewCases() {
   const F = S.view.caseF ??= { project: store.get('filters', {}).project || '', module: '', text: '', inactive: false };
   view(`
   <div class="pagehead"><div><div class="eyebrow">Testy</div><h1>Scenariusze testów</h1><p>Opisane krok po kroku sprawdzenia funkcji. Z nich tworzysz przebiegi testów.</p></div>
-    <div class="actions">${canWrite() ? '<button class="btn primary" id="newCase">＋ Nowy scenariusz</button>' : ''}</div></div>
+    <div class="actions">${isAdmin() ? '<button class="btn secondary" id="impCase">↥ Import z CSV</button>' : ''}${canWrite() ? '<button class="btn primary" id="newCase">＋ Nowy scenariusz</button>' : ''}</div></div>
   <div class="filters"><input class="control search" id="cfText" placeholder="Szukaj w scenariuszach…" value="${esc(F.text)}">
     <select class="control" id="cfProject">${opts(S.meta.projects.map(p => [p.id, p.code + ' · ' + p.name]), F.project, 'Każdy projekt')}</select>
     <select class="control" id="cfModule"></select>
@@ -671,8 +671,32 @@ async function viewCases() {
   $('#cfProject').onchange = e => { F.project = e.target.value; F.module = ''; fillMods(); draw(); };
   $('#cfModule').onchange = e => { F.module = e.target.value; draw(); };
   $('#cfInactive').onchange = e => { F.inactive = e.target.checked; draw(); };
+  $('#impCase') && ($('#impCase').onclick = importCasesModal);
   $('#newCase') && ($('#newCase').onclick = () => caseModal({ project_id: Number(F.project) || activeProjects()[0]?.id, module: F.module, priority: 'medium', active: 1 }, viewCases));
   fillMods(); draw();
+}
+function importCasesModal() {
+  let csv = '';
+  const o = modal('Import scenariuszy z CSV', `<p class="small" style="margin-top:0">Kolumny (pierwszy wiersz): <b>projekt; obszar; tytuł; warunki wstępne; kroki; oczekiwany wynik; priorytet</b>. Projekt to skrót (np. PZB) albo nazwa. Separator średnik albo przecinek. Najpierw zobaczysz podgląd — nic się nie zapisze bez potwierdzenia.</p>
+    <div class="field"><input type="file" id="impFile" accept=".csv,text/csv"></div><div id="impPrev" style="margin-top:12px"></div>`,
+    'Zapisz scenariusze', async (btn, close) => {
+      if (!csv) return toast('Najpierw wybierz plik.', true);
+      await busy(btn, async () => { const r = await api('cases_import', { body: { csv, commit: true } }); close(); toast('Zapisano scenariuszy: ' + r.saved + '.'); await loadCases(true); viewCases(); });
+    }, true);
+  const ok = $('[data-ok]', o); ok.disabled = true;
+  $('#impFile', o).onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    if (f.size > 1048576) return toast('Plik jest za duży (najwyżej 1 MB).', true);
+    const buf = await f.arrayBuffer();
+    try { csv = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { csv = new TextDecoder('windows-1250').decode(buf); }
+    try {
+      const r = await api('cases_import', { body: { csv, commit: false } });
+      const lbl = { ok: badge('rs-pass', 'do zapisu'), duplicate: badge('', 'już jest'), error: badge('rs-fail', 'błąd') };
+      $('#impPrev', o).innerHTML = `<p><b>${r.valid}</b> z ${r.rows.length} scenariuszy do zapisu.</p><div class="tablewrap" style="max-height:340px;overflow:auto"><table><thead><tr><th>Wiersz</th><th>Scenariusz</th><th>Stan</th></tr></thead><tbody>
+        ${r.rows.map(x => `<tr><td class="sub">${x.line}</td><td><div class="ttl">${esc(x.title || '—')}</div><div class="sub">${esc(x.project)} · ${esc(x.module || 'bez obszaru')} · ${esc(S.meta.priorities[x.priority] || '')}${x.note ? ' — ' + esc(x.note) : ''}</div></td><td>${lbl[x.status]}</td></tr>`).join('')}</tbody></table></div>`;
+      ok.disabled = !r.valid; ok.textContent = 'Zapisz ' + r.valid + ' scenariuszy';
+    } catch (ex) { csv = ''; ok.disabled = true; $('#impPrev', o).innerHTML = `<div class="authError show">${esc(ex.message)}</div>`; }
+  };
 }
 function caseModal(c, done) {
   const ro = !canWrite();
