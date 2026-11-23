@@ -10,7 +10,7 @@ Odhaczaj `[x]` od razu po zakończeniu punktu.
 
 ## Etap 0 — przygotowanie, zanim tester zacznie
 
-- [ ] **0.1 [Ł+C] Repozytorium.** W VS Code: `git init` w `kod\fullbase-qa`, pierwszy commit „FULLBASE QA 2.0.1”, prywatne repo GitHub `lookash86/fullbase-qa`.
+- [x] **0.1 [Ł+C] Repozytorium.** W VS Code: `git init` w `kod\fullbase-qa`, pierwszy commit „FULLBASE QA 2.0.1”, prywatne repo GitHub `lookash86/fullbase_qa` (z podkreślnikiem).
 - [ ] **0.2 [Ł] Uruchomienie lokalne.** `narzedzia\uruchom-lokalnie.cmd` → instalacja na SQLite → przeklikanie: zgłoszenie, zrzut ekranu wklejony Ctrl+V, zmiana statusu.
 - [ ] **0.3 [Ł] Serwer.** Subdomena `testy.fullbase.pl` na home.pl → katalog `/testy.fullbase.pl/public` („bez separacji serwisu”) → SSL → wgranie plików → `install.php` od razu po wgraniu → konto administratora (szczegóły w README.md).
 - [ ] **0.4 [Ł] Konto testera** w rejestrze (Użytkownicy → rola Tester). Hasło tymczasowe przekazujesz SMS-em.
@@ -67,3 +67,4 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 ## Dziennik
 - 2026-11-23 — wersja 2.0 / 2.0.1 gotowa i przetestowana (SQLite + MariaDB); plan spisany.
 - 2026-11-23 — 0.1 (część C): `git init` (gałąź `main`), commit „FULLBASE QA 2.0.1”. Brak `gh` na komputerze, więc repo GitHub `lookash86/fullbase-qa` zakłada właściciel (instrukcja w czacie); po `git push` odhaczyć 0.1. Następny punkt: 0.6.
+- 2026-11-24 — 0.1 zakończone: repo prywatne `github.com/lookash86/fullbase_qa` (nazwa z podkreślnikiem, nie z myślnikiem), `main` wypchnięty. Następny punkt: 0.6.
