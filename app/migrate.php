@@ -20,6 +20,12 @@ function qa_migrations(): array
         2 => function (PDO $pdo, string $driver): void {
             qa_meta_set($pdo, 'migrated_at', qa_now());
         },
+        // 3 — 1.1: waga zgłoszenia obok priorytetu. Stare krytyczne dostają wagę „blokuje pracę”.
+        3 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_issues', 'severity', "VARCHAR(12) NOT NULL DEFAULT 'annoying'");
+            $pdo->exec("UPDATE qa_issues SET severity='blocker' WHERE priority='critical'");
+            qa_add_index($pdo, $driver, 'qa_issues', 'qa_issues_severity', 'severity');
+        },
     ];
 }
 

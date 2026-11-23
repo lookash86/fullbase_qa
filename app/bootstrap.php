@@ -13,6 +13,8 @@ date_default_timezone_set('Europe/Warsaw');
 
 const QA_ROLES = ['admin' => 'Administrator', 'tester' => 'Tester', 'viewer' => 'Obserwator'];
 const QA_KINDS = ['bug' => 'Błąd', 'missing' => 'Brak funkcji', 'improvement' => 'Usprawnienie', 'question' => 'Pytanie'];
+/** Waga = jak bardzo przeszkadza (ustawia tester). Priorytet = kiedy naprawiamy (ustawia administrator). */
+const QA_SEVERITIES = ['blocker' => 'Blokuje pracę', 'data' => 'Psuje dane', 'annoying' => 'Utrudnia', 'cosmetic' => 'Kosmetyka'];
 const QA_PRIORITIES = ['critical' => 'Krytyczny', 'high' => 'Wysoki', 'medium' => 'Średni', 'low' => 'Niski'];
 const QA_STATUSES = [
     'new' => 'Nowe', 'confirmed' => 'Potwierdzone', 'progress' => 'W naprawie', 'fixed' => 'Do weryfikacji',

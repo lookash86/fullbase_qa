@@ -232,12 +232,27 @@ $obs->post('password', ['current' => $H['OBS_TMP'], 'new' => $H['OBS_NOWE']]);
 /* ---------- 5. zgłoszenie z załącznikiem ---------- */
 
 sekcja('Zgłoszenie z załącznikiem');
-$noweZgl = ['project_id' => $pzbId, 'kind' => 'bug', 'title' => 'Wynik meczu nie zapisuje się', 'module' => 'Mecze i wyniki', 'priority' => 'high',
+$noweZgl = ['project_id' => $pzbId, 'kind' => 'bug', 'title' => 'Wynik meczu nie zapisuje się', 'module' => 'Mecze i wyniki', 'priority' => 'critical', 'severity' => 'blocker',
     'description' => 'Po kliknięciu Zapisz wynik znika.', 'steps' => "1. Otwórz mecz\n2. Wpisz 80:75\n3. Zapisz", 'expected' => 'Wynik zapisany.',
     'environment' => 'demo.fullbase.pl', 'version' => '0.9', 'url' => 'https://demo.fullbase.pl/mecze/1'];
 $z = kod($tester->post('issue_create', $noweZgl), 200, 'tester tworzy zgłoszenie');
 $idZgl = (int)($z['issue']['id'] ?? 0);
 sprawdz(($z['issue']['key'] ?? '') === sprintf('PZB-%04d', $idZgl), 'numer zgłoszenia w formacie PZB-0001');
+
+sekcja('1.1 Waga i priorytet');
+sprawdz(($z['issue']['severity'] ?? '') === 'blocker', 'tester ustawia wagę (blokuje pracę)');
+sprawdz(($z['issue']['priority'] ?? '') === 'medium', 'priorytet od testera jest ignorowany (ustawia go administrator)');
+sprawdz(isset($meta['severities']['data']), 'słownik wag w meta');
+$zw = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Zła waga', 'description' => 'x', 'severity' => 'hakerska']), 200, 'nieznana waga');
+sprawdz(($zw['issue']['severity'] ?? '') === 'annoying', 'nieznana waga zamienia się na „Utrudnia”');
+$z = kod($tester->post('issue_update&id=' . $idZgl, ['priority' => 'low', 'severity' => 'data'] + $noweZgl), 200, 'tester zmienia wagę we własnym zgłoszeniu');
+sprawdz(($z['issue']['severity'] ?? '') === 'data' && $z['issue']['priority'] === 'medium', 'tester zmienia wagę, ale nie priorytet');
+$z = kod($admin->post('issue_update&id=' . $idZgl, ['priority' => 'critical', 'severity' => 'blocker'] + $noweZgl), 200, 'admin ustawia priorytet');
+sprawdz(($z['issue']['priority'] ?? '') === 'critical', 'priorytet ustawiony przez administratora');
+$l = $admin->get('issues')[1]['issues'] ?? [];
+sprawdz(($l[1]['severity'] ?? $l[0]['severity'] ?? '') !== '', 'lista zgłoszeń zawiera wagę');
+[, , $csv] = $admin->get('export');
+sprawdz(str_contains($csv, ';Waga;') && str_contains($csv, 'Blokuje pracę'), 'eksport CSV zawiera wagę');
 kod($obs->post('issue_create', $noweZgl), 403, 'obserwator nie może zgłaszać');
 kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => '', 'description' => '']), 422, 'puste zgłoszenie odrzucone');
 
@@ -318,7 +333,7 @@ if (!wgrajZGita($katS, WERSJA_2_0_1)) {
     $a->zaloguj('admin', $hasloAdmina);
     $m = $a->get('meta')[1];
     $z = kod($a->post('issue_create', ['project_id' => (int)($m['projects'][0]['id'] ?? 0), 'title' => 'Zgłoszenie sprzed aktualizacji',
-        'description' => 'Ma przetrwać migrację.']), 200, 'zgłoszenie w wersji 2.0.1');
+        'description' => 'Ma przetrwać migrację.', 'priority' => 'critical']), 200, 'zgłoszenie w wersji 2.0.1');
     zatrzymajSerwer($srv);
 
     wgrajBiezace($katS); // podmiana plików, data/ i config.php zostają
@@ -330,6 +345,7 @@ if (!wgrajZGita($katS, WERSJA_2_0_1)) {
     sprawdz(($s['schema'] ?? 0) === $SCHEMAT, "schemat bazy podniesiony do wersji $SCHEMAT", 'jest: ' . json_encode($s['schema'] ?? null));
     $l = kod($a->get('issues'), 200, 'lista zgłoszeń po aktualizacji');
     sprawdz(($l['issues'][0]['title'] ?? '') === 'Zgłoszenie sprzed aktualizacji', 'dane sprzed aktualizacji zostały');
+    sprawdz(($l['issues'][0]['severity'] ?? '') === 'blocker', 'stare krytyczne zgłoszenie dostało wagę „blokuje pracę”');
     kod($a->post('issue_create', ['project_id' => (int)($m['projects'][0]['id'] ?? 0), 'title' => 'Nowe po aktualizacji',
         'description' => 'x']), 200, 'nowe zgłoszenie po aktualizacji');
     $a2 = new Klient($adr, 'admin2');

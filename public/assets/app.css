@@ -45,6 +45,7 @@ td{padding:11px 14px;border-bottom:1px solid #eef2f1;vertical-align:top}tr.row{c
 .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:650;white-space:nowrap;background:var(--greybg);color:var(--grey)}
 .st-new{background:var(--bluebg);color:var(--blue)}.st-confirmed{background:var(--violetbg);color:var(--violet)}.st-progress{background:var(--orangebg);color:var(--orange)}.st-fixed{background:var(--lime);color:var(--navy)}.st-reopened{background:var(--redbg);color:var(--red)}.st-closed{background:var(--greenbg);color:var(--green)}.st-rejected{background:var(--greybg);color:var(--grey)}
 .pr-critical{background:var(--red);color:#fff}.pr-high{background:var(--redbg);color:var(--red)}.pr-medium{background:var(--orangebg);color:var(--orange)}.pr-low{background:var(--greybg);color:var(--grey)}
+.sv-blocker{background:var(--red);color:#fff}.sv-data{background:var(--violet);color:#fff}.sv-annoying{background:var(--orangebg);color:var(--orange)}.sv-cosmetic{background:var(--greybg);color:var(--grey)}
 .kd-bug{background:var(--redbg);color:var(--red)}.kd-missing{background:var(--violetbg);color:var(--violet)}.kd-improvement{background:var(--teal2);color:var(--teal)}.kd-question{background:var(--bluebg);color:var(--blue)}
 .rs-pending{background:var(--greybg);color:var(--grey)}.rs-pass{background:var(--greenbg);color:var(--green)}.rs-fail{background:var(--redbg);color:var(--red)}.rs-blocked{background:var(--orangebg);color:var(--orange)}.rs-skip{background:var(--greybg);color:var(--grey)}
 /* board */

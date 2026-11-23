@@ -38,6 +38,8 @@ const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1
 const badge = (cls, txt) => `<span class="badge ${cls}">${esc(txt)}</span>`;
 const stB = s => badge('st-' + s, S.meta.statuses[s] || s);
 const prB = p => badge('pr-' + p, S.meta.priorities[p] || p);
+const svB = s => badge('sv-' + s, S.meta.severities[s] || s);
+const CRIT = ['blocker', 'data']; // waga „krytyczna”: blokuje pracę albo psuje dane
 const kdB = k => badge('kd-' + k, S.meta.kinds[k] || k);
 const rsB = r => badge('rs-' + r, S.meta.results[r] || r);
 const isAdmin = () => S.user?.role === 'admin';
@@ -230,7 +232,7 @@ async function viewDashboard() {
     <a class="stat" href="#/zgloszenia"><small>Nowe i ponownie otwarte</small><b>${cnt(i => ['new', 'reopened'].includes(i.status))}</b></a>
     <a class="stat" href="#/zgloszenia"><small>Potwierdzone / w naprawie</small><b>${cnt(i => ['confirmed', 'progress'].includes(i.status))}</b></a>
     <a class="stat focus" href="#/weryfikacja"><small>Do weryfikacji</small><b>${cnt(i => i.status === 'fixed')}</b></a>
-    <a class="stat ${cnt(i => OPEN.includes(i.status) && i.priority === 'critical') ? 'alert' : ''}" href="#/zgloszenia?priority=critical"><small>Krytyczne otwarte</small><b>${cnt(i => OPEN.includes(i.status) && i.priority === 'critical')}</b></a>
+    <a class="stat ${cnt(i => OPEN.includes(i.status) && CRIT.includes(i.severity)) ? 'alert' : ''}" href="#/zgloszenia?severity=crit*" title="Waga: blokuje pracę albo psuje dane"><small>Krytyczne otwarte</small><b>${cnt(i => OPEN.includes(i.status) && CRIT.includes(i.severity))}</b></a>
     <a class="stat" href="#/zgloszenia?status=closed"><small>Zamknięte (7 dni)</small><b>${cnt(i => i.status === 'closed' && i.closed_at && new Date(i.closed_at.replace(' ', 'T')) > week)}</b></a>
   </div>
   <div class="grid2c">
@@ -260,7 +262,7 @@ function viewIssues(kind) {
   const saved = store.get('filters', {});
   const F = S.view.filters = {
     text: q.get('q') ?? '', project: q.get('project') ?? saved.project ?? '', status: q.get('status') ?? (kind === 'weryfikacja' ? 'fixed' : (kind === 'moje' ? '' : 'open*')),
-    kind: q.get('kind') ?? '', priority: q.get('priority') ?? '', module: q.get('module') ?? '', who: kind === 'moje' ? 'me' : (q.get('who') ?? ''),
+    kind: q.get('kind') ?? '', severity: q.get('severity') ?? '', priority: q.get('priority') ?? '', module: q.get('module') ?? '', who: kind === 'moje' ? 'me' : (q.get('who') ?? ''),
   };
   const titles = { zgloszenia: ['Rejestr', 'Zgłoszenia', 'Błędy, braki funkcji i usprawnienia zgłoszone przez zespół.'],
     weryfikacja: ['Weryfikacja', 'Do weryfikacji', 'Poprawki gotowe do sprawdzenia. Sprawdź i potwierdź albo otwórz ponownie z komentarzem.'],
@@ -277,13 +279,14 @@ function viewIssues(kind) {
     <select class="control" id="fProject">${opts(S.meta.projects.map(p => [p.id, p.code + ' · ' + p.name]), F.project, 'Każdy projekt')}</select>
     <select class="control" id="fStatus">${opts([['open*', 'Otwarte (wszystkie)'], ...Object.entries(S.meta.statuses)], F.status, 'Każdy status')}</select>
     <select class="control" id="fKind">${opts(Object.entries(S.meta.kinds), F.kind, 'Każdy rodzaj')}</select>
+    <select class="control" id="fSeverity">${opts([['crit*', 'Krytyczne (blokuje / psuje dane)'], ...Object.entries(S.meta.severities)], F.severity, 'Każda waga')}</select>
     <select class="control" id="fPriority">${opts(Object.entries(S.meta.priorities), F.priority, 'Każdy priorytet')}</select>
     <select class="control" id="fModule">${opts(modules, F.module, 'Każdy obszar')}</select>
     ${kind === 'moje' ? '' : `<select class="control" id="fWho">${opts([['me', 'Moje'], ['assigned', 'Przypisane do mnie']], F.who, 'Wszyscy')}</select>`}
   </div>
   <div id="issueList"></div>`);
   const bind = (id, key) => { const el = $('#' + id); if (!el) return; el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', () => { F[key] = el.value; if (key === 'project') store.set('filters', { project: el.value }); drawIssueList(); }); };
-  bind('fText', 'text'); bind('fProject', 'project'); bind('fStatus', 'status'); bind('fKind', 'kind'); bind('fPriority', 'priority'); bind('fModule', 'module'); bind('fWho', 'who');
+  bind('fText', 'text'); bind('fProject', 'project'); bind('fStatus', 'status'); bind('fKind', 'kind'); bind('fSeverity', 'severity'); bind('fPriority', 'priority'); bind('fModule', 'module'); bind('fWho', 'who');
   $$('[data-mode]').forEach(b => b.onclick = () => { store.set('mode', b.dataset.mode); $$('[data-mode]').forEach(x => x.classList.toggle('on', x === b)); drawIssueList(); });
   drawIssueList();
 }
@@ -293,6 +296,7 @@ function filteredIssues() {
     if (F.project && i.project_id !== Number(F.project)) return false;
     if (F.status === 'open*' ? !OPEN.includes(i.status) && i.status !== 'fixed' : F.status && i.status !== F.status) return false;
     if (F.kind && i.kind !== F.kind) return false;
+    if (F.severity === 'crit*' ? !CRIT.includes(i.severity) : F.severity && i.severity !== F.severity) return false;
     if (F.priority && i.priority !== F.priority) return false;
     if (F.module && i.module !== F.module) return false;
     if (F.who === 'me' && i.reporter_id !== S.user.id && i.assignee_id !== S.user.id) return false;
@@ -302,17 +306,18 @@ function filteredIssues() {
   });
 }
 const PRI = { critical: 0, high: 1, medium: 2, low: 3 };
+const SEV = { blocker: 0, data: 1, annoying: 2, cosmetic: 3 };
 function drawIssueList() {
   const list = filteredIssues(), box = $('#issueList'), mode = store.get('mode', 'list');
   if (mode === 'board') {
-    box.innerHTML = `<div class="board">${BOARD.map(([st, label]) => { const items = list.filter(i => i.status === st).sort((a, b) => PRI[a.priority] - PRI[b.priority]);
-      return `<div class="col"><h4>${label}<span class="muted">${items.length}</span></h4>${items.map(i => `<div class="tile" data-go="#/z/${i.id}"><div class="key">${esc(i.key)}</div><div class="ttl">${esc(i.title)}</div><div class="meta">${prB(i.priority)}${i.kind !== 'bug' ? kdB(i.kind) : ''}${i.assignee_name ? `<span class="badge">→ ${esc(i.assignee_name.split(' ')[0])}</span>` : ''}</div></div>`).join('')}</div>`; }).join('')}</div>
+    box.innerHTML = `<div class="board">${BOARD.map(([st, label]) => { const items = list.filter(i => i.status === st).sort((a, b) => (SEV[a.severity] - SEV[b.severity]) || (PRI[a.priority] - PRI[b.priority]));
+      return `<div class="col"><h4>${label}<span class="muted">${items.length}</span></h4>${items.map(i => `<div class="tile" data-go="#/z/${i.id}"><div class="key">${esc(i.key)}</div><div class="ttl">${esc(i.title)}</div><div class="meta">${svB(i.severity)}${prB(i.priority)}${i.kind !== 'bug' ? kdB(i.kind) : ''}${i.assignee_name ? `<span class="badge">→ ${esc(i.assignee_name.split(' ')[0])}</span>` : ''}</div></div>`).join('')}</div>`; }).join('')}</div>
       <p class="muted small">Tablica pokazuje zgłoszenia w toku. Zamknięte i odrzucone znajdziesz w widoku listy.</p>`;
     return bindRowLinks(box);
   }
-  box.innerHTML = `<div class="tablewrap">${list.length ? `<table><thead><tr><th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
+  box.innerHTML = `<div class="tablewrap">${list.length ? `<table><thead><tr><th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Waga / priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
     ${list.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}</div></td>
-      <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${prB(i.priority)}</td><td>${stB(i.status)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
+      <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${svB(i.severity)}<div class="sub" style="margin-top:4px">${prB(i.priority)}</div></td><td>${stB(i.status)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>Brak zgłoszeń dla tych filtrów</b>Zmień filtry${canWrite() ? ' albo <a href="#/nowe">dodaj nowe zgłoszenie</a>' : ''}.</div>`}
     <div class="listfoot"><span>${list.length} z ${S.issues.length}</span><span>Kliknij wiersz, aby otworzyć</span></div></div>`;
   bindRowLinks(box);
@@ -333,7 +338,7 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
       steps: [caseInfo.preconditions ? 'Warunki wstępne:\n' + caseInfo.preconditions : '', caseInfo.steps].filter(Boolean).join('\n\n'), expected: caseInfo.expected,
       description: caseInfo.note || '', _run: run.id, _case: caseInfo.case_id, _caseTitle: caseInfo.title };
   }
-  const v = x || { project_id: last.project || activeProjects()[0]?.id, kind: 'bug', priority: 'medium', environment: last.environment || '', version: last.version || '', device: guessDevice(), browser: guessBrowser(), url: q.get('url') || '' };
+  const v = x || { project_id: last.project || activeProjects()[0]?.id, kind: 'bug', priority: 'medium', severity: 'annoying', environment: last.environment || '', version: last.version || '', device: guessDevice(), browser: guessBrowser(), url: q.get('url') || '' };
   const editing = !!(x && x.id);
   S.pendingFiles = [];
   const projectOptions = (editing && !isAdmin() ? S.meta.projects.filter(p => p.id === v.project_id) : S.meta.projects.filter(p => p.active || p.id === v.project_id)).map(p => [p.id, p.code + ' · ' + p.name]);
@@ -351,7 +356,8 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
       <div class="field full"><label for="fd">Co się dzieje? (faktyczny wynik) <i>*</i></label><textarea id="fd" name="description" required placeholder="Co zobaczyłeś? Treść komunikatu błędu, co się nie zapisało, czego brakuje…">${esc(v.description)}</textarea></div>
       <div class="field"><label for="fs">Kroki do odtworzenia problemu</label><textarea id="fs" name="steps" placeholder="1. Zaloguj się jako…&#10;2. Wejdź w…&#10;3. Kliknij…">${esc(v.steps)}</textarea><span class="hint">Co klikałeś po kolei, aż pojawił się problem — tak, żeby ktoś inny mógł to powtórzyć.</span></div>
       <div class="field"><label for="fe">Czego się spodziewałeś? (oczekiwany wynik)</label><textarea id="fe" name="expected" placeholder="Co powinno się wydarzyć?">${esc(v.expected)}</textarea></div>
-      <div class="field"><label for="fpr">Priorytet</label><select id="fpr" name="priority">${opts(Object.entries(S.meta.priorities), v.priority)}</select><span class="hint">Krytyczny = blokuje pracę lub psuje dane.</span></div>
+      <div class="field"><label for="fsv">Waga — jak bardzo przeszkadza</label><select id="fsv" name="severity">${opts(Object.entries(S.meta.severities), v.severity || 'annoying')}</select><span class="hint">Blokuje pracę: nie da się dokończyć czynności. Psuje dane: dane znikają, są złe albo widzi je ktoś niepowołany.</span></div>
+      ${isAdmin() ? `<div class="field"><label for="fpr">Priorytet — kiedy naprawiamy</label><select id="fpr" name="priority">${opts(Object.entries(S.meta.priorities), v.priority)}</select><span class="hint">Ustawia administrator.</span></div>` : ''}
       <div class="field"><label for="fen">Środowisko</label><select id="fen" name="environment"></select></div>
       <div class="field"><label for="fv">Wersja systemu (jeśli widać)</label><input id="fv" name="version" maxlength="60" value="${esc(v.version)}" placeholder="np. v0.8-demo"></div>
       <div class="field"><label for="fu">Adres strony</label><input id="fu" name="url" type="url" maxlength="1000" value="${esc(v.url)}" placeholder="https://…"></div>
@@ -457,7 +463,7 @@ async function viewIssue(id) {
   view(`
   <div class="dhead"><a href="#/zgloszenia" class="small">← Wszystkie zgłoszenia</a>
     <div class="key" style="margin-top:10px">${esc(x.key)} · ${esc(x.project_name)}</div><h1>${esc(x.title)}</h1>
-    <div class="badges">${stB(x.status)} ${prB(x.priority)} ${kdB(x.kind)} ${x.module ? `<span class="badge">${esc(x.module)}</span>` : ''}</div></div>
+    <div class="badges">${stB(x.status)} ${svB(x.severity)} ${prB(x.priority)} ${kdB(x.kind)} ${x.module ? `<span class="badge">${esc(x.module)}</span>` : ''}</div></div>
   <div class="detail">
     <div class="stack">
       ${canVerify ? `<div class="verify"><b>Poprawka czeka na weryfikację</b><p>Sprawdź na środowisku${x.environment ? ' <b>' + esc(x.environment) + '</b>' : ''}, czy problem zniknął.${x.solution ? ' Opis poprawki znajdziesz niżej.' : ''}</p>

@@ -119,6 +119,7 @@ function issue_fields(array $b): array
         'title' => str_in($b, 'title', 200),
         'module' => str_in($b, 'module', 120),
         'priority' => enum_in($b, 'priority', QA_PRIORITIES, 'medium'),
+        'severity' => enum_in($b, 'severity', QA_SEVERITIES, 'annoying'),
         'description' => str_in($b, 'description', 20000),
         'steps' => str_in($b, 'steps', 20000),
         'expected' => str_in($b, 'expected', 20000),
@@ -219,7 +220,7 @@ if ($action === 'meta') {
     }
     $users = $p->query("SELECT id, display_name name, role, active FROM qa_users ORDER BY display_name")->fetchAll();
     foreach ($users as &$x) { $x['id'] = (int)$x['id']; $x['active'] = (int)$x['active']; }
-    out(['projects' => $projects, 'users' => $users, 'roles' => QA_ROLES, 'kinds' => QA_KINDS, 'priorities' => QA_PRIORITIES,
+    out(['projects' => $projects, 'users' => $users, 'roles' => QA_ROLES, 'kinds' => QA_KINDS, 'severities' => QA_SEVERITIES, 'priorities' => QA_PRIORITIES,
         'statuses' => QA_STATUSES, 'results' => QA_RESULTS, 'upload_max' => min(QA_UPLOAD_MAX, upload_limit())]);
 }
 function upload_limit(): int
@@ -233,7 +234,7 @@ function upload_limit(): int
 /* ---------- zgłoszenia ---------- */
 
 if ($action === 'issues') {
-    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.status,i.environment,i.version,i.device,i.browser,
+    $rows = $p->query('SELECT i.id,i.project_id,i.kind,i.title,i.module,i.priority,i.severity,i.status,i.environment,i.version,i.device,i.browser,
             i.reporter_id,i.assignee_id,i.created_at,i.updated_at,i.closed_at, p.code project_code, p.name project_name,
             r.display_name reporter_name, a.display_name assignee_name,
             (SELECT COUNT(*) FROM qa_attachments t WHERE t.issue_id=i.id) attachments,
@@ -267,12 +268,13 @@ if ($action === 'issue_create') {
     need_role($u, 'admin', 'tester');
     $b = body();
     $f = issue_fields($b);
+    if ($u['role'] !== 'admin') $f['priority'] = 'medium'; // priorytet ustawia tylko administrator
     $project = project_row((int)($b['project_id'] ?? 0));
     $now = qa_now();
     $p->beginTransaction();
-    $q = $p->prepare('INSERT INTO qa_issues(project_id,kind,title,module,priority,status,description,steps,expected,environment,version,device,browser,url,solution,reporter_id,assignee_id,created_at,updated_at)
-        VALUES(?,?,?,?,?,\'new\',?,?,?,?,?,?,?,?,\'\',?,NULL,?,?)');
-    $q->execute([$project['id'], $f['kind'], $f['title'], $f['module'], $f['priority'], $f['description'], $f['steps'], $f['expected'],
+    $q = $p->prepare('INSERT INTO qa_issues(project_id,kind,title,module,priority,severity,status,description,steps,expected,environment,version,device,browser,url,solution,reporter_id,assignee_id,created_at,updated_at)
+        VALUES(?,?,?,?,?,?,\'new\',?,?,?,?,?,?,?,?,\'\',?,NULL,?,?)');
+    $q->execute([$project['id'], $f['kind'], $f['title'], $f['module'], $f['priority'], $f['severity'], $f['description'], $f['steps'], $f['expected'],
         $f['environment'], $f['version'], $f['device'], $f['browser'], $f['url'], $u['id'], $now, $now]);
     $id = (int)$p->lastInsertId();
     log_act($id, $u['id'], 'created', 'Utworzono zgłoszenie.');
@@ -295,13 +297,14 @@ if ($action === 'issue_update') {
     $ownNew = $u['role'] === 'tester' && $before['reporter_id'] === $u['id'] && in_array($before['status'], ['new', 'reopened'], true);
     if (!$isAdmin && !$ownNew) out(['error' => 'Możesz edytować tylko własne zgłoszenia, zanim trafią do naprawy.'], 403);
     $f = issue_fields($b);
+    if (!$isAdmin) $f['priority'] = $before['priority'];
     $projectId = $isAdmin ? project_row((int)($b['project_id'] ?? $before['project_id']))['id'] : $before['project_id'];
     $sets = $f + ['project_id' => $projectId];
     if ($isAdmin) {
         $sets['solution'] = str_in($b, 'solution', 20000);
         $sets['assignee_id'] = user_exists_active(isset($b['assignee_id']) ? (int)$b['assignee_id'] : null);
     }
-    $labels = ['title' => 'tytuł', 'kind' => 'rodzaj', 'module' => 'obszar', 'priority' => 'priorytet', 'description' => 'opis', 'steps' => 'kroki do odtworzenia problemu',
+    $labels = ['title' => 'tytuł', 'kind' => 'rodzaj', 'module' => 'obszar', 'priority' => 'priorytet', 'severity' => 'waga', 'description' => 'opis', 'steps' => 'kroki do odtworzenia problemu',
         'expected' => 'oczekiwany wynik', 'environment' => 'środowisko', 'version' => 'wersja', 'device' => 'urządzenie', 'browser' => 'przeglądarka',
         'url' => 'adres', 'solution' => 'rozwiązanie', 'assignee_id' => 'osoba naprawiająca', 'project_id' => 'projekt'];
     $changed = [];
@@ -313,6 +316,10 @@ if ($action === 'issue_update') {
     if (in_array('priorytet', $changed, true)) {
         log_act($id, $u['id'], 'field', 'Priorytet: ' . QA_PRIORITIES[$before['priority']] . ' → ' . QA_PRIORITIES[$sets['priority']] . '.');
         $changed = array_values(array_diff($changed, ['priorytet']));
+    }
+    if (in_array('waga', $changed, true)) {
+        log_act($id, $u['id'], 'field', 'Waga: ' . (QA_SEVERITIES[$before['severity']] ?? '—') . ' → ' . QA_SEVERITIES[$sets['severity']] . '.');
+        $changed = array_values(array_diff($changed, ['waga']));
     }
     if (in_array('osoba naprawiająca', $changed, true)) {
         $n = '—';
@@ -453,10 +460,10 @@ if ($action === 'export') {
     $o = fopen('php://output', 'w');
     fwrite($o, "\xEF\xBB\xBF");
     $safe = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v; // ochrona przed formułami w Excelu
-    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Priorytet', 'Status', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
+    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Środowisko', 'Wersja', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
     foreach ($rows as $r) {
         $r = cast_issue($r);
-        fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '',
+        fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_SEVERITIES[$r['severity']] ?? '', QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '',
             $r['description'], $r['steps'], $r['expected'], $r['environment'], $r['version'], $r['device'], $r['browser'], $r['url'], $r['solution'],
             $r['reporter_name'], $r['assignee_name'] ?? '', $r['created_at'], $r['updated_at'], $r['closed_at'] ?? '']), ';');
     }
