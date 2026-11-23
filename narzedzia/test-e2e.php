@@ -1,0 +1,276 @@
+<?php
+declare(strict_types=1);
+
+/*
+ * FULLBASE QA — test całej ścieżki przez API (admin + tester + obserwator).
+ *
+ *   php narzedzia/test-e2e.php            test na czystej bazie SQLite
+ *   php narzedzia/test-e2e.php --zachowaj nie usuwa katalogu tymczasowego (do oglądania bazy)
+ *
+ * Skrypt kopiuje app/ i public/ do katalogu tymczasowego, uruchamia tam wbudowany serwer PHP,
+ * instaluje aplikację przez install.php i przechodzi przez API. Twojej lokalnej bazy nie dotyka.
+ * Kod wyjścia: 0 = wszystko zaliczone, 1 = są błędy.
+ */
+
+const ZRODLO = __DIR__ . '/..';
+$opcje = array_slice($argv, 1);
+$zachowaj = in_array('--zachowaj', $opcje, true);
+
+/* ---------- przygotowanie środowiska ---------- */
+
+function kopiuj(string $z, string $do): void
+{
+    if (is_dir($z)) {
+        @mkdir($do, 0777, true);
+        foreach (scandir($z) as $e) if ($e !== '.' && $e !== '..') kopiuj("$z/$e", "$do/$e");
+    } else {
+        copy($z, $do);
+    }
+}
+function usun(string $s): void
+{
+    if (is_dir($s) && !is_link($s)) {
+        foreach (scandir($s) as $e) if ($e !== '.' && $e !== '..') usun("$s/$e");
+        @rmdir($s);
+    } elseif (file_exists($s)) {
+        @unlink($s);
+    }
+}
+
+$kat = sys_get_temp_dir() . '/fbqa-e2e-' . bin2hex(random_bytes(4));
+kopiuj(ZRODLO . '/app', "$kat/app");
+kopiuj(ZRODLO . '/public', "$kat/public");
+@mkdir("$kat/data", 0777, true);
+
+$gn = stream_socket_server('tcp://127.0.0.1:0');
+$port = (int)substr(strrchr(stream_socket_get_name($gn, false), ':'), 1);
+fclose($gn);
+$null = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+$serwer = proc_open([PHP_BINARY, '-S', "127.0.0.1:$port", '-t', "$kat/public"], [['pipe', 'r'], ['file', $null, 'w'], ['file', $null, 'w']], $rury);
+for ($i = 0; $i < 50; $i++) {
+    $s = @fsockopen('127.0.0.1', $port, $en, $es, 0.2);
+    if ($s) { fclose($s); break; }
+    usleep(100000);
+}
+$BAZA = "http://127.0.0.1:$port";
+
+register_shutdown_function(function () use ($serwer, $kat, $zachowaj) {
+    proc_terminate($serwer);
+    proc_close($serwer);
+    usleep(300000);
+    if ($zachowaj) echo "Katalog testu zachowany: $kat\n";
+    else usun($kat);
+});
+
+/* ---------- klient HTTP ---------- */
+
+final class Klient
+{
+    public string $ciastko = '';
+    public string $csrf = '';
+
+    public function __construct(private string $baza, public string $nazwa) {}
+
+    /** @return array{0:int,1:array,2:string} kod, JSON, surowa treść */
+    public function zadanie(string $metoda, string $sciezka, string $tresc = '', string $typ = 'application/json', bool $zCsrf = true): array
+    {
+        $h = ['Accept: application/json'];
+        if ($this->ciastko !== '') $h[] = 'Cookie: ' . $this->ciastko;
+        if ($metoda === 'POST') {
+            $h[] = 'Content-Type: ' . $typ;
+            if ($zCsrf && $this->csrf !== '') $h[] = 'X-CSRF-Token: ' . $this->csrf;
+        }
+        $ctx = stream_context_create(['http' => ['method' => $metoda, 'header' => implode("\r\n", $h), 'content' => $tresc,
+            'ignore_errors' => true, 'timeout' => 30]]);
+        $odp = @file_get_contents($this->baza . $sciezka, false, $ctx);
+        $nag = function_exists('http_get_last_response_headers') ? (http_get_last_response_headers() ?? []) : ($http_response_header ?? []);
+        $kod = preg_match('#^HTTP/\S+\s+(\d+)#', $nag[0] ?? '', $m) ? (int)$m[1] : 0;
+        foreach ($nag as $l) if (preg_match('/^Set-Cookie:\s*fbqa=([^;]*)/i', $l, $mm)) $this->ciastko = 'fbqa=' . $mm[1];
+        $json = json_decode((string)$odp, true);
+        return [$kod, is_array($json) ? $json : [], (string)$odp];
+    }
+    public function get(string $akcja): array { return $this->zadanie('GET', '/api.php?action=' . $akcja); }
+    public function post(string $akcja, array $dane = [], bool $zCsrf = true): array
+    {
+        return $this->zadanie('POST', '/api.php?action=' . $akcja, json_encode($dane), 'application/json', $zCsrf);
+    }
+    public function zaloguj(string $login, string $haslo): array
+    {
+        $this->get('session');
+        $r = $this->post('login', ['username' => $login, 'password' => $haslo]);
+        if (!empty($r[1]['csrf'])) $this->csrf = $r[1]['csrf'];
+        return $r;
+    }
+    public function wyslijPlik(int $idZgloszenia, string $nazwa, string $dane, string $mime): array
+    {
+        $g = '----fbqa' . bin2hex(random_bytes(8));
+        $t = "--$g\r\nContent-Disposition: form-data; name=\"files[]\"; filename=\"$nazwa\"\r\nContent-Type: $mime\r\n\r\n$dane\r\n--$g--\r\n";
+        return $this->zadanie('POST', '/api.php?action=upload&id=' . $idZgloszenia, $t, "multipart/form-data; boundary=$g");
+    }
+}
+
+/* ---------- asercje ---------- */
+
+$zaliczone = 0;
+$bledy = [];
+function sprawdz(bool $warunek, string $opis, string $szczegoly = ''): void
+{
+    global $zaliczone, $bledy;
+    if ($warunek) { $zaliczone++; echo "  ok   $opis\n"; }
+    else { $bledy[] = $opis; echo "  BŁĄD $opis" . ($szczegoly !== '' ? "  →  $szczegoly" : '') . "\n"; }
+}
+function kod(array $r, int $oczekiwany, string $opis): array
+{
+    sprawdz($r[0] === $oczekiwany, $opis . " (HTTP $oczekiwany)", "HTTP {$r[0]} " . mb_substr($r[2], 0, 200));
+    return $r[1];
+}
+function sekcja(string $t): void { echo "\n== $t\n"; }
+
+/* ---------- 1. instalacja ---------- */
+
+sekcja('Instalacja (SQLite)');
+$inst = new Klient($BAZA, 'instalator');
+[$k, , $html] = $inst->zadanie('GET', '/install.php');
+sprawdz($k === 200 && preg_match('/name="csrf" value="([0-9a-f]+)"/', $html, $m) === 1, 'formularz instalatora się otwiera');
+// Hasła losowe przy każdym uruchomieniu — w repozytorium nie ma żadnych haseł.
+$los = fn() => 'Los-' . bin2hex(random_bytes(8));
+$H = array_map(fn() => $los(), array_flip(['T1_TMP', 'T2_TMP', 'OBS_TMP', 'X_TMP', 'T1_NOWE', 'T2_NOWE', 'OBS_NOWE', 'ZLE']));
+$hasloAdmina = $los();
+[$k, , $html] = $inst->zadanie('POST', '/install.php', http_build_query([
+    'csrf' => $m[1] ?? '', 'driver' => 'sqlite', 'admin_login' => 'admin', 'admin_name' => 'Admin Testowy',
+    'admin_email' => '', 'admin_pass' => $hasloAdmina, 'admin_pass2' => $hasloAdmina,
+]), 'application/x-www-form-urlencoded');
+sprawdz($k === 200 && str_contains($html, 'Gotowe'), 'instalacja kończy się sukcesem', strip_tags(mb_substr($html, 0, 300)));
+[, , $html] = $inst->zadanie('GET', '/install.php');
+sprawdz(str_contains($html, "już zainstalowana"), "instalator blokuje się po instalacji");
+[$k, , $html] = $inst->zadanie("GET", "/");
+sprawdz($k === 200 && str_contains($html, "app.js"), "strona główna się otwiera");
+[$k, , $js] = $inst->zadanie("GET", "/assets/app.js");
+sprawdz($k === 200 && strlen($js) > 1000, "skrypt aplikacji jest dostępny");
+
+/* ---------- 2. bez logowania ---------- */
+
+sekcja('Bez logowania');
+$gosc = new Klient($BAZA, 'gość');
+$s = $gosc->get('session')[1];
+sprawdz(array_key_exists('user', $s) && $s['user'] === null, 'sesja bez użytkownika');
+kod($gosc->get('issues'), 401, 'lista zgłoszeń wymaga logowania');
+kod($gosc->get('file&id=1'), 401, 'pobranie pliku wymaga logowania');
+kod($gosc->post('login', ['username' => 'admin', 'password' => $H['ZLE']]), 401, 'złe hasło odrzucone');
+
+/* ---------- 3. administrator zakłada konta ---------- */
+
+sekcja('Administrator');
+$admin = new Klient($BAZA, 'admin');
+kod($admin->zaloguj('admin', $hasloAdmina), 200, 'admin się loguje');
+$meta = kod($admin->get('meta'), 200, 'słowniki');
+$pzb = null;
+foreach ($meta['projects'] ?? [] as $pr) if ($pr['code'] === 'PZB') $pzb = $pr;
+sprawdz($pzb !== null, 'projekt startowy PZB istnieje');
+$pzbId = (int)($pzb['id'] ?? 0);
+kod($admin->post('user_save', ['username' => 'tester1', 'display_name' => 'Tester Jeden', 'role' => 'tester', 'active' => 1, 'password' => $H['T1_TMP']]), 200, 'admin zakłada testera');
+kod($admin->post('user_save', ['username' => 'tester2', 'display_name' => 'Tester Dwa', 'role' => 'tester', 'active' => 1, 'password' => $H['T2_TMP']]), 200, 'admin zakłada drugiego testera');
+kod($admin->post('user_save', ['username' => 'obserwator', 'display_name' => 'Obserwator', 'role' => 'viewer', 'active' => 1, 'password' => $H['OBS_TMP']]), 200, 'admin zakłada obserwatora');
+kod($admin->post('user_save', ['username' => 'x1', 'display_name' => 'X', 'role' => 'tester', 'active' => 1, 'password' => $H['X_TMP']], false), 419, 'zapis bez tokenu CSRF odrzucony');
+
+/* ---------- 4. tester: pierwsze logowanie ---------- */
+
+sekcja('Tester — pierwsze logowanie');
+$tester = new Klient($BAZA, 'tester1');
+$r = kod($tester->zaloguj('tester1', $H['T1_TMP']), 200, 'tester się loguje hasłem tymczasowym');
+sprawdz(!empty($r['user']['must_change_pw']), 'tester musi zmienić hasło');
+kod($tester->get('issues'), 403, 'bez zmiany hasła nie ma dostępu');
+kod($tester->post('password', ['current' => $H['T1_TMP'], 'new' => $H['T1_NOWE']]), 200, 'tester ustawia własne hasło');
+kod($tester->get('issues'), 200, 'po zmianie hasła lista działa');
+
+$tester2 = new Klient($BAZA, 'tester2');
+$tester2->zaloguj('tester2', $H['T2_TMP']);
+$tester2->post('password', ['current' => $H['T2_TMP'], 'new' => $H['T2_NOWE']]);
+$obs = new Klient($BAZA, 'obserwator');
+$obs->zaloguj('obserwator', $H['OBS_TMP']);
+$obs->post('password', ['current' => $H['OBS_TMP'], 'new' => $H['OBS_NOWE']]);
+
+/* ---------- 5. zgłoszenie z załącznikiem ---------- */
+
+sekcja('Zgłoszenie z załącznikiem');
+$noweZgl = ['project_id' => $pzbId, 'kind' => 'bug', 'title' => 'Wynik meczu nie zapisuje się', 'module' => 'Mecze i wyniki', 'priority' => 'high',
+    'description' => 'Po kliknięciu Zapisz wynik znika.', 'steps' => "1. Otwórz mecz\n2. Wpisz 80:75\n3. Zapisz", 'expected' => 'Wynik zapisany.',
+    'environment' => 'demo.fullbase.pl', 'version' => '0.9', 'url' => 'https://demo.fullbase.pl/mecze/1'];
+$z = kod($tester->post('issue_create', $noweZgl), 200, 'tester tworzy zgłoszenie');
+$idZgl = (int)($z['issue']['id'] ?? 0);
+sprawdz(($z['issue']['key'] ?? '') === sprintf('PZB-%04d', $idZgl), 'numer zgłoszenia w formacie PZB-0001');
+kod($obs->post('issue_create', $noweZgl), 403, 'obserwator nie może zgłaszać');
+kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => '', 'description' => '']), 422, 'puste zgłoszenie odrzucone');
+
+$png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+kod($tester->wyslijPlik($idZgl, 'zrzut.png', $png, 'image/png'), 200, 'tester dodaje zrzut ekranu');
+kod($tester->wyslijPlik($idZgl, 'skrypt.php', '<?php echo 1;', 'image/png'), 415, 'plik PHP udający obraz odrzucony');
+kod($obs->wyslijPlik($idZgl, 'zrzut.png', $png, 'image/png'), 403, 'obserwator nie dodaje plików');
+$szcz = kod($tester->get('issue&id=' . $idZgl), 200, 'szczegóły zgłoszenia');
+$idPliku = (int)($szcz['issue']['files'][0]['id'] ?? 0);
+sprawdz($idPliku > 0, 'załącznik jest przy zgłoszeniu');
+[$k, , $plik] = $obs->get('file&id=' . $idPliku);
+sprawdz($k === 200 && $plik === $png, 'zalogowany pobiera plik w całości');
+kod($tester2->post('file_delete&id=' . $idPliku), 403, 'cudzego załącznika nie można usunąć');
+
+/* ---------- 6. uprawnienia do zgłoszenia ---------- */
+
+sekcja('Uprawnienia');
+kod($tester->post('issue_status&id=' . $idZgl, ['status' => 'closed']), 403, 'tester nie zamyka zgłoszenia ze statusu Nowe');
+kod($tester2->post('issue_update&id=' . $idZgl, $noweZgl), 403, 'tester nie edytuje cudzego zgłoszenia');
+kod($tester->post('issue_update&id=' . $idZgl, ['title' => 'Wynik meczu nie zapisuje się po kliknięciu Zapisz'] + $noweZgl), 200, 'tester edytuje własne nowe zgłoszenie');
+kod($tester->get('users'), 403, 'tester nie widzi listy użytkowników');
+kod($tester->post('issue_delete&id=' . $idZgl), 403, 'tester nie usuwa zgłoszeń');
+kod($obs->post('comment&id=' . $idZgl, ['message' => 'Zarząd: ważne przed sezonem.']), 200, 'obserwator komentuje');
+
+/* ---------- 7. naprawa i weryfikacja ---------- */
+
+sekcja('Naprawa i weryfikacja');
+kod($admin->post('issue_status&id=' . $idZgl, ['status' => 'confirmed']), 200, 'admin potwierdza');
+kod($admin->post('issue_status&id=' . $idZgl, ['status' => 'progress']), 200, 'admin: w naprawie');
+kod($tester->post('issue_update&id=' . $idZgl, $noweZgl), 403, 'tester nie edytuje zgłoszenia w naprawie');
+kod($admin->post('issue_status&id=' . $idZgl, ['status' => 'fixed']), 200, 'admin: do weryfikacji');
+kod($tester->post('issue_status&id=' . $idZgl, ['status' => 'reopened']), 422, 'odrzucenie poprawki wymaga komentarza');
+kod($tester->post('issue_status&id=' . $idZgl, ['status' => 'reopened', 'comment' => 'Dalej znika przy remisie.']), 200, 'tester odrzuca poprawkę');
+$admin->post('issue_status&id=' . $idZgl, ['status' => 'fixed']);
+$z = kod($tester->post('issue_status&id=' . $idZgl, ['status' => 'closed']), 200, 'tester potwierdza poprawkę');
+sprawdz(($z['issue']['status'] ?? '') === 'closed' && !empty($z['issue']['closed_at']), 'zgłoszenie zamknięte z datą');
+$hist = $tester->get('issue&id=' . $idZgl)[1]['issue']['activity'] ?? [];
+sprawdz(count(array_filter($hist, fn($a) => $a['kind'] === 'verify')) === 2, 'historia zawiera obie weryfikacje');
+
+/* ---------- 8. scenariusze i przebieg testów ---------- */
+
+sekcja('Scenariusze i przebieg testów');
+$c = kod($tester->post('case_save', ['project_id' => $pzbId, 'module' => 'Mecze i wyniki', 'title' => 'Wpisanie wyniku meczu',
+    'preconditions' => 'Mecz zaplanowany', 'steps' => "1. Otwórz mecz\n2. Wpisz wynik", 'expected' => 'Wynik widoczny', 'priority' => 'high', 'active' => 1]), 200, 'tester dodaje scenariusz');
+$idCase = (int)($c['id'] ?? 0);
+kod($obs->post('case_save', ['project_id' => $pzbId, 'title' => 'x', 'steps' => 'y', 'active' => 1]), 403, 'obserwator nie dodaje scenariuszy');
+$run = kod($tester->post('run_create', ['project_id' => $pzbId, 'name' => 'Regresja testowa', 'environment' => 'demo.fullbase.pl', 'version' => '0.9']), 200, 'tester tworzy przebieg');
+$idRun = (int)($run['id'] ?? 0);
+kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'fail', 'note' => 'Wynik znika']), 200, 'tester zapisuje wynik: niezaliczony');
+$z2 = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Niezaliczony: Wpisanie wyniku meczu', 'description' => 'Wynik znika',
+    'steps' => '1. Otwórz mecz', 'run_id' => $idRun, 'case_id' => $idCase]), 200, 'zgłoszenie z niezaliczonego scenariusza');
+$r = kod($tester->get('run&id=' . $idRun), 200, 'szczegóły przebiegu');
+sprawdz((int)($r['run']['results'][0]['issue_id'] ?? 0) === (int)($z2['issue']['id'] ?? -1), 'wynik testu powiązany ze zgłoszeniem');
+kod($tester->post('run_status', ['id' => $idRun, 'status' => 'closed']), 200, 'tester zamyka przebieg');
+kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'pass']), 422, 'zamknięty przebieg nie przyjmuje wyników');
+kod($tester->post('case_delete&id=' . $idCase), 403, 'tester nie usuwa scenariuszy');
+
+/* ---------- 9. eksport i wylogowanie ---------- */
+
+sekcja('Eksport i wylogowanie');
+[$k, , $csv] = $admin->get('export');
+sprawdz($k === 200 && str_contains($csv, 'PZB-0001'), 'eksport CSV zawiera zgłoszenie');
+kod($tester->post('logout'), 200, 'wylogowanie');
+kod($tester->get('issues'), 401, 'po wylogowaniu brak dostępu');
+
+/* ---------- podsumowanie ---------- */
+
+echo "\n" . str_repeat('-', 50) . "\n";
+if ($bledy) {
+    echo "NIEZALICZONE: " . count($bledy) . " (zaliczone: $zaliczone)\n";
+    foreach ($bledy as $b) echo "  - $b\n";
+    exit(1);
+}
+echo "WSZYSTKO ZALICZONE: $zaliczone sprawdzeń\n";
+exit(0);

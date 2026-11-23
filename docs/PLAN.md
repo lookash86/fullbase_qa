@@ -11,7 +11,7 @@ Odhaczaj `[x]` od razu po zakończeniu punktu.
 ## Etap 0 — przygotowanie, zanim tester zacznie
 
 - [x] **0.1 [Ł+C] Repozytorium.** W VS Code: `git init` w `kod\fullbase-qa`, pierwszy commit „FULLBASE QA 2.0.1”, prywatne repo GitHub `lookash86/fullbase_qa` (z podkreślnikiem).
-- [ ] **0.2 [Ł] Uruchomienie lokalne.** `narzedzia\uruchom-lokalnie.cmd` → instalacja na SQLite → przeklikanie: zgłoszenie, zrzut ekranu wklejony Ctrl+V, zmiana statusu.
+- [x] **0.2 [C] Uruchomienie lokalne.** `narzedzia\uruchom-lokalnie.cmd` → instalacja na SQLite → przeklikanie: zgłoszenie, zrzut ekranu wklejony Ctrl+V, zmiana statusu.
 - [ ] **0.3 [Ł] Serwer.** Subdomena `testy.fullbase.pl` na home.pl → katalog `/testy.fullbase.pl/public` („bez separacji serwisu”) → SSL → wgranie plików → `install.php` od razu po wgraniu → konto administratora (szczegóły w README.md).
 - [ ] **0.4 [Ł] Konto testera** w rejestrze (Użytkownicy → rola Tester). Hasło tymczasowe przekazujesz SMS-em.
 - [ ] **0.5 [Ł+C] Konta testowe w demo PZBall** dla każdej roli: admin związku, wydział gier, klub, trener, sędzia (lokalnie istnieją już jako `*@pzball.test`). Hasła trzymamy w menedżerze haseł, **nie** w rejestrze.
@@ -68,3 +68,5 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 - 2026-11-23 — wersja 2.0 / 2.0.1 gotowa i przetestowana (SQLite + MariaDB); plan spisany.
 - 2026-11-23 — 0.1 (część C): `git init` (gałąź `main`), commit „FULLBASE QA 2.0.1”. Brak `gh` na komputerze, więc repo GitHub `lookash86/fullbase-qa` zakłada właściciel (instrukcja w czacie); po `git push` odhaczyć 0.1. Następny punkt: 0.6.
 - 2026-11-24 — 0.1 zakończone: repo prywatne `github.com/lookash86/fullbase_qa` (nazwa z podkreślnikiem, nie z myślnikiem), `main` wypchnięty. Następny punkt: 0.6.
+- 2026-11-24 — Decyzja właściciela: najpierw cała wersja 2.1 (Etap 0 [C] + Etap 1), potem serwer home.pl (0.3) i konto testera (0.4). VPS niepotrzebny do 3.3, home.pl wystarcza.
+- 2026-11-24 — 0.2 zrobione przez Claude ([Ł]→[C]). Decyzja: zalążek `narzedzia/test-e2e.php` już teraz (kopia app/ i public/ w katalogu tymczasowym, instalacja przez install.php, ścieżka admin + tester + obserwator przez API, hasła losowane przy uruchomieniu; lokalnej bazy nie rusza). Zastępuje ręczną ścieżkę; w 1.9 dojdzie `--mysql`. Wynik: 60/60 na SQLite. Lokalny PHP 8.3 nie ma pdo_mysql, więc MySQL nietestowany. Do sprawdzenia ręcznie przy okazji: wklejanie zrzutu Ctrl+V. Następny punkt: 0.6.
