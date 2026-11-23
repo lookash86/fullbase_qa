@@ -148,7 +148,7 @@ function lines(string $s): array
 
 if ($action === 'session') {
     $u = current_user();
-    out(['user' => $u, 'csrf' => $_SESSION['csrf'], 'version' => QA_VERSION]);
+    out(['user' => $u, 'csrf' => $_SESSION['csrf'], 'version' => QA_VERSION, 'schema' => $u ? (int)qa_meta_get(db(), 'schema') : null]);
 }
 
 if ($action === 'login') {

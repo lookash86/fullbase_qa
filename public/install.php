@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 require dirname(__DIR__) . '/app/schema.php';
+require dirname(__DIR__) . '/app/migrate.php';
 
 qa_security_headers('text/html; charset=utf-8');
 header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'");
@@ -61,6 +62,7 @@ if (!$installed && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 ->execute([$login, $aname, trim((string)($_POST['admin_email'] ?? '')), qa_hash_password($pw), qa_now()]);
             qa_seed_projects($pdo);
             $pdo->commit();
+            qa_migrate($pdo, $driver); // schemat bazowy (wersja 1) + wszystkie migracje
             $config = "<?php\n// FULLBASE QA — konfiguracja. Plik zawiera dane dostępu: nie publikuj, nie wysyłaj w czacie.\n"
                 . "date_default_timezone_set('Europe/Warsaw');\nreturn " . var_export(['db' => $db, 'installed' => qa_now()], true) . ";\n";
             if (file_put_contents(QA_ROOT . '/config.php', $config, LOCK_EX) === false) throw new RuntimeException('Nie udało się zapisać config.php.');

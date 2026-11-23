@@ -13,6 +13,7 @@ declare(strict_types=1);
  */
 
 const ZRODLO = __DIR__ . '/..';
+const WERSJA_2_0_1 = '10b7c55'; // commit „FULLBASE QA 2.0.1” — punkt wyjścia testu migracji
 $opcje = array_slice($argv, 1);
 $zachowaj = in_array('--zachowaj', $opcje, true);
 
@@ -37,30 +38,60 @@ function usun(string $s): void
     }
 }
 
-$kat = sys_get_temp_dir() . '/fbqa-e2e-' . bin2hex(random_bytes(4));
-kopiuj(ZRODLO . '/app', "$kat/app");
-kopiuj(ZRODLO . '/public', "$kat/public");
-@mkdir("$kat/data", 0777, true);
-
-$gn = stream_socket_server('tcp://127.0.0.1:0');
-$port = (int)substr(strrchr(stream_socket_get_name($gn, false), ':'), 1);
-fclose($gn);
-$null = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
-$serwer = proc_open([PHP_BINARY, '-S', "127.0.0.1:$port", '-t', "$kat/public"], [['pipe', 'r'], ['file', $null, 'w'], ['file', $null, 'w']], $rury);
-for ($i = 0; $i < 50; $i++) {
-    $s = @fsockopen('127.0.0.1', $port, $en, $es, 0.2);
-    if ($s) { fclose($s); break; }
-    usleep(100000);
+/** Kopiuje bieżące app/ i public/ do katalogu (podmiana plików jak przy aktualizacji na serwerze). */
+function wgrajBiezace(string $kat): void
+{
+    foreach (['app', 'public'] as $d) { usun("$kat/$d"); kopiuj(ZRODLO . "/$d", "$kat/$d"); }
+    @mkdir("$kat/data", 0777, true);
 }
-$BAZA = "http://127.0.0.1:$port";
 
-register_shutdown_function(function () use ($serwer, $kat, $zachowaj) {
-    proc_terminate($serwer);
-    proc_close($serwer);
-    usleep(300000);
-    if ($zachowaj) echo "Katalog testu zachowany: $kat\n";
-    else usun($kat);
+/** Wypakowuje app/ i public/ z podanego commita (np. wersja 2.0.1). Zwraca false, gdy git niedostępny. */
+function wgrajZGita(string $kat, string $commit): bool
+{
+    $tar = "$kat.tar";
+    $cmd = 'git -C ' . escapeshellarg(ZRODLO) . ' archive --format=tar -o ' . escapeshellarg($tar) . ' ' . escapeshellarg($commit) . ' app public';
+    exec($cmd . ' 2>&1', $o, $kod);
+    if ($kod !== 0 || !is_file($tar)) return false;
+    (new PharData($tar))->extractTo($kat, null, true);
+    @unlink($tar);
+    @mkdir("$kat/data", 0777, true);
+    return true;
+}
+
+/** @return array{0:resource,1:string} proces serwera i adres bazowy */
+function uruchomSerwer(string $kat): array
+{
+    $gn = stream_socket_server('tcp://127.0.0.1:0');
+    $port = (int)substr(strrchr(stream_socket_get_name($gn, false), ':'), 1);
+    fclose($gn);
+    $null = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+    $p = proc_open([PHP_BINARY, '-S', "127.0.0.1:$port", '-t', "$kat/public"], [['pipe', 'r'], ['file', $null, 'w'], ['file', $null, 'w']], $rury);
+    for ($i = 0; $i < 50; $i++) {
+        $s = @fsockopen('127.0.0.1', $port, $en, $es, 0.2);
+        if ($s) { fclose($s); break; }
+        usleep(100000);
+    }
+    return [$p, "http://127.0.0.1:$port"];
+}
+function zatrzymajSerwer($p): void
+{
+    if (is_resource($p)) { proc_terminate($p); proc_close($p); usleep(300000); }
+}
+
+$KATALOGI = [];
+$SERWERY = [];
+register_shutdown_function(function () use (&$KATALOGI, &$SERWERY, $zachowaj) {
+    foreach ($SERWERY as $s) zatrzymajSerwer($s);
+    foreach ($KATALOGI as $k) {
+        if ($zachowaj) echo "Katalog testu zachowany: $k\n";
+        else usun($k);
+    }
 });
+
+$kat = $KATALOGI[] = sys_get_temp_dir() . '/fbqa-e2e-' . bin2hex(random_bytes(4));
+wgrajBiezace($kat);
+[$serwer, $BAZA] = uruchomSerwer($kat);
+$SERWERY[] = $serwer;
 
 /* ---------- klient HTTP ---------- */
 
@@ -128,25 +159,33 @@ function sekcja(string $t): void { echo "\n== $t\n"; }
 
 /* ---------- 1. instalacja ---------- */
 
-sekcja('Instalacja (SQLite)');
-$inst = new Klient($BAZA, 'instalator');
-[$k, , $html] = $inst->zadanie('GET', '/install.php');
-sprawdz($k === 200 && preg_match('/name="csrf" value="([0-9a-f]+)"/', $html, $m) === 1, 'formularz instalatora się otwiera');
+/** Instaluje aplikację przez install.php (SQLite). Zwraca HTML odpowiedzi. */
+function zainstaluj(string $baza, string $haslo): string
+{
+    $inst = new Klient($baza, 'instalator');
+    [$k, , $html] = $inst->zadanie('GET', '/install.php');
+    if ($k !== 200 || !preg_match('/name="csrf" value="([0-9a-f]+)"/', $html, $m)) return 'brak formularza: HTTP ' . $k;
+    return $inst->zadanie('POST', '/install.php', http_build_query([
+        'csrf' => $m[1], 'driver' => 'sqlite', 'admin_login' => 'admin', 'admin_name' => 'Admin Testowy',
+        'admin_email' => '', 'admin_pass' => $haslo, 'admin_pass2' => $haslo,
+    ]), 'application/x-www-form-urlencoded')[2];
+}
+
 // Hasła losowe przy każdym uruchomieniu — w repozytorium nie ma żadnych haseł.
 $los = fn() => 'Los-' . bin2hex(random_bytes(8));
 $H = array_map(fn() => $los(), array_flip(['T1_TMP', 'T2_TMP', 'OBS_TMP', 'X_TMP', 'T1_NOWE', 'T2_NOWE', 'OBS_NOWE', 'ZLE']));
 $hasloAdmina = $los();
-[$k, , $html] = $inst->zadanie('POST', '/install.php', http_build_query([
-    'csrf' => $m[1] ?? '', 'driver' => 'sqlite', 'admin_login' => 'admin', 'admin_name' => 'Admin Testowy',
-    'admin_email' => '', 'admin_pass' => $hasloAdmina, 'admin_pass2' => $hasloAdmina,
-]), 'application/x-www-form-urlencoded');
-sprawdz($k === 200 && str_contains($html, 'Gotowe'), 'instalacja kończy się sukcesem', strip_tags(mb_substr($html, 0, 300)));
+
+sekcja('Instalacja (SQLite)');
+$inst = new Klient($BAZA, 'instalator');
+$html = zainstaluj($BAZA, $hasloAdmina);
+sprawdz(str_contains($html, 'Gotowe'), 'instalacja kończy się sukcesem', strip_tags(mb_substr($html, 0, 300)));
 [, , $html] = $inst->zadanie('GET', '/install.php');
-sprawdz(str_contains($html, "już zainstalowana"), "instalator blokuje się po instalacji");
-[$k, , $html] = $inst->zadanie("GET", "/");
-sprawdz($k === 200 && str_contains($html, "app.js"), "strona główna się otwiera");
-[$k, , $js] = $inst->zadanie("GET", "/assets/app.js");
-sprawdz($k === 200 && strlen($js) > 1000, "skrypt aplikacji jest dostępny");
+sprawdz(str_contains($html, 'już zainstalowana'), 'instalator blokuje się po instalacji');
+[$k, , $html] = $inst->zadanie('GET', '/');
+sprawdz($k === 200 && str_contains($html, 'app.js'), 'strona główna się otwiera');
+[$k, , $js] = $inst->zadanie('GET', '/assets/app.js');
+sprawdz($k === 200 && strlen($js) > 1000, 'skrypt aplikacji jest dostępny');
 
 /* ---------- 2. bez logowania ---------- */
 
@@ -263,6 +302,40 @@ sekcja('Eksport i wylogowanie');
 sprawdz($k === 200 && str_contains($csv, 'PZB-0001'), 'eksport CSV zawiera zgłoszenie');
 kod($tester->post('logout'), 200, 'wylogowanie');
 kod($tester->get('issues'), 401, 'po wylogowaniu brak dostępu');
+
+/* ---------- 10. aktualizacja z wersji 2.0.1 (migracje) ---------- */
+
+sekcja('Aktualizacja bazy z wersji 2.0.1 po podmianie plików');
+$SCHEMAT = (function () { require_once ZRODLO . '/app/bootstrap.php'; require_once ZRODLO . '/app/migrate.php'; return qa_schema_target(); })();
+$katS = $KATALOGI[] = sys_get_temp_dir() . '/fbqa-e2e-stara-' . bin2hex(random_bytes(4));
+if (!wgrajZGita($katS, WERSJA_2_0_1)) {
+    sprawdz(false, 'pobranie wersji 2.0.1 z gita', 'brak gita albo commita ' . WERSJA_2_0_1);
+} else {
+    [$srv, $adr] = uruchomSerwer($katS);
+    $SERWERY[] = $srv;
+    sprawdz(str_contains(zainstaluj($adr, $hasloAdmina), 'Gotowe'), 'instalacja wersji 2.0.1');
+    $a = new Klient($adr, 'admin');
+    $a->zaloguj('admin', $hasloAdmina);
+    $m = $a->get('meta')[1];
+    $z = kod($a->post('issue_create', ['project_id' => (int)($m['projects'][0]['id'] ?? 0), 'title' => 'Zgłoszenie sprzed aktualizacji',
+        'description' => 'Ma przetrwać migrację.']), 200, 'zgłoszenie w wersji 2.0.1');
+    zatrzymajSerwer($srv);
+
+    wgrajBiezace($katS); // podmiana plików, data/ i config.php zostają
+    [$srv, $adr] = uruchomSerwer($katS);
+    $SERWERY[] = $srv;
+    $a = new Klient($adr, 'admin');
+    kod($a->zaloguj('admin', $hasloAdmina), 200, 'logowanie po podmianie plików');
+    $s = $a->get('session')[1];
+    sprawdz(($s['schema'] ?? 0) === $SCHEMAT, "schemat bazy podniesiony do wersji $SCHEMAT", 'jest: ' . json_encode($s['schema'] ?? null));
+    $l = kod($a->get('issues'), 200, 'lista zgłoszeń po aktualizacji');
+    sprawdz(($l['issues'][0]['title'] ?? '') === 'Zgłoszenie sprzed aktualizacji', 'dane sprzed aktualizacji zostały');
+    kod($a->post('issue_create', ['project_id' => (int)($m['projects'][0]['id'] ?? 0), 'title' => 'Nowe po aktualizacji',
+        'description' => 'x']), 200, 'nowe zgłoszenie po aktualizacji');
+    $a2 = new Klient($adr, 'admin2');
+    $a2->zaloguj('admin', $hasloAdmina);
+    sprawdz(($a2->get('session')[1]['schema'] ?? 0) === $SCHEMAT, 'kolejne żądanie nie migruje drugi raz (wersja stała)');
+}
 
 /* ---------- podsumowanie ---------- */
 

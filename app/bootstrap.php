@@ -77,6 +77,15 @@ function db(): PDO
         error_log('FULLBASE QA DB: ' . $e->getMessage());
         out(['error' => 'Nie można połączyć się z bazą danych.'], 503);
     }
+    // Po wgraniu nowej wersji plików baza aktualizuje się sama (app/migrate.php).
+    try {
+        require_once __DIR__ . '/migrate.php';
+        qa_migrate($pdo, $cfg['db']['driver'] ?? 'sqlite');
+    } catch (Throwable $e) {
+        error_log('FULLBASE QA migracja: ' . $e->getMessage());
+        $pdo = null;
+        out(['error' => 'Nie udało się zaktualizować bazy danych do nowej wersji. Dane są bezpieczne — skontaktuj się z administratorem.'], 503);
+    }
     return $pdo;
 }
 
