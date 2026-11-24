@@ -1,4 +1,4 @@
-# FULLBASE QA — rejestr błędów, braków i testów (wersja 2.1)
+# FULLBASE QA — rejestr błędów, braków i testów (wersja 2.2)
 
 Aplikacja webowa dla testerów systemów FULLBASE (PZBall, Kluby i kolejne). PHP 8.1+ bez zewnętrznych bibliotek, baza **SQLite** (zero konfiguracji) albo **MySQL 8 / MariaDB**. Działa na komputerze i telefonie.
 
@@ -13,15 +13,21 @@ Aplikacja webowa dla testerów systemów FULLBASE (PZBall, Kluby i kolejne). PHP
 - **Scenariusz regresji** z zamkniętego zgłoszenia jednym kliknięciem — te same kroki i oczekiwany wynik, żeby błąd nie wrócił.
 - **Powiadomienia e-mail:** poprawka czeka na Twoją weryfikację; nowe zgłoszenie „blokuje pracę”/„psuje dane” i ponowne otwarcie (do administratorów); przypisano Ci zgłoszenie. Każdy może je wyłączyć w „Moim koncie”.
 - **Komentarze i pełna historia zmian** (kto, co, kiedy).
-- **Scenariusze testów** z warunkami wstępnymi, krokami i oczekiwanym wynikiem; **import z CSV** (administrator; najpierw podgląd, potem zapis).
-- **Przebiegi testów:** sesja testowania na danym środowisku i wersji; wyniki zaliczony / niezaliczony / zablokowany / pominięty z notatką. Z niezaliczonego scenariusza jednym kliknięciem tworzy się zgłoszenie z wpisanymi już krokami.
-- **Pulpit** („Krytyczne otwarte” według wagi), lista z filtrami (m.in. waga, rola), tablica (kanban), **eksport CSV** do Excela.
+- **Sugestia naprawy** — tester może dopisać, jak jego zdaniem to naprawić.
+- **Scenariusze testów** z warunkami wstępnymi, krokami i oczekiwanym wynikiem, w **zestawach** (np. „Szybki test”, „Pełna regresja”, „Dzień meczowy”, „Telefon”); **import z CSV** (administrator; najpierw podgląd, potem zapis). W `docs/` są gotowe pliki: 18 krytycznych, 52 rozszerzone i 28 priorytetowych scenariuszy PZBall.
+- **Przebiegi testów:** sesja testowania na danym środowisku i wersji, według zestawu albo obszarów; wyniki zaliczony / niezaliczony / zablokowany / pominięty z notatką i zrzutem ekranu (Ctrl+V). **Skróty klawiszowe** Z / N / B / P i strzałki. Z niezaliczonego scenariusza jednym kliknięciem tworzy się zgłoszenie z krokami i zrzutami. **„Powtórz niezaliczone”** tworzy przebieg tylko z tego, co nie przeszło.
+- **Pulpit** („Krytyczne otwarte” według wagi), lista z filtrami i **sortowaniem**, gotowe i własne **widoki** (np. „Do weryfikacji”, „Nieprzypisane”), tablica (kanban), **eksport CSV** do Excela.
+- **Masowe akcje** (administrator): zaznacz wiele zgłoszeń → status z wersją, przypisanie, priorytet.
+- **Wersje:** co naprawiono w każdej wersji i gotowy **opis wydania** do skopiowania.
+- **Gotowość wydania:** czy można wypuścić wersję (zero otwartych krytycznych błędów i niezaliczonych scenariuszy krytycznych).
+- **Dostęp Claude Code** przez klucz API i `narzedzia/qa.php` (pobranie zgłoszenia z plikami, komentarz, „Do weryfikacji”).
+- **Kopia zapasowa bazy** raz na dobę (14 ostatnich), do pobrania przez administratora.
 - **Projekty, obszary i role testowanego systemu** definiowane w panelu. Skrót projektu tworzy numer zgłoszenia, np. `PZB-0012`.
 - **Aktualizacje bez ręcznego SQL:** po wgraniu nowych plików baza sama dochodzi do nowej wersji (migracje), dane zostają.
 
 | Rola | Może |
 |---|---|
-| Administrator | wszystko: statusy, priorytety, przypisania, odrzucenia, rozwiązania, edycja i usuwanie, użytkownicy, projekty, import scenariuszy |
+| Administrator | wszystko: statusy (też masowo), priorytety, przypisania, odrzucenia, rozwiązania, edycja i usuwanie, użytkownicy, projekty, import scenariuszy, klucze API, kopie zapasowe |
 | Tester | zgłasza (z wagą), dodaje pliki i komentarze, edytuje własne nowe zgłoszenia, weryfikuje poprawki, pisze scenariusze (też regresji), prowadzi przebiegi |
 | Obserwator | przegląda i komentuje (np. zarząd PZBall) |
 
@@ -99,6 +105,7 @@ Skrypt kopiuje aplikację do katalogu tymczasowego, instaluje ją i przechodzi p
 
 ## Kopie zapasowe
 
+- Rejestr sam robi kopię bazy raz na dobę w `data/kopie/` (14 ostatnich); administrator pobiera ją w „Kopie zapasowe”. Raz w tygodniu zapisz najnowszą poza serwerem.
 - SQLite: kopiuj cały katalog `data/` (baza + załączniki) i `config.php`.
 - MySQL: zrzut bazy (tabele `qa_*`) + katalog `data/uploads/` + `config.php`.
 
