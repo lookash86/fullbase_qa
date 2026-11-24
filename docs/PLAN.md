@@ -50,7 +50,7 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 
 ## Etap 1b — wygoda pracy (prośba właściciela 24.11.2026, przed wdrożeniem)
 
-- [ ] **1.12 Masowe akcje na liście** (admin): zaznaczenie wielu zgłoszeń → status (z wersją przy „Do weryfikacji”), przypisanie, priorytet.
+- [x] **1.12 Masowe akcje na liście** (admin): zaznaczenie wielu zgłoszeń → status (z wersją przy „Do weryfikacji”), przypisanie, priorytet.
 - [ ] **1.13 Szybkie przechodzenie scenariuszy:** skróty klawiszowe w przebiegu (Z/N/B/P, strzałki), zrzut ekranu przy wyniku testu (przechodzi do zgłoszenia utworzonego z tego wyniku).
 - [ ] **1.14 „Powtórz niezaliczone”:** nowy przebieg tylko z niezaliczonych i zablokowanych scenariuszy.
 - [ ] **1.15 Sortowanie i zapisane widoki listy zgłoszeń** (gotowe widoki + własne, zapamiętane w przeglądarce).
@@ -106,3 +106,4 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 - 2026-11-24 — Scenariusze rozszerzone: `docs/scenariusze_rozszerzone_PZBall.csv`, 52 scenariusze uzupełniające (źródło: DEMO_TESTY i MACIERZ_UPRAWNIEN w silniku), obejmujące wszystkie 21 obszarów PZB, obszary sprawdzone (0 rozbieżności). Razem z krytycznymi 70. Import przez „Import z CSV” (najpierw krytyczne, potem rozszerzone; duplikaty są pomijane).
 - 2026-11-24 — Scenariusze priorytetowe (wskazane przez właściciela): `docs/scenariusze_priorytetowe_PZBall.csv`, 28 scenariuszy — obsada sędziów (9), e-licencje (7), wynik meczu i iScore (6), strona rozgrywek ze statystykami (6). Razem 98 scenariuszy w trzech plikach.
 - 2026-11-24 — Poprawka wyglądu (uwaga właściciela): wybór obszarów przy nowym przebiegu to teraz lista w ramce (2 kolumny, na telefonie 1), nazwa po lewej i liczba scenariuszy po prawej, zaznaczony wiersz podświetlony, „Zaznacz wszystkie / Wyczyść”, obszary w kolejności z projektu, podsumowanie liczby scenariuszy. QA_VERSION 2.1.2, paczka `FULLBASE-QA-v2.1.2.zip`.
+- 2026-11-24 — 1.12: zmiana statusu wydzielona do `change_status()` (wyjątek `QaError` zamiast `out()`), więc pojedyncza i masowa zmiana mają te same reguły, historię i e-maile. Akcja `issues_bulk` (POST, CSRF, tylko admin; do 200 zgłoszeń): status (bez odrzucenia — ono wymaga powodu; „Do weryfikacji” wymaga wersji), przypisanie, priorytet; wynik = liczba zmienionych + lista pominiętych z powodem. Lista zgłoszeń: pole wyboru przy wierszach (tylko admin), „zaznacz wszystkie widoczne”, pasek akcji przyklejony u góry. Testy 190/190.

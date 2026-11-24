@@ -110,3 +110,7 @@ fieldset{border:1px solid var(--line);border-radius:12px;padding:14px;display:gr
 .pickcount{flex:none;min-width:26px;text-align:center;font-size:11px;font-weight:750;color:var(--muted);background:var(--greybg);border-radius:99px;padding:2px 7px}.pickrow.on .pickcount{background:#fff;color:var(--teal)}
 .picksum{margin-top:8px;font-size:13px;color:var(--muted)}.picksum b{color:var(--ink)}
 @media (max-width:640px){.picklist{grid-template-columns:1fr}.pickrow:nth-child(odd){border-right:0}}
+
+/* masowe akcje */
+.selcell{width:34px;padding-right:0!important}.selcell input{width:16px;height:16px;accent-color:var(--teal);cursor:pointer}
+.bulkbar{position:sticky;top:8px;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--navy);color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;box-shadow:var(--shadow)}.bulkbar b{margin-right:6px}.bulkbar .btn.ghost{color:#cfe0dd}

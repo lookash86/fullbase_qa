@@ -482,6 +482,27 @@ $zw = kod($admin->post('cases_import', ['csv' => $zly]), 200, 'plik z błędami 
 sprawdz(array_column($zw['rows'] ?? [], 'status') === ['error', 'error', 'ok'] && ($zw['separator'] ?? '') === ',', 'błędne wiersze oznaczone, separator przecinek wykryty');
 kod($admin->post('cases_import', ['csv' => "a;b\n1;2\n"]), 422, 'plik bez wymaganych kolumn odrzucony');
 
+/* ---------- 1.12 masowe akcje ---------- */
+
+sekcja('1.12 Masowe akcje');
+$m1 = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Masowe 1', 'description' => 'x']), 200, 'zgłoszenie do masowej zmiany 1')['issue']['id'] ?? 0;
+$m2 = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Masowe 2', 'description' => 'x']), 200, 'zgłoszenie do masowej zmiany 2')['issue']['id'] ?? 0;
+kod($tester->post('issues_bulk', ['ids' => [$m1, $m2], 'what' => 'priority', 'priority' => 'high']), 403, 'tester nie robi masowych zmian');
+kod($admin->post('issues_bulk', ['ids' => [$m1, $m2], 'what' => 'priority', 'priority' => 'high'], false), 419, 'masowa zmiana bez tokenu CSRF odrzucona');
+$r = kod($admin->post('issues_bulk', ['ids' => [$m1, $m2], 'what' => 'priority', 'priority' => 'high']), 200, 'admin zmienia priorytet dwóch zgłoszeń');
+sprawdz(($r['done'] ?? 0) === 2, 'zmieniono 2 zgłoszenia');
+$r = kod($admin->post('issues_bulk', ['ids' => [$m1, $m2], 'what' => 'status', 'status' => 'fixed']), 200, 'masowe „Do weryfikacji” bez wersji');
+sprawdz(($r['done'] ?? -1) === 0 && count($r['errors'] ?? []) === 2, 'bez wersji nic nie zmieniono (błąd przy każdym)');
+$r = kod($admin->post('issues_bulk', ['ids' => [$m1, $m2], 'what' => 'status', 'status' => 'fixed', 'fixed_in' => '2.0', 'comment' => 'Wydanie 2.0']), 200, 'masowe „Do weryfikacji” z wersją');
+$d = $admin->get('issue&id=' . $m2)[1]['issue'] ?? [];
+sprawdz(($r['done'] ?? 0) === 2 && $d['status'] === 'fixed' && $d['fixed_in'] === '2.0' && $d['priority'] === 'high', 'oba mają status, wersję i priorytet');
+sprawdz(count(array_filter($d['activity'], fn($a) => $a['message'] === 'Wydanie 2.0')) === 1, 'komentarz dopisany do zgłoszenia');
+$r = kod($admin->post('issues_bulk', ['ids' => [$m1], 'what' => 'status', 'status' => 'rejected']), 200, 'masowe odrzucenie');
+sprawdz(($r['done'] ?? -1) === 0, 'masowe odrzucenie zablokowane (wymaga powodu)');
+$r = kod($admin->post('issues_bulk', ['ids' => [$m1, $m2], 'what' => 'assignee', 'assignee_id' => $t2id]), 200, 'masowe przypisanie');
+sprawdz(($admin->get('issue&id=' . $m1)[1]['issue']['assignee_id'] ?? 0) === $t2id, 'przypisanie zapisane');
+poczta($kat);
+
 /* ---------- 1.5 scenariusz regresji ---------- */
 
 sekcja('1.5 Scenariusz regresji');

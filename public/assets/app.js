@@ -285,7 +285,7 @@ function runMini(r) {
     <div><div class="progress"><i class="p-pass" style="width:${pc(r.pass)}%"></i><i class="p-fail" style="width:${pc(r.fail)}%"></i><i class="p-blocked" style="width:${pc(r.blocked)}%"></i><i class="p-skip" style="width:${pc(r.skip)}%"></i></div>
     <div class="sub">✓ ${r.pass} · ✗ ${r.fail} · ⛔ ${r.blocked}</div></div></a>`;
 }
-function bindRowLinks(root = document) { $$('[data-go]', root).forEach(el => el.onclick = e => { if (e.target.closest('a,button')) return; location.hash = el.dataset.go; }); }
+function bindRowLinks(root = document) { $$('[data-go]', root).forEach(el => el.onclick = e => { if (e.target.closest('a,button,input,label,.selcell')) return; location.hash = el.dataset.go; }); }
 
 /* ---------- lista zgłoszeń ---------- */
 function viewIssues(kind) {
@@ -350,12 +350,56 @@ function drawIssueList() {
       <p class="muted small">Tablica pokazuje zgłoszenia w toku. Zamknięte i odrzucone znajdziesz w widoku listy.</p>`;
     return bindRowLinks(box);
   }
-  box.innerHTML = `<div class="tablewrap">${list.length ? `<table><thead><tr><th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Waga / priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
-    ${list.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.sys_role || i.sys_account ? '👤 ' + esc([i.sys_role, i.sys_account].filter(Boolean).join(' · ')) + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}${i.status === 'fixed' && i.fixed_in ? ' · sprawdzaj na ≥ ' + esc(i.fixed_in) : ''}</div></td>
+  const sel = S.view.sel ??= new Set();
+  const adm = isAdmin();
+  box.innerHTML = `${adm ? '<div class="bulkbar" id="bulkbar" hidden></div>' : ''}<div class="tablewrap">${list.length ? `<table><thead><tr>${adm ? '<th class="selcell"><input type="checkbox" id="selAll" title="Zaznacz wszystkie widoczne"></th>' : ''}<th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Waga / priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
+    ${list.map(i => `<tr class="row" data-go="#/z/${i.id}">${adm ? `<td class="selcell"><input type="checkbox" data-sel="${i.id}" ${sel.has(i.id) ? 'checked' : ''}></td>` : ''}<td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.sys_role || i.sys_account ? '👤 ' + esc([i.sys_role, i.sys_account].filter(Boolean).join(' · ')) + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}${i.status === 'fixed' && i.fixed_in ? ' · sprawdzaj na ≥ ' + esc(i.fixed_in) : ''}</div></td>
       <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${svB(i.severity)}<div class="sub" style="margin-top:4px">${prB(i.priority)}</div></td><td>${stB(i.status)}${rejectInfo(i)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>Brak zgłoszeń dla tych filtrów</b>Zmień filtry${canWrite() ? ' albo <a href="#/nowe">dodaj nowe zgłoszenie</a>' : ''}.</div>`}
     <div class="listfoot"><span>${list.length} z ${S.issues.length}</span><span>Kliknij wiersz, aby otworzyć</span></div></div>`;
   bindRowLinks(box);
+  if (adm) bindBulk(box, list);
+}
+/* Masowe akcje (administrator): zaznacz zgłoszenia → status / przypisanie / priorytet. */
+function bindBulk(box, list) {
+  const sel = S.view.sel, bar = $('#bulkbar', box);
+  const visible = new Set(list.map(i => i.id));
+  [...sel].forEach(id => { if (!visible.has(id)) sel.delete(id); });
+  const draw = () => {
+    bar.hidden = !sel.size;
+    bar.innerHTML = `<b>Zaznaczono: ${sel.size}</b><button class="btn secondary sm" data-bulk="status">Zmień status</button><button class="btn secondary sm" data-bulk="assignee">Przypisz</button><button class="btn secondary sm" data-bulk="priority">Priorytet</button><button class="btn ghost sm" data-bulk="clear">Odznacz</button>`;
+    $$('[data-bulk]', bar).forEach(b => b.onclick = () => bulkModal(b.dataset.bulk));
+    const all = $('#selAll', box); if (all) { all.checked = sel.size > 0 && list.every(i => sel.has(i.id)); all.indeterminate = sel.size > 0 && !all.checked; }
+  };
+  $$('[data-sel]', box).forEach(c => c.onchange = () => { const id = Number(c.dataset.sel); c.checked ? sel.add(id) : sel.delete(id); draw(); });
+  const all = $('#selAll', box); if (all) all.onchange = () => { list.forEach(i => all.checked ? sel.add(i.id) : sel.delete(i.id)); $$('[data-sel]', box).forEach(c => { c.checked = all.checked; }); draw(); };
+  draw();
+}
+function bulkModal(what) {
+  const sel = S.view.sel;
+  if (what === 'clear') { sel.clear(); return drawIssueList(); }
+  const users = S.meta.users.filter(u => u.active && u.role !== 'viewer');
+  const st = Object.entries(S.meta.statuses).filter(([k]) => k !== 'rejected');
+  const body = {
+    status: `<div class="field"><label>Nowy status</label><select id="bS">${opts(st, 'fixed')}</select></div>
+      <div class="field" id="bFixBox" style="margin-top:10px"><label>Naprawiono w wersji <i>*</i></label><input id="bFix" maxlength="60" placeholder="np. 0.9.3"><span class="hint">Ustaw „Do weryfikacji” dopiero po wgraniu poprawek na demo.</span></div>
+      <div class="field" style="margin-top:10px"><label>Komentarz do każdego zgłoszenia (opcjonalnie)</label><textarea id="bC" style="min-height:60px"></textarea></div>
+      <p class="hint">Odrzucanie robimy pojedynczo — wymaga powodu.</p>`,
+    assignee: `<div class="field"><label>Osoba naprawiająca</label><select id="bA">${opts(users.map(u => [u.id, u.name]), '', '— nieprzypisane —')}</select></div>`,
+    priority: `<div class="field"><label>Priorytet</label><select id="bP">${opts(Object.entries(S.meta.priorities), 'high')}</select></div>`,
+  }[what];
+  const o = modal({ status: 'Zmiana statusu', assignee: 'Przypisanie', priority: 'Priorytet' }[what] + ` — ${sel.size} zgłoszeń`, body, 'Zastosuj', async (btn, close) => {
+    const data = { ids: [...sel], what };
+    if (what === 'status') { data.status = $('#bS', o).value; data.fixed_in = $('#bFix', o).value.trim(); data.comment = $('#bC', o).value.trim(); if (data.status === 'fixed' && !data.fixed_in) return toast('Wpisz wersję z poprawkami.', true); }
+    if (what === 'assignee') data.assignee_id = $('#bA', o).value ? Number($('#bA', o).value) : null;
+    if (what === 'priority') data.priority = $('#bP', o).value;
+    await busy(btn, async () => {
+      const r = await api('issues_bulk', { body: data }); close(); sel.clear(); await loadIssues(); updateCounts(); drawIssueList();
+      if (r.errors.length) modal('Nie wszystko się udało', `<p>Zmieniono: <b>${r.done}</b>. Pominięte:</p><ul class="small">${r.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul>`, null, null);
+      else toast('Zmieniono zgłoszeń: ' + r.done + '.');
+    });
+  });
+  if (what === 'status') { const t = () => { $('#bFixBox', o).hidden = $('#bS', o).value !== 'fixed'; }; $('#bS', o).onchange = t; t(); }
 }
 
 /* ---------- formularz zgłoszenia ---------- */

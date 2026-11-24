@@ -446,16 +446,16 @@ if ($action === 'issue_update') {
     out(['issue' => issue_row($id)]);
 }
 
-if ($action === 'issue_status') {
-    require_post();
-    $id = (int)($_GET['id'] ?? 0);
+/** Zmiana statusu z pełnymi regułami (uprawnienia, powody, wersja, historia, e-maile). Błąd → QaError. */
+function change_status(array $u, int $id, array $b): array
+{
+    $p = db();
     $issue = issue_row($id);
-    $b = body();
     $to = (string)($b['status'] ?? '');
     $comment = str_in($b, 'comment', 20000);
-    if (!array_key_exists($to, QA_STATUSES)) out(['error' => 'Nieznany status.'], 422);
+    if (!array_key_exists($to, QA_STATUSES)) throw new QaError('Nieznany status.', 422);
     $from = $issue['status'];
-    if ($from === $to) out(['issue' => $issue]);
+    if ($from === $to) return $issue;
     $allowed = false;
     if ($u['role'] === 'admin') $allowed = true;
     elseif ($u['role'] === 'tester') {
@@ -463,25 +463,25 @@ if ($action === 'issue_status') {
         $allowed = ($from === 'fixed' && in_array($to, ['closed', 'reopened'], true))
             || (in_array($from, ['closed', 'rejected'], true) && $to === 'reopened');
     }
-    if (!$allowed) out(['error' => 'Nie możesz zmienić statusu z „' . QA_STATUSES[$from] . '” na „' . QA_STATUSES[$to] . '”.'], 403);
-    if ($to === 'reopened' && $comment === '') out(['error' => 'Dopisz komentarz — co dalej nie działa.'], 422);
+    if (!$allowed) throw new QaError('Nie możesz zmienić statusu z „' . QA_STATUSES[$from] . '” na „' . QA_STATUSES[$to] . '”.', 403);
+    if ($to === 'reopened' && $comment === '') throw new QaError('Dopisz komentarz — co dalej nie działa.', 422);
     $reason = '';
     $dupOf = null;
     if ($to === 'rejected') {
         $reason = (string)($b['reject_reason'] ?? '');
-        if (!array_key_exists($reason, QA_REJECT_REASONS)) out(['error' => 'Wybierz powód odrzucenia.'], 422);
+        if (!array_key_exists($reason, QA_REJECT_REASONS)) throw new QaError('Wybierz powód odrzucenia.', 422);
         if ($reason === 'duplicate') {
             $dupOf = issue_id_from_key((string)($b['duplicate_of'] ?? ''));
-            if ($dupOf === $id) out(['error' => 'Zgłoszenie nie może być duplikatem samego siebie.'], 422);
+            if ($dupOf === $id) throw new QaError('Zgłoszenie nie może być duplikatem samego siebie.', 422);
             $q = $p->prepare('SELECT id FROM qa_issues WHERE id=?');
             $q->execute([$dupOf]);
-            if (!$dupOf || !$q->fetchColumn()) out(['error' => 'Podaj numer oryginalnego zgłoszenia, np. PZB-0012.'], 422);
+            if (!$dupOf || !$q->fetchColumn()) throw new QaError('Podaj numer oryginalnego zgłoszenia, np. PZB-0012.', 422);
         }
     }
     $fixedIn = $issue['fixed_in'];
     if ($to === 'fixed') {
         $fixedIn = str_in($b, 'fixed_in', 60) ?: $fixedIn;
-        if ($fixedIn === '') out(['error' => 'Wpisz wersję, w której jest poprawka (np. 0.9.3). Ustawiaj „Do weryfikacji” dopiero po wgraniu poprawki na demo.'], 422);
+        if ($fixedIn === '') throw new QaError('Wpisz wersję, w której jest poprawka (np. 0.9.3). Ustawiaj „Do weryfikacji” dopiero po wgraniu poprawki na demo.', 422);
         if ($fixedIn !== $issue['fixed_in']) $p->prepare('UPDATE qa_issues SET fixed_in=? WHERE id=?')->execute([$fixedIn, $id]);
     }
     $closed = in_array($to, ['closed', 'rejected'], true) ? qa_now() : null;
@@ -510,7 +510,62 @@ if ($action === 'issue_status') {
         notify([...admin_ids(), (int)$after['assignee_id']], $u['id'], $after, 'Zgłoszenie otwarte ponownie',
             $u['name'] . ' otworzył(a) zgłoszenie ponownie.' . ($comment !== '' ? "\n\nKomentarz: " . $comment : ''));
     }
-    out(['issue' => $after]);
+    return $after;
+}
+
+
+final class QaError extends RuntimeException {}
+
+if ($action === 'issue_status') {
+    require_post();
+    try { out(['issue' => change_status($u, (int)($_GET['id'] ?? 0), body())]); }
+    catch (QaError $e) { out(['error' => $e->getMessage()], $e->getCode()); }
+}
+
+/* ---------- masowe akcje (1.12) ---------- */
+
+if ($action === 'issues_bulk') {
+    require_post();
+    need_role($u, 'admin');
+    $b = body();
+    $ids = array_values(array_unique(array_filter(array_map('intval', (array)($b['ids'] ?? [])))));
+    if (!$ids) out(['error' => 'Zaznacz co najmniej jedno zgłoszenie.'], 422);
+    if (count($ids) > 200) out(['error' => 'Najwyżej 200 zgłoszeń naraz.'], 422);
+    $what = (string)($b['what'] ?? '');
+    $done = 0;
+    $errors = [];
+    foreach ($ids as $id) {
+        try {
+            if ($what === 'status') {
+                $to = (string)($b['status'] ?? '');
+                if ($to === 'rejected') throw new QaError('Odrzucenie wymaga powodu — zrób je pojedynczo.', 422);
+                change_status($u, $id, ['status' => $to, 'fixed_in' => $b['fixed_in'] ?? '', 'comment' => $b['comment'] ?? '']);
+            } elseif ($what === 'assignee' || $what === 'priority') {
+                $before = issue_row($id);
+                if ($what === 'priority') {
+                    $v = (string)($b['priority'] ?? '');
+                    if (!isset(QA_PRIORITIES[$v])) throw new QaError('Nieznany priorytet.', 422);
+                    if ($v === $before['priority']) continue;
+                    $p->prepare('UPDATE qa_issues SET priority=?, updated_at=? WHERE id=?')->execute([$v, qa_now(), $id]);
+                    log_act($id, $u['id'], 'field', 'Priorytet: ' . QA_PRIORITIES[$before['priority']] . ' → ' . QA_PRIORITIES[$v] . '.');
+                } else {
+                    $v = user_exists_active(isset($b['assignee_id']) ? (int)$b['assignee_id'] : null);
+                    if ($v === $before['assignee_id']) continue;
+                    $p->prepare('UPDATE qa_issues SET assignee_id=?, updated_at=? WHERE id=?')->execute([$v, qa_now(), $id]);
+                    $n = '—';
+                    if ($v) { $q = $p->prepare('SELECT display_name FROM qa_users WHERE id=?'); $q->execute([$v]); $n = (string)$q->fetchColumn(); }
+                    log_act($id, $u['id'], 'field', 'Przypisano: ' . $n . '.');
+                    if ($v) notify([$v], $u['id'], issue_row($id), 'Przypisano Ci zgłoszenie', $u['name'] . ' przypisał(a) Ci zgłoszenie do naprawy.');
+                }
+            } else {
+                out(['error' => 'Nieznana akcja masowa.'], 422);
+            }
+            $done++;
+        } catch (QaError $e) {
+            $errors[] = issue_key_of($id) . ': ' . $e->getMessage();
+        }
+    }
+    out(['ok' => true, 'done' => $done, 'errors' => $errors]);
 }
 
 if ($action === 'comment') {
