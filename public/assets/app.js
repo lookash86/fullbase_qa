@@ -188,6 +188,7 @@ function renderShell() {
       <a href="#/zgloszenia" data-nav="zgloszenia"><span class="ico">▦</span>Zgłoszenia<span class="count" id="cOpen"></span></a>
       <a href="#/weryfikacja" data-nav="weryfikacja"><span class="ico">✓</span>Do weryfikacji<span class="count hot" id="cFixed"></span></a>
       <a href="#/moje" data-nav="moje"><span class="ico">☺</span>Moje zgłoszenia</a>
+      <a href="#/wersje" data-nav="wersje"><span class="ico">⇪</span>Wersje</a>
       ${canWrite() ? '<a href="#/nowe" data-nav="nowe"><span class="ico">＋</span>Nowe zgłoszenie</a>' : ''}
       <div class="navlabel">Testy</div>
       <a href="#/przebiegi" data-nav="przebiegi"><span class="ico">▶</span>Przebiegi testów</a>
@@ -222,7 +223,7 @@ async function route() {
   const [r, id] = parts;
   try {
     // listy zawsze świeże — inni użytkownicy mogli coś zmienić w międzyczasie
-    if ([undefined, 'pulpit', 'zgloszenia', 'weryfikacja', 'moje', 'projekty'].includes(r)) { await loadIssues(); updateCounts(); }
+    if ([undefined, 'pulpit', 'zgloszenia', 'weryfikacja', 'moje', 'projekty', 'wersje'].includes(r)) { await loadIssues(); updateCounts(); }
     switch (r) {
       case undefined: case 'pulpit': return await viewDashboard();
       case 'zgloszenia': return viewIssues('zgloszenia');
@@ -237,6 +238,7 @@ async function route() {
       case 'uzytkownicy': return await viewUsers();
       case 'projekty': return viewProjects();
       case 'konto': return viewAccount();
+      case 'wersje': return viewVersions();
       default: location.hash = '#/pulpit';
     }
   } catch (e) { view(`<div class="card empty"><b>Nie udało się wczytać widoku</b>${esc(e.message)}</div>`); }
@@ -1026,6 +1028,42 @@ function viewProjects() {
   };
   $('#newProj').onclick = () => edit({ active: 1, environments: S.meta.projects[0]?.environments || [] });
   $$('[data-p]').forEach(el => el.onclick = () => edit(project(el.dataset.p)));
+}
+
+/* ---------- wersje i lista zmian (1.17) ---------- */
+function versionGroups(projectId) {
+  const g = {};
+  S.issues.filter(i => i.fixed_in && ['fixed', 'closed'].includes(i.status) && (!projectId || i.project_id === Number(projectId)))
+    .forEach(i => { const k = i.project_code + '|' + i.fixed_in; (g[k] ||= { code: i.project_code, name: i.project_name, version: i.fixed_in, items: [] }).items.push(i); });
+  return Object.values(g).sort((a, b) => b.version.localeCompare(a.version, 'pl', { numeric: true }) || a.code.localeCompare(b.code));
+}
+function releaseNotes(v) {
+  const line = i => `- ${i.key} ${i.title}${i.module ? ' (' + i.module + ')' : ''}`;
+  const done = v.items.filter(i => i.status === 'closed'), wait = v.items.filter(i => i.status === 'fixed');
+  return `## ${v.name} — wersja ${v.version}\n\n`
+    + (done.length ? `### Naprawione i potwierdzone przez testera (${done.length})\n${done.map(line).join('\n')}\n\n` : '')
+    + (wait.length ? `### Naprawione, czeka na sprawdzenie (${wait.length})\n${wait.map(line).join('\n')}\n` : '');
+}
+function viewVersions() {
+  setNav('wersje');
+  const F = S.view.verF ??= { project: store.get('filters', {}).project || '' };
+  const draw = () => {
+    const vs = versionGroups(F.project);
+    $('#verList').innerHTML = vs.length ? vs.map((v, n) => {
+      const done = v.items.filter(i => i.status === 'closed').length, wait = v.items.length - done;
+      return `<div class="card" style="margin-bottom:14px"><div class="section"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+        <div><div class="key">${esc(v.code)}</div><h2 style="margin:2px 0 4px">Wersja ${esc(v.version)}</h2><div class="sub">✓ ${done} potwierdzonych · ⏳ ${wait} czeka na sprawdzenie</div></div>
+        <button class="btn secondary sm" data-notes="${n}">⧉ Kopiuj opis wydania</button></div>
+        <table style="margin-top:10px"><tbody>${v.items.sort((a, b) => (a.status === 'fixed') - (b.status === 'fixed') || SEV[a.severity] - SEV[b.severity]).map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key" style="width:90px">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${esc(i.module || '')}</div></td><td style="width:120px">${svB(i.severity)}</td><td style="width:130px">${stB(i.status)}</td></tr>`).join('')}</tbody></table></div></div>`;
+    }).join('') : '<div class="card empty"><b>Brak wersji z poprawkami</b>Wersja pojawi się tutaj, gdy administrator ustawi zgłoszenie na „Do weryfikacji” z numerem wersji.</div>';
+    bindRowLinks($('#verList'));
+    $$('[data-notes]').forEach(b => b.onclick = async () => { const t = releaseNotes(vs[Number(b.dataset.notes)]);
+      if (await copyText(t)) toast('Skopiowano opis wydania.'); else { modal('Skopiuj ręcznie', `<div class="field"><textarea id="rnT" style="min-height:260px;font-family:monospace;font-size:12px">${esc(t)}</textarea></div>`, null, null, true); $('#rnT').select(); } });
+  };
+  view(`<div class="pagehead"><div><div class="eyebrow">Wydania</div><h1>Wersje</h1><p>Co naprawiono w każdej wersji — według pola „Naprawiono w wersji”. Tester widzi, co ma sprawdzić; Ty masz gotowy opis wydania.</p></div></div>
+    <div class="filters"><select class="control" id="vfProject">${opts(S.meta.projects.map(p => [p.id, p.code + ' · ' + p.name]), F.project, 'Każdy projekt')}</select></div><div id="verList"></div>`);
+  $('#vfProject').onchange = e => { F.project = e.target.value; draw(); };
+  draw();
 }
 
 /* ---------- konto ---------- */

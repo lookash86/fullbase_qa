@@ -232,6 +232,8 @@ if ($node === '') echo "  —    brak node — pomijam sprawdzenie składni JS\n
 else {
     exec('node --check ' . escapeshellarg(ZRODLO . '/public/assets/app.js') . ' 2>&1', $wy, $kodJs);
     sprawdz($kodJs === 0, 'składnia public/assets/app.js (node --check)', implode(' ', $wy));
+    exec('node ' . escapeshellarg(ZRODLO . '/narzedzia/test-js.js') . ' 2>&1', $wyJs, $kodJs2);
+    sprawdz($kodJs2 === 0, 'logika frontendu (narzedzia/test-js.js)', implode(' | ', array_filter($wyJs, fn($l) => str_contains($l, 'BŁĄD'))));
 }
 foreach (['app/bootstrap.php', 'app/schema.php', 'app/migrate.php', 'app/mail.php', 'public/api.php', 'public/install.php', 'public/index.php'] as $plikPhp) {
     exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg(ZRODLO . '/' . $plikPhp) . ' 2>&1', $wy2, $kodPhp);
