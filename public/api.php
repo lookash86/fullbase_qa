@@ -392,7 +392,20 @@ if ($action === 'issue_create') {
     if (!empty($b['run_id']) && !empty($b['case_id'])) {
         $q = $p->prepare('UPDATE qa_results SET issue_id=?, result=CASE WHEN result IN (\'pending\',\'pass\') THEN \'fail\' ELSE result END, tester_id=?, updated_at=? WHERE run_id=? AND case_id=?');
         $q->execute([$id, $u['id'], $now, (int)$b['run_id'], (int)$b['case_id']]);
-        if ($q->rowCount()) log_act($id, $u['id'], 'field', 'Powiązano z przebiegiem testów #' . (int)$b['run_id'] . '.');
+        if ($q->rowCount()) {
+            log_act($id, $u['id'], 'field', 'Powiązano z przebiegiem testów #' . (int)$b['run_id'] . '.');
+            // zrzuty dodane przy wyniku przechodzą do zgłoszenia (kopia pliku)
+            $q = $p->prepare('SELECT * FROM qa_result_files WHERE run_id=? AND case_id=? ORDER BY id');
+            $q->execute([(int)$b['run_id'], (int)$b['case_id']]);
+            foreach ($q->fetchAll() as $rf) {
+                $src = QA_DATA . '/uploads/' . basename($rf['stored_name']);
+                $dst = bin2hex(random_bytes(16)) . '.' . pathinfo($rf['stored_name'], PATHINFO_EXTENSION);
+                if (is_file($src) && copy($src, QA_DATA . '/uploads/' . $dst)) {
+                    $p->prepare('INSERT INTO qa_attachments(issue_id,user_id,orig_name,stored_name,mime,size,created_at) VALUES(?,?,?,?,?,?,?)')
+                        ->execute([$id, $rf['user_id'], $rf['orig_name'], $dst, $rf['mime'], $rf['size'], $now]);
+                }
+            }
+        }
     }
     $p->commit();
     $new = issue_row($id);
@@ -599,17 +612,15 @@ if ($action === 'issue_delete') {
 
 /* ---------- załączniki ---------- */
 
-if ($action === 'upload') {
-    require_post();
-    need_role($u, 'admin', 'tester');
-    $id = (int)($_GET['id'] ?? 0);
-    issue_row($id);
+/** Sprawdza i zapisuje przesłane pliki w data/uploads. Najpierw kontrola wszystkich, potem zapis — zły plik nie zostawia połowy. */
+function store_uploads(): array
+{
     $files = $_FILES['files'] ?? null;
     if (!$files || !is_array($files['name'])) out(['error' => 'Nie wybrano plików (lub plik przekracza limit serwera).'], 422);
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $saved = [];
     $count = count($files['name']);
     if ($count > 10) out(['error' => 'Najwyżej 10 plików naraz.'], 422);
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $ok = [];
     for ($i = 0; $i < $count; $i++) {
         $name = (string)$files['name'][$i];
         if ($files['error'][$i] !== UPLOAD_ERR_OK) out(['error' => "Plik „{$name}” nie został przesłany (za duży albo przerwany)."], 422);
@@ -617,22 +628,15 @@ if ($action === 'upload') {
         $mime = (string)$finfo->file($files['tmp_name'][$i]);
         if ($mime === 'text/x-log' || ($mime === 'text/plain' && preg_match('/\.(log|txt|csv|json)$/i', $name))) $mime = 'text/plain';
         if (!isset(QA_UPLOAD_TYPES[$mime])) out(['error' => "Plik „{$name}” ma niedozwolony typ ($mime). Dozwolone: obrazy, PDF, TXT/LOG, CSV, JSON, MP4/WEBM, ZIP."], 415);
-        $stored = bin2hex(random_bytes(16)) . '.' . QA_UPLOAD_TYPES[$mime];
-        if (!move_uploaded_file($files['tmp_name'][$i], QA_DATA . '/uploads/' . $stored)) out(['error' => 'Nie udało się zapisać pliku na serwerze.'], 500);
-        $clean = mb_substr(preg_replace('/[^\p{L}\p{N}._ ()-]+/u', '_', $name) ?: 'plik', 0, 200);
-        $p->prepare('INSERT INTO qa_attachments(issue_id,user_id,orig_name,stored_name,mime,size,created_at) VALUES(?,?,?,?,?,?,?)')
-            ->execute([$id, $u['id'], $clean, $stored, $mime, (int)$files['size'][$i], qa_now()]);
-        $saved[] = $clean;
+        $ok[] = ['tmp' => $files['tmp_name'][$i], 'orig' => mb_substr(preg_replace('/[^\p{L}\p{N}._ ()-]+/u', '_', $name) ?: 'plik', 0, 200),
+            'mime' => $mime, 'size' => (int)$files['size'][$i], 'stored' => bin2hex(random_bytes(16)) . '.' . QA_UPLOAD_TYPES[$mime]];
     }
-    log_act($id, $u['id'], 'attachment', 'Dodano załączniki: ' . implode(', ', $saved) . '.');
-    touch_issue($id);
-    out(['ok' => true, 'saved' => count($saved)]);
+    foreach ($ok as $x) if (!move_uploaded_file($x['tmp'], QA_DATA . '/uploads/' . $x['stored'])) out(['error' => 'Nie udało się zapisać pliku na serwerze.'], 500);
+    return $ok;
 }
-
-if ($action === 'file') {
-    $q = $p->prepare('SELECT * FROM qa_attachments WHERE id=?');
-    $q->execute([(int)($_GET['id'] ?? 0)]);
-    $f = $q->fetch();
+/** Wydaje plik z data/uploads z bezpiecznymi nagłówkami. */
+function serve_file(?array $f): never
+{
     $path = $f ? QA_DATA . '/uploads/' . basename($f['stored_name']) : '';
     if (!$f || !is_file($path)) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo 'Nie znaleziono pliku.'; exit; }
     $inline = str_starts_with($f['mime'], 'image/') || in_array($f['mime'], ['application/pdf', 'video/mp4', 'video/webm'], true);
@@ -643,6 +647,65 @@ if ($action === 'file') {
     header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . "; filename*=UTF-8''" . rawurlencode($f['orig_name']));
     readfile($path);
     exit;
+}
+
+if ($action === 'upload') {
+    require_post();
+    need_role($u, 'admin', 'tester');
+    $id = (int)($_GET['id'] ?? 0);
+    issue_row($id);
+    $saved = [];
+    foreach (store_uploads() as $x) {
+        $p->prepare('INSERT INTO qa_attachments(issue_id,user_id,orig_name,stored_name,mime,size,created_at) VALUES(?,?,?,?,?,?,?)')
+            ->execute([$id, $u['id'], $x['orig'], $x['stored'], $x['mime'], $x['size'], qa_now()]);
+        $saved[] = $x['orig'];
+    }
+    log_act($id, $u['id'], 'attachment', 'Dodano załączniki: ' . implode(', ', $saved) . '.');
+    touch_issue($id);
+    out(['ok' => true, 'saved' => count($saved)]);
+}
+
+if ($action === 'result_upload') {
+    require_post();
+    need_role($u, 'admin', 'tester');
+    $runId = (int)($_GET['run'] ?? 0);
+    $caseId = (int)($_GET['case'] ?? 0);
+    $q = $p->prepare('SELECT n.status FROM qa_results r JOIN qa_runs n ON n.id=r.run_id WHERE r.run_id=? AND r.case_id=?');
+    $q->execute([$runId, $caseId]);
+    $st = $q->fetchColumn();
+    if (!$st) out(['error' => 'Nie znaleziono scenariusza w tym przebiegu.'], 404);
+    if ($st !== 'open') out(['error' => 'Przebieg jest zamknięty.'], 422);
+    $n = 0;
+    foreach (store_uploads() as $x) {
+        $p->prepare('INSERT INTO qa_result_files(run_id,case_id,user_id,orig_name,stored_name,mime,size,created_at) VALUES(?,?,?,?,?,?,?,?)')
+            ->execute([$runId, $caseId, $u['id'], $x['orig'], $x['stored'], $x['mime'], $x['size'], qa_now()]);
+        $n++;
+    }
+    out(['ok' => true, 'saved' => $n]);
+}
+
+if ($action === 'rfile') {
+    $q = $p->prepare('SELECT * FROM qa_result_files WHERE id=?');
+    $q->execute([(int)($_GET['id'] ?? 0)]);
+    serve_file($q->fetch() ?: null);
+}
+
+if ($action === 'rfile_delete') {
+    require_post();
+    $q = $p->prepare('SELECT f.*, n.status run_status FROM qa_result_files f JOIN qa_runs n ON n.id=f.run_id WHERE f.id=?');
+    $q->execute([(int)($_GET['id'] ?? 0)]);
+    $f = $q->fetch();
+    if (!$f) out(['error' => 'Nie znaleziono pliku.'], 404);
+    if ($u['role'] !== 'admin' && (int)$f['user_id'] !== $u['id']) out(['error' => 'Możesz usuwać tylko własne pliki.'], 403);
+    $p->prepare('DELETE FROM qa_result_files WHERE id=?')->execute([$f['id']]);
+    @unlink(QA_DATA . '/uploads/' . basename($f['stored_name']));
+    out(['ok' => true]);
+}
+
+if ($action === 'file') {
+    $q = $p->prepare('SELECT * FROM qa_attachments WHERE id=?');
+    $q->execute([(int)($_GET['id'] ?? 0)]);
+    serve_file($q->fetch() ?: null);
 }
 
 if ($action === 'file_delete') {
@@ -935,6 +998,12 @@ if ($action === 'run') {
         $r['issue_key'] = $r['issue_id'] ? $run['project_code'] . '-' . str_pad((string)$r['issue_id'], 4, '0', STR_PAD_LEFT) : null;
         return $r;
     }, $q->fetchAll());
+    $q = $p->prepare('SELECT id, case_id, orig_name, mime, size, user_id FROM qa_result_files WHERE run_id=? ORDER BY id');
+    $q->execute([$id]);
+    $rf = [];
+    foreach ($q->fetchAll() as $x) $rf[(int)$x['case_id']][] = ['id' => (int)$x['id'], 'orig_name' => $x['orig_name'], 'mime' => $x['mime'], 'size' => (int)$x['size'], 'user_id' => (int)$x['user_id']];
+    foreach ($run['results'] as &$x) $x['files'] = $rf[$x['case_id']] ?? [];
+    unset($x);
     $run['id'] = (int)$run['id'];
     $run['project_id'] = (int)$run['project_id'];
     out(['run' => $run]);

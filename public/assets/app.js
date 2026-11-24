@@ -836,8 +836,9 @@ async function viewRun(id) {
       <div class="body"><div class="steps3"><div><h3>Warunki wstępne</h3><div class="prose">${esc(x.preconditions || '—')}</div></div><div><h3>Kroki</h3><div class="prose">${esc(x.steps)}</div></div><div><h3>Oczekiwany wynik</h3><div class="prose">${esc(x.expected || '—')}</div></div></div>
         ${open ? `<div class="resbtns">${[['pass', '✓ Zaliczony'], ['fail', '✗ Niezaliczony'], ['blocked', '⛔ Zablokowany'], ['skip', '↷ Pominięty']].map(([k, l]) => `<button type="button" class="${k}${x.result === k ? ' on' : ''}" data-res="${k}">${l}</button>`).join('')}${x.result !== 'pending' ? '<button type="button" data-res="pending" class="btn ghost">wyczyść</button>' : ''}</div>
         <div class="field"><textarea class="note" placeholder="Notatka z testu (co sprawdziłeś, co zauważyłeś)…" style="min-height:60px">${esc(x.note)}</textarea></div>
-        <div class="actions" style="margin-top:8px;justify-content:flex-end">${x.issue_key ? '' : `<a class="btn soft sm" href="#/nowe?run=${r.id}&case=${x.case_id}">＋ Zgłoś błąd z tego scenariusza</a>`}</div>`
-        : (x.note ? `<div class="section" style="padding:10px 0 0"><h3>Notatka</h3><div class="prose">${esc(x.note)}</div></div>` : '')}</div></div>`).join('')
+        ${x.files.length ? `<div class="rfiles">${x.files.map(rfileHtml).join('')}</div>` : ''}
+        <div class="actions" style="margin-top:8px;justify-content:flex-end"><label class="btn secondary sm" title="Albo wklej zrzut Ctrl+V, gdy scenariusz jest otwarty">📷 Dodaj zrzut<input type="file" hidden multiple accept="image/*,.pdf,.txt,.log,.mp4,.webm" data-rup></label>${x.issue_key ? '' : `<a class="btn soft sm" href="#/nowe?run=${r.id}&case=${x.case_id}">＋ Zgłoś błąd z tego scenariusza</a>`}</div>`
+        : (x.note ? `<div class="section" style="padding:10px 0 0"><h3>Notatka</h3><div class="prose">${esc(x.note)}</div></div>` : '') + (x.files.length ? `<div class="rfiles">${x.files.map(rfileHtml).join('')}</div>` : '')}</div></div>`).join('')
       : '<div class="card empty"><b>Nic do pokazania</b>Zmień filtr powyżej.</div>';
     $$('.runcase').forEach(el => {
       const cid = Number(el.dataset.c), item = r.results.find(x => x.case_id === cid);
@@ -853,8 +854,34 @@ async function viewRun(id) {
         else if (res !== 'pending') { const next = r.results.find(x => x.result === 'pending'); S.view.openCase = next?.case_id ?? null; }
         viewRun(id);
       });
+      const up = $('[data-rup]', el); if (up) up.onchange = e => { uploadResultFiles(r.id, cid, [...e.target.files]); e.target.value = ''; };
+      $$('[data-rfdel]', el).forEach(b => b.onclick = async ev => { ev.preventDefault(); if (!confirm('Usunąć ten plik?')) return; try { await api('rfile_delete', { params: { id: b.dataset.rfdel }, body: {} }); viewRun(id); } catch (e2) { toast(e2.message, true); } });
       const note = $('.note', el); if (note) note.onblur = () => { if (note.value !== item.note) save(item.result, note.value).then(() => toast('Zapisano notatkę.')).catch(() => null); };
     });
+  };
+  if (open) {
+    const hint = document.createElement('p'); hint.className = 'hint kbdhint';
+    hint.innerHTML = 'Skróty: <kbd>Z</kbd> zaliczony · <kbd>N</kbd> niezaliczony · <kbd>B</kbd> zablokowany · <kbd>P</kbd> pominięty · <kbd>↓</kbd>/<kbd>↑</kbd> następny/poprzedni · <kbd>Ctrl+V</kbd> zrzut do otwartego scenariusza';
+    $('#cases').before(hint);
+  }
+  const route0 = location.hash;
+  document.onkeydown = e => {
+    if (location.hash !== route0 || !open) { document.onkeydown = null; return; }
+    if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input,textarea,select') || $('.overlay')) return;
+    const cur = $('.runcase.open'), all = $$('.runcase');
+    const k = e.key.toLowerCase(), res = { z: 'pass', n: 'fail', b: 'blocked', p: 'skip' }[k];
+    if (res && cur) { e.preventDefault(); $(`[data-res="${res}"]`, cur)?.click(); return; }
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && all.length) {
+      e.preventDefault();
+      const i = cur ? all.indexOf(cur) : -1, next = all[Math.max(0, Math.min(all.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+      all.forEach(x => x.classList.remove('open')); next.classList.add('open'); S.view.openCase = Number(next.dataset.c); next.scrollIntoView({ block: 'center' });
+    }
+  };
+  document.onpaste = e => {
+    if (location.hash !== route0 || !open) { document.onpaste = null; return; }
+    const cur = $('.runcase.open'); if (!cur) return;
+    const files = [...(e.clipboardData?.items || [])].filter(it => it.kind === 'file').map(it => it.getAsFile()).filter(Boolean);
+    if (files.length) { e.preventDefault(); uploadResultFiles(id, Number(cur.dataset.c), files); }
   };
   $$('[data-show]').forEach(b => b.onclick = () => { F.show = b.dataset.show; $$('[data-show]').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   const setStatus = (status, btn) => busy(btn, async () => { await api('run_status', { body: { id, status } }); toast(status === 'closed' ? 'Przebieg zakończony.' : 'Przebieg wznowiony.'); viewRun(id); });
@@ -863,6 +890,21 @@ async function viewRun(id) {
   if (S.view.openCase == null && open) S.view.openCase = r.results.find(x => x.result === 'pending')?.case_id ?? null;
   draw();
   const opened = $('.runcase.open'); if (opened && S.view.scrollToCase !== false) opened.scrollIntoView({ block: 'center' });
+}
+
+function rfileHtml(f) {
+  const url = 'api.php?action=rfile&id=' + f.id, img = f.mime.startsWith('image/');
+  return `<div class="file"><a href="${url}" target="_blank" rel="noopener">${img ? `<img src="${url}" alt="${esc(f.orig_name)}" loading="lazy">` : '<div class="ficon">📄</div>'}<div class="fname" title="${esc(f.orig_name)}">${esc(f.orig_name)}</div></a>${isAdmin() || f.user_id === S.user.id ? `<button class="del" data-rfdel="${f.id}" title="Usuń plik">×</button>` : ''}</div>`;
+}
+async function uploadResultFiles(runId, caseId, files) {
+  const fd = new FormData();
+  for (let f of files.slice(0, 10)) {
+    if (f.type.startsWith('image/') && f.type !== 'image/gif' && f.size > 1.5 * 1048576) f = await shrinkImage(f);
+    const name = f.name && f.name !== 'image.png' ? f.name : 'zrzut-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.' + ((f.type.split('/')[1] || 'png').replace('jpeg', 'jpg'));
+    fd.append('files[]', f, name);
+  }
+  try { await api('result_upload', { params: { run: runId, case: caseId }, form: fd }); toast('Dodano zrzut do scenariusza.'); S.view.openCase = caseId; S.view.scrollToCase = false; await viewRun(runId); S.view.scrollToCase = true; }
+  catch (e) { toast(e.message, true); }
 }
 
 /* ---------- użytkownicy ---------- */

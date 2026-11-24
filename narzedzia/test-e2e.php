@@ -552,11 +552,28 @@ kod($obs->post('case_save', ['project_id' => $pzbId, 'title' => 'x', 'steps' => 
 $run = kod($tester->post('run_create', ['project_id' => $pzbId, 'name' => 'Regresja testowa', 'environment' => 'demo.fullbase.pl', 'version' => '0.9']), 200, 'tester tworzy przebieg');
 $idRun = (int)($run['id'] ?? 0);
 kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'fail', 'note' => 'Wynik znika']), 200, 'tester zapisuje wynik: niezaliczony');
+// 1.13: zrzut przy wyniku
+$wyslijDoWyniku = function (Klient $k) use ($idRun, $idCase, $png) {
+    $g = '----fbqa' . bin2hex(random_bytes(8));
+    $t = "--$g\r\nContent-Disposition: form-data; name=\"files[]\"; filename=\"wynik.png\"\r\nContent-Type: image/png\r\n\r\n$png\r\n--$g--\r\n";
+    return $k->zadanie('POST', "/api.php?action=result_upload&run=$idRun&case=$idCase", $t, "multipart/form-data; boundary=$g");
+};
+kod($wyslijDoWyniku($obs), 403, '1.13: obserwator nie dodaje zrzutów do wyników');
+kod($wyslijDoWyniku($tester), 200, '1.13: tester dodaje zrzut przy wyniku');
+$rr = array_values(array_filter($tester->get('run&id=' . $idRun)[1]['run']['results'] ?? [], fn($x) => $x['case_id'] === $idCase))[0] ?? [];
+$rfId = (int)($rr['files'][0]['id'] ?? 0);
+sprawdz($rfId > 0, '1.13: zrzut widoczny przy scenariuszu w przebiegu');
+[$k, , $plik] = $obs->get('rfile&id=' . $rfId);
+sprawdz($k === 200 && $plik === $png, '1.13: zalogowany pobiera zrzut wyniku');
+kod($gosc->get('rfile&id=' . $rfId), 401, '1.13: zrzut wyniku wymaga logowania');
+kod($tester2->post('rfile_delete&id=' . $rfId), 403, '1.13: cudzego zrzutu nie można usunąć');
 $z2 = kod($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Niezaliczony: Wpisanie wyniku meczu', 'description' => 'Wynik znika',
     'steps' => '1. Otwórz mecz', 'run_id' => $idRun, 'case_id' => $idCase]), 200, 'zgłoszenie z niezaliczonego scenariusza');
 $r = kod($tester->get('run&id=' . $idRun), 200, 'szczegóły przebiegu');
 $wynik = array_values(array_filter($r['run']['results'] ?? [], fn($x) => $x['case_id'] === $idCase))[0] ?? [];
 sprawdz((int)($wynik['issue_id'] ?? 0) === (int)($z2['issue']['id'] ?? -1), 'wynik testu powiązany ze zgłoszeniem');
+$zf = $tester->get('issue&id=' . (int)($z2['issue']['id'] ?? 0))[1]['issue']['files'] ?? [];
+sprawdz(count($zf) === 1 && $zf[0]['orig_name'] === 'wynik.png', '1.13: zrzut z wyniku przeszedł do zgłoszenia');
 kod($tester->post('run_status', ['id' => $idRun, 'status' => 'closed']), 200, 'tester zamyka przebieg');
 kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'pass']), 422, 'zamknięty przebieg nie przyjmuje wyników');
 kod($tester->post('case_delete&id=' . $idCase), 403, 'tester nie usuwa scenariuszy');

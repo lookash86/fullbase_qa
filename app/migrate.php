@@ -76,6 +76,20 @@ function qa_migrations(): array
         10 => function (PDO $pdo, string $driver): void {
             qa_add_column($pdo, $driver, 'qa_issues', 'suggestion', "VARCHAR(4000) NOT NULL DEFAULT ''");
         },
+        // 11 — 1.13: zrzuty ekranu przy wyniku scenariusza w przebiegu testów.
+        11 => function (PDO $pdo, string $driver): void {
+            if (qa_has_table($pdo, $driver, 'qa_result_files')) return;
+            $my = $driver === 'mysql';
+            $id = $my ? 'BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+            $ref = $my ? 'BIGINT UNSIGNED' : 'INTEGER';
+            $tail = $my ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
+            $pdo->exec("CREATE TABLE qa_result_files (
+                id $id, run_id $ref NOT NULL, case_id $ref NOT NULL, user_id $ref NOT NULL, orig_name VARCHAR(200) NOT NULL,
+                stored_name VARCHAR(80) NOT NULL, mime VARCHAR(80) NOT NULL, size INT NOT NULL, created_at VARCHAR(19) NOT NULL,
+                FOREIGN KEY (run_id) REFERENCES qa_runs(id) ON DELETE CASCADE, FOREIGN KEY (user_id) REFERENCES qa_users(id)
+            )$tail");
+            $pdo->exec('CREATE INDEX qa_result_files_run ON qa_result_files(run_id, case_id)');
+        },
     ];
 }
 

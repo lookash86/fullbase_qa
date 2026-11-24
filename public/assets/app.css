@@ -114,3 +114,8 @@ fieldset{border:1px solid var(--line);border-radius:12px;padding:14px;display:gr
 /* masowe akcje */
 .selcell{width:34px;padding-right:0!important}.selcell input{width:16px;height:16px;accent-color:var(--teal);cursor:pointer}
 .bulkbar{position:sticky;top:8px;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--navy);color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;box-shadow:var(--shadow)}.bulkbar b{margin-right:6px}.bulkbar .btn.ghost{color:#cfe0dd}
+
+/* przebieg: zrzuty przy wyniku i skróty */
+.rfiles{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.rfiles .file{width:110px}
+kbd{display:inline-block;min-width:18px;padding:1px 5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:#fff;font:700 11px/1.4 inherit;text-align:center;color:var(--ink)}.kbdhint{margin:-4px 0 12px}
+@media (max-width:640px){.kbdhint{display:none}}
