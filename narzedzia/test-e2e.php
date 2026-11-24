@@ -601,6 +601,27 @@ kod($tester->post('run_rerun', ['id' => (int)($rr['id'] ?? 0)]), 422, '1.14: gdy
 kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'pass']), 422, 'zamknięty przebieg nie przyjmuje wyników');
 kod($tester->post('case_delete&id=' . $idCase), 403, 'tester nie usuwa scenariuszy');
 
+/* ---------- 1.18 gotowość wydania ---------- */
+
+sekcja('1.18 Gotowość wydania');
+kod($gosc->get('readiness&project_id=' . $pzbId), 401, 'gotowość wymaga logowania');
+$g = kod($obs->get('readiness&project_id=' . $pzbId), 200, 'obserwator widzi gotowość wydania');
+sprawdz(($g['ready'] ?? true) === false && count($g['open_critical'] ?? []) > 0, 'z otwartymi krytycznymi zgłoszeniami — „jeszcze nie”');
+sprawdz(count($g['critical_cases'] ?? []) >= 6, 'lista scenariuszy krytycznych (z importu)');
+// projekt bez niczego jest gotowy; potem jeden niezaliczony scenariusz krytyczny psuje gotowość
+$admin->post('project_save', ['code' => 'GOT', 'name' => 'Projekt gotowości', 'modules' => 'A', 'environments' => 'demo', 'active' => 1]);
+$gid = 0; foreach ($admin->get('meta')[1]['projects'] ?? [] as $pr) if ($pr['code'] === 'GOT') $gid = $pr['id'];
+sprawdz(($admin->get('readiness&project_id=' . $gid)[1]['ready'] ?? false) === true, 'pusty projekt — gotowy');
+$gc = $admin->post('case_save', ['project_id' => $gid, 'title' => 'Krytyczny', 'steps' => '1. a', 'priority' => 'critical', 'active' => 1])[1]['id'] ?? 0;
+$gr = $admin->post('run_create', ['project_id' => $gid, 'name' => 'R1', 'version' => '1.0'])[1]['id'] ?? 0;
+$admin->post('result_save', ['run_id' => $gr, 'case_id' => $gc, 'result' => 'fail']);
+$g = $admin->get('readiness&project_id=' . $gid)[1];
+sprawdz(($g['ready'] ?? true) === false && ($g['failed'] ?? 0) === 1 && ($g['critical_cases'][0]['run_name'] ?? '') === 'R1', 'niezaliczony scenariusz krytyczny blokuje wydanie');
+$gr2 = $admin->post('run_create', ['project_id' => $gid, 'name' => 'R2', 'version' => '1.1'])[1]['id'] ?? 0;
+$admin->post('result_save', ['run_id' => $gr2, 'case_id' => $gc, 'result' => 'pass']);
+$g = $admin->get('readiness&project_id=' . $gid)[1];
+sprawdz(($g['ready'] ?? false) === true && ($g['critical_cases'][0]['version'] ?? '') === '1.1', 'liczy się ostatni wynik — po zaliczeniu gotowe');
+
 /* ---------- 9. eksport i wylogowanie ---------- */
 
 sekcja('Eksport i wylogowanie');

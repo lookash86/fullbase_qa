@@ -56,7 +56,7 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 - [x] **1.15 Sortowanie i zapisane widoki listy zgłoszeń** (gotowe widoki + własne, zapamiętane w przeglądarce).
 - [x] **1.16 Zestawy scenariuszy** (np. „Szybki test”, „Pełna regresja”, „Telefon”) — wybór zestawu przy nowym przebiegu, kolumna w imporcie CSV.
 - [x] **1.17 Wersje i lista zmian:** strona „Wersje” — co naprawiono w wersji X (do weryfikacji / potwierdzone), kopiowanie jako opis wydania.
-- [ ] **1.18 Gotowość wydania** (= 3.1).
+- [x] **1.18 Gotowość wydania** (= 3.1).
 - [ ] **1.19 Dostęp Claude Code do rejestru:** klucze API (admin), `narzedzia/qa.php` — pobranie zgłoszenia z plikami, komentarz, „Do weryfikacji” z wersją.
 - [ ] **1.20 Automatyczna kopia zapasowa** (raz na dobę, 14 ostatnich, pobieranie przez administratora).
 
@@ -74,7 +74,7 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 
 ## Etap 3 — proces wydań i miary
 
-- [ ] **3.1 Bramka wydania.** Przed każdą wersją PZBall robimy przebieg regresji (wszystkie scenariusze krytyczne). W rejestrze strona „Gotowość wydania”: otwarte zgłoszenia „blokuje pracę”/„psuje dane” = 0, a niezaliczone scenariusze krytyczne = 0.
+- [x] **3.1 Bramka wydania.** (zrobione jako 1.18) Przed każdą wersją PZBall robimy przebieg regresji (wszystkie scenariusze krytyczne). W rejestrze strona „Gotowość wydania”: otwarte zgłoszenia „blokuje pracę”/„psuje dane” = 0, a niezaliczone scenariusze krytyczne = 0.
 - [ ] **3.2 Miary na pulpicie:** średni czas od zgłoszenia do zamknięcia, odsetek ponownych otwarć, liczba błędów według obszaru w ostatnich 30 dniach. Pokazują, który moduł silnika wymaga przebudowy, a nie łatania. Przydadzą się też we wnioskach dotacyjnych jako opis procesu jakości.
 - [ ] **3.3 Przeniesienie na VPS OVH** razem z resztą instalacji (MySQL, kopie poza serwerem zgodnie z `Decyzje_technologiczne`).
 
@@ -112,3 +112,4 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 - 2026-11-24 — 1.15: tylko frontend. Klikalne nagłówki listy (numer, problem, obszar, waga/priorytet, status, zgłosił, zmiana); kierunek zapamiętany w przeglądarce. Pasek widoków nad filtrami: gotowe (Otwarte, Krytyczne otwarte, Do weryfikacji, Nowe do przeglądu / Moje, Nieprzypisane, Przypisane do mnie, Zamknięte) i własne („＋ Zapisz obecne filtry jako widok”, w localStorage tej przeglądarki). Widok = adres z filtrami, więc można go też wysłać linkiem. Nowy filtr „Nieprzypisane”. Sortowanie sprawdzone w node; e2e 202/202.
 - 2026-11-24 — 1.16: migracja 12 (`qa_cases.suites`, lista rozdzielana średnikiem, oczyszczana: spacje, powtórzenia bez względu na wielkość liter, do 12 zestawów po 40 znaków). Scenariusz: pole „Zestawy” z podpowiedziami; lista scenariuszy: filtr i plakietki zestawów. Nowy przebieg: wybór zestawu (z liczbą scenariuszy), który można zawęzić obszarami. Import CSV: opcjonalna kolumna „zestawy”; dla scenariuszy, które już są, dopisuje brakujące zestawy (bez kopii). Pliki scenariuszy w docs/ mają kolumnę: krytyczne = Szybki test + Pełna regresja, rozszerzone = Pełna regresja, priorytetowe = Pełna regresja + Dzień meczowy; dodatkowo „Telefon” (21 scenariuszy). Testy 210/210.
 - 2026-11-24 — 1.17: strona „Wersje” w menu (każda rola), tylko frontend: zgłoszenia „Do weryfikacji” i „Zamknięte” pogrupowane po „Naprawiono w wersji” i projekcie, wersje w kolejności numerycznej (0.9.10 przed 0.9.9), liczniki potwierdzonych / czekających, „⧉ Kopiuj opis wydania” (Markdown: naprawione i potwierdzone + czeka na sprawdzenie). Nowy `narzedzia/test-js.js` (node; sortowanie, Markdown dla programisty, wersje — funkcje wycinane z app.js) uruchamiany przez test-e2e. Testy 211/211.
+- 2026-11-24 — 1.18 (= 3.1): akcja `readiness` (GET, każdy zalogowany, 401 bez logowania): otwarte zgłoszenia z wagą blokuje/psuje dane (także „Do weryfikacji” — dopóki tester nie potwierdzi) i scenariusze o priorytecie „Krytyczny” z OSTATNIM wynikiem z dowolnego przebiegu projektu. Gotowe = 0 otwartych krytycznych i 0 niezaliczonych/zablokowanych; scenariusze bez wyniku tylko ostrzegają. Strona „Gotowość wydania” w menu Testy (werdykt zielony/czerwony, linki do zgłoszeń i przebiegów). Testy 218/218.

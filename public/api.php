@@ -1008,6 +1008,36 @@ if ($action === 'run_create') {
     out(['ok' => true, 'id' => $runId]);
 }
 
+/* ---------- gotowość wydania (1.18 = 3.1) ---------- */
+
+if ($action === 'readiness') {
+    $project = project_row((int)($_GET['project_id'] ?? 0));
+    $q = $p->prepare("SELECT id, title, status, severity, module, fixed_in FROM qa_issues
+        WHERE project_id=? AND severity IN ('blocker','data') AND status NOT IN ('closed','rejected') ORDER BY id");
+    $q->execute([$project['id']]);
+    $issues = array_map(fn($r) => ['id' => (int)$r['id'], 'key' => $project['code'] . '-' . str_pad((string)$r['id'], 4, '0', STR_PAD_LEFT), 'title' => $r['title'],
+        'status' => $r['status'], 'severity' => $r['severity'], 'module' => $r['module'], 'fixed_in' => $r['fixed_in']], $q->fetchAll());
+    $q = $p->prepare("SELECT id, title, module FROM qa_cases WHERE project_id=? AND active=1 AND priority='critical' ORDER BY module, id");
+    $q->execute([$project['id']]);
+    $cases = [];
+    foreach ($q->fetchAll() as $c) $cases[(int)$c['id']] = ['id' => (int)$c['id'], 'title' => $c['title'], 'module' => $c['module'], 'result' => null, 'run_id' => null, 'run_name' => null, 'version' => null, 'at' => null];
+    if ($cases) {
+        $q = $p->prepare("SELECT r.case_id, r.result, r.updated_at, n.id run_id, n.name run_name, n.version FROM qa_results r JOIN qa_runs n ON n.id=r.run_id
+            WHERE n.project_id=? AND r.result<>'pending' AND r.updated_at IS NOT NULL ORDER BY r.updated_at, r.id");
+        $q->execute([$project['id']]);
+        foreach ($q->fetchAll() as $r) {
+            $cid = (int)$r['case_id'];
+            if (isset($cases[$cid])) $cases[$cid] = ['result' => $r['result'], 'run_id' => (int)$r['run_id'], 'run_name' => $r['run_name'], 'version' => $r['version'], 'at' => $r['updated_at']] + $cases[$cid];
+        }
+    }
+    $cases = array_values($cases);
+    $failed = array_filter($cases, fn($c) => in_array($c['result'], ['fail', 'blocked'], true));
+    $untested = array_filter($cases, fn($c) => $c['result'] === null || $c['result'] === 'skip');
+    out(['project' => ['id' => (int)$project['id'], 'code' => $project['code'], 'name' => $project['name']],
+        'ready' => !$issues && !$failed, 'open_critical' => $issues, 'critical_cases' => $cases,
+        'failed' => count($failed), 'untested' => count($untested)]);
+}
+
 if ($action === 'run_rerun') {
     require_post();
     need_role($u, 'admin', 'tester');

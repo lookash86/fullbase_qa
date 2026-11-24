@@ -193,6 +193,7 @@ function renderShell() {
       <div class="navlabel">Testy</div>
       <a href="#/przebiegi" data-nav="przebiegi"><span class="ico">▶</span>Przebiegi testów</a>
       <a href="#/scenariusze" data-nav="scenariusze"><span class="ico">☰</span>Scenariusze</a>
+      <a href="#/gotowosc" data-nav="gotowosc"><span class="ico">⚑</span>Gotowość wydania</a>
       ${isAdmin() ? `<div class="navlabel">Ustawienia</div>
       <a href="#/uzytkownicy" data-nav="uzytkownicy"><span class="ico">◎</span>Użytkownicy</a>
       <a href="#/projekty" data-nav="projekty"><span class="ico">◇</span>Projekty i obszary</a>` : ''}
@@ -239,6 +240,7 @@ async function route() {
       case 'projekty': return viewProjects();
       case 'konto': return viewAccount();
       case 'wersje': return viewVersions();
+      case 'gotowosc': return await viewReadiness();
       default: location.hash = '#/pulpit';
     }
   } catch (e) { view(`<div class="card empty"><b>Nie udało się wczytać widoku</b>${esc(e.message)}</div>`); }
@@ -1028,6 +1030,27 @@ function viewProjects() {
   };
   $('#newProj').onclick = () => edit({ active: 1, environments: S.meta.projects[0]?.environments || [] });
   $$('[data-p]').forEach(el => el.onclick = () => edit(project(el.dataset.p)));
+}
+
+/* ---------- gotowość wydania (1.18) ---------- */
+async function viewReadiness() {
+  setNav('gotowosc');
+  const F = S.view.rdyF ??= { project: store.get('filters', {}).project || activeProjects()[0]?.id || '' };
+  if (!F.project) F.project = activeProjects()[0]?.id || '';
+  const d = await api('readiness', { params: { project_id: F.project } });
+  const rs = { pass: badge('rs-pass', 'zaliczony'), fail: badge('rs-fail', 'niezaliczony'), blocked: badge('rs-blocked', 'zablokowany'), skip: badge('rs-skip', 'pominięty') };
+  const crit = d.critical_cases;
+  view(`<div class="pagehead"><div><div class="eyebrow">Wydania</div><h1>Gotowość wydania</h1><p>Czy można wypuścić nową wersję: zero otwartych błędów „blokuje pracę” i „psuje dane” oraz zero niezaliczonych scenariuszy o priorytecie krytycznym.</p></div>
+      <div class="actions"><select class="control" id="rdP">${opts(activeProjects().map(p => [p.id, p.code + ' · ' + p.name]), F.project)}</select></div></div>
+    <div class="verdict ${d.ready ? 'ok' : 'bad'}"><b>${d.ready ? '✓ Gotowe do wydania' : '✗ Jeszcze nie'}</b><span>${d.ready
+      ? (d.untested ? `Uwaga: ${d.untested} scenariuszy krytycznych nie ma jeszcze wyniku — warto przejść przebieg „Szybki test”.` : 'Wszystkie scenariusze krytyczne zaliczone, brak otwartych krytycznych błędów.')
+      : [d.open_critical.length ? `${d.open_critical.length} otwartych zgłoszeń krytycznych` : '', d.failed ? `${d.failed} scenariuszy krytycznych niezaliczonych lub zablokowanych` : ''].filter(Boolean).join(' · ')}</span></div>
+    <div class="grid2c">
+      <div class="card"><div class="section"><h3>Otwarte zgłoszenia krytyczne (${d.open_critical.length})</h3>${d.open_critical.length ? `<table><tbody>${d.open_critical.map(i => `<tr class="row" data-go="#/z/${i.id}"><td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${esc(i.module || '')}${i.status === 'fixed' && i.fixed_in ? ' · czeka na sprawdzenie w ' + esc(i.fixed_in) : ''}</div></td><td>${svB(i.severity)}</td><td>${stB(i.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted small" style="margin:0">Brak — świetnie.</p>'}</div></div>
+      <div class="card"><div class="section"><h3>Scenariusze krytyczne — ostatni wynik (${crit.length})</h3>${crit.length ? `<table><tbody>${crit.map(c => `<tr><td class="key" style="width:70px">TC-${String(c.id).padStart(3, '0')}</td><td><div class="ttl">${esc(c.title)}</div><div class="sub">${esc(c.module || '')}${c.run_id ? ` · <a href="#/przebieg/${c.run_id}">${esc(c.run_name)}</a>${c.version ? ' (' + esc(c.version) + ')' : ''}` : ''}</div></td><td style="width:110px">${c.result ? rs[c.result] : badge('', 'bez wyniku')}</td></tr>`).join('')}</tbody></table>` : '<p class="muted small" style="margin:0">Ten projekt nie ma scenariuszy o priorytecie „Krytyczny”. Zaimportuj scenariusze krytyczne albo ustaw priorytet w scenariuszach.</p>'}</div></div>
+    </div>`);
+  bindRowLinks();
+  $('#rdP').onchange = e => { F.project = e.target.value; viewReadiness(); };
 }
 
 /* ---------- wersje i lista zmian (1.17) ---------- */
