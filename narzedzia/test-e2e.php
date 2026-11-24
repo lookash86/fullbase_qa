@@ -599,6 +599,8 @@ sprawdz(count($nr['results'] ?? []) === 1 && ($nr['results'][0]['case_id'] ?? 0)
 $tester->post('result_save', ['run_id' => (int)($rr['id'] ?? 0), 'case_id' => $idCase, 'result' => 'pass']);
 kod($tester->post('run_rerun', ['id' => (int)($rr['id'] ?? 0)]), 422, '1.14: gdy wszystko zaliczone — nie ma czego powtarzać');
 kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'pass']), 422, 'zamknięty przebieg nie przyjmuje wyników');
+if ($rfId) kod($tester->post('rfile_delete&id=' . $rfId), 422, 'z zamkniętego przebiegu tester nie usuwa zrzutów');
+kod($tester->post('run_status', ['id' => 999999, 'status' => 'closed']), 404, 'zamknięcie nieistniejącego przebiegu: 404');
 kod($tester->post('case_delete&id=' . $idCase), 403, 'tester nie usuwa scenariuszy');
 
 /* ---------- 1.18 gotowość wydania ---------- */

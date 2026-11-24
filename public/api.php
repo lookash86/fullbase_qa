@@ -291,7 +291,7 @@ if ($action === 'reset_request') {
     $q = $p->prepare('SELECT COUNT(*) FROM qa_password_resets WHERE ip=? AND created_at>?');
     $q->execute([client_ip(), date('Y-m-d H:i:s', time() - 900)]);
     if ((int)$q->fetchColumn() >= 5) out(['error' => 'Zbyt wiele prób. Spróbuj ponownie za 15 minut.'], 429);
-    $q = $p->prepare("SELECT id, email, display_name FROM qa_users WHERE active=1 AND email<>'' AND (username=? OR LOWER(email)=?)");
+    $q = $p->prepare("SELECT id, email, display_name FROM qa_users WHERE active=1 AND email<>'' AND (LOWER(username)=? OR LOWER(email)=?)");
     $q->execute([$who, $who]);
     $user = $q->fetch();
     $userId = $user ? (int)$user['id'] : 0;
@@ -747,6 +747,7 @@ if ($action === 'rfile_delete') {
     $f = $q->fetch();
     if (!$f) out(['error' => 'Nie znaleziono pliku.'], 404);
     if ($u['role'] !== 'admin' && (int)$f['user_id'] !== $u['id']) out(['error' => 'Możesz usuwać tylko własne pliki.'], 403);
+    if ($f['run_status'] !== 'open' && $u['role'] !== 'admin') out(['error' => 'Przebieg jest zamknięty. Pliki może usunąć tylko administrator.'], 422);
     $p->prepare('DELETE FROM qa_result_files WHERE id=?')->execute([$f['id']]);
     @unlink(QA_DATA . '/uploads/' . basename($f['stored_name']));
     out(['ok' => true]);
@@ -1230,7 +1231,9 @@ if ($action === 'run_status') {
     need_role($u, 'admin', 'tester');
     $b = body();
     $status = ($b['status'] ?? '') === 'closed' ? 'closed' : 'open';
-    $p->prepare('UPDATE qa_runs SET status=?, closed_at=? WHERE id=?')->execute([$status, $status === 'closed' ? qa_now() : null, (int)($b['id'] ?? 0)]);
+    $q = $p->prepare('UPDATE qa_runs SET status=?, closed_at=? WHERE id=?');
+    $q->execute([$status, $status === 'closed' ? qa_now() : null, (int)($b['id'] ?? 0)]);
+    if (!$q->rowCount() && !$p->query('SELECT 1 FROM qa_runs WHERE id=' . (int)($b['id'] ?? 0))->fetchColumn()) out(['error' => 'Nie znaleziono przebiegu.'], 404);
     out(['ok' => true]);
 }
 
