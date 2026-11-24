@@ -1,71 +1,71 @@
-﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet
+﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet;Zestawy
 PZB;"Logowanie i konta";"Logowanie każdej roli i wylogowanie";"Konta testowe w demo dla ról: admin, wydzial, kolegium, klub, trener, sedzia, redaktor. Konto testowe w demo (hasło w menedżerze haseł).";"1. Otwórz stronę logowania demo.
 2. Zaloguj się kolejno na każde konto testowe.
 3. Po każdym logowaniu sprawdź nazwę konta i menu w górnym pasku.
-4. Kliknij „Wyloguj”.";"Każde konto loguje się i widzi pulpit ze swoim menu. Po wylogowaniu wraca strona logowania, a przycisk „Wstecz” nie pokazuje danych.";Krytyczny
+4. Kliknij „Wyloguj”.";"Każde konto loguje się i widzi pulpit ze swoim menu. Po wylogowaniu wraca strona logowania, a przycisk „Wstecz” nie pokazuje danych.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Logowanie i konta";"Błędne hasło i blokada konta";"Dowolne konto testowe.";"1. Wpisz poprawny login i złe hasło.
 2. Powtórz kilka razy, aż system zablokuje próby.
-3. Spróbuj zalogować się poprawnym hasłem w czasie blokady.";"Przy złym haśle komunikat bez zdradzania, czy konto istnieje. Po kilku próbach blokada z informacją, kiedy można spróbować ponownie.";Wysoki
+3. Spróbuj zalogować się poprawnym hasłem w czasie blokady.";"Przy złym haśle komunikat bez zdradzania, czy konto istnieje. Po kilku próbach blokada z informacją, kiedy można spróbować ponownie.";Wysoki;"Szybki test; Pełna regresja"
 PZB;"Logowanie i konta";"Reset hasła przez e-mail";"Konto testowe z adresem e-mail, do którego masz dostęp.";"1. Na stronie logowania kliknij „Nie pamiętasz hasła?”.
 2. Wpisz adres e-mail.
 3. Otwórz link z wiadomości (sprawdź też spam) i ustaw nowe hasło.
-4. Otwórz ten sam link drugi raz.";"Przychodzi e-mail z linkiem. Nowe hasło działa. Link użyty drugi raz nie działa.";Wysoki
+4. Otwórz ten sam link drugi raz.";"Przychodzi e-mail z linkiem. Nowe hasło działa. Link użyty drugi raz nie działa.";Wysoki;"Szybki test; Pełna regresja"
 PZB;"Członkowie / osoby";"Klub dodaje nową osobę (zawodnika)";"Konto klubu (klub@ — DĘBY).";"1. Wejdź w „Osoby”.
 2. Dodaj nową osobę: imię, nazwisko, data urodzenia, PESEL testowy.
 3. Zapisz i otwórz kartotekę.
-4. Wyszukaj osobę po nazwisku.";"Osoba zapisuje się w klubie DĘBY, kartoteka ma zakładki (Licencje, Badania, NNW, Historia zmian). Wyszukiwarka ją znajduje.";Krytyczny
+4. Wyszukaj osobę po nazwisku.";"Osoba zapisuje się w klubie DĘBY, kartoteka ma zakładki (Licencje, Badania, NNW, Historia zmian). Wyszukiwarka ją znajduje.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Członkowie / osoby";"Klub nie widzi danych innego klubu";"Konta klub@ (DĘBY) i klub2@ (STAL).";"1. Zaloguj się jako klub@ i zapisz nazwisko jednego zawodnika DĘBÓW.
 2. Wyloguj się i zaloguj jako klub2@.
 3. Wyszukaj tego zawodnika w „Osoby”.
-4. Spróbuj otworzyć jego kartotekę adresem skopiowanym z konta klub@.";"STAL nie widzi zawodnika DĘBÓW ani w wyszukiwarce, ani po wpisaniu adresu (odmowa dostępu). Dotyczy też licencji, badań i opłat.";Krytyczny
+4. Spróbuj otworzyć jego kartotekę adresem skopiowanym z konta klub@.";"STAL nie widzi zawodnika DĘBÓW ani w wyszukiwarce, ani po wpisaniu adresu (odmowa dostępu). Dotyczy też licencji, badań i opłat.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Licencje zawodników";"Wniosek o licencję zawodnika: złożenie i zatwierdzenie";"Konto klub@ i konto biura (wydzial@). Zawodnik klubu bez licencji na bieżący sezon.";"1. Jako klub@ otwórz kartotekę zawodnika → Licencje → złóż wniosek.
 2. Wgraj skan badania lekarskiego.
 3. Jako wydzial@ otwórz wnioski do rozpatrzenia i zatwierdź wniosek.
-4. Jako klub@ sprawdź stan licencji.";"Wniosek trafia do biura. Po zatwierdzeniu licencja jest aktywna w kartotece, a klub dostaje powiadomienie. Odrzucenie wymaga uzasadnienia.";Krytyczny
+4. Jako klub@ sprawdź stan licencji.";"Wniosek trafia do biura. Po zatwierdzeniu licencja jest aktywna w kartotece, a klub dostaje powiadomienie. Odrzucenie wymaga uzasadnienia.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Licencje zawodników";"E-licencja w telefonie";"Zawodnik z aktywną licencją; telefon z dostępem do demo przez HTTPS.";"1. Jako klub@ w kartotece zawodnika → Licencje → wygeneruj kod aktywacyjny e-licencji.
 2. Na telefonie aktywuj e-licencję kodem.
 3. Na stronie „Sprawdź e-licencję” zeskanuj kod z telefonu.
-4. Zeskanuj zrzut ekranu kodu.";"Karta aktywuje się, kod QR zmienia się co 30 s. Skan żywego kodu pokazuje dane zawodnika, a skan zrzutu ekranu jest odrzucony.";Wysoki
+4. Zeskanuj zrzut ekranu kodu.";"Karta aktywuje się, kod QR zmienia się co 30 s. Skan żywego kodu pokazuje dane zawodnika, a skan zrzutu ekranu jest odrzucony.";Wysoki;"Szybki test; Pełna regresja; Telefon"
 PZB;"Licencje klubowe";"Wniosek o licencję klubową";"Konto klub@ i konto biura. Klub bez licencji klubowej na sezon.";"1. Jako klub@ otwórz „Licencje klubowe” → złóż wniosek z wymaganymi danymi i załącznikami.
 2. Jako biuro otwórz listę licencji klubowych i rozpatrz wniosek.
-3. Jako klub@ sprawdź stan.";"Wniosek widać u biura z kompletem załączników. Po decyzji klub widzi stan licencji, a brak wymaganych dokumentów jest wyraźnie wskazany.";Wysoki
+3. Jako klub@ sprawdź stan.";"Wniosek widać u biura z kompletem załączników. Po decyzji klub widzi stan licencji, a brak wymaganych dokumentów jest wyraźnie wskazany.";Wysoki;"Szybki test; Pełna regresja"
 PZB;"Rozgrywki i terminarze";"Lista startowa: dopisanie zawodnika i zatwierdzenie";"Konto klub@ i konto biura. Rozgrywki z otwartym zgłaszaniem list.";"1. Jako klub@ otwórz listę startową drużyny.
 2. Dopisz zawodnika z licencją (numer z kartoteki) i osobę do sztabu.
 3. Zgłoś listę do zatwierdzenia.
-4. Jako biuro zatwierdź listę.";"Zawodnik bez ważnej licencji albo zawieszony jest oznaczony jako nieuprawniony. Po zatwierdzeniu lista jest zablokowana do edycji przez klub.";Krytyczny
+4. Jako biuro zatwierdź listę.";"Zawodnik bez ważnej licencji albo zawieszony jest oznaczony jako nieuprawniony. Po zatwierdzeniu lista jest zablokowana do edycji przez klub.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Rozgrywki i terminarze";"Zmiana terminu meczu na wniosek klubu";"Konta klub@ (DĘBY), klub2@ (STAL), biuro. Mecz DĘBY — STAL za więcej niż 7 dni.";"1. Jako klub2@ złóż wniosek o zmianę terminu.
 2. Jako klub@ wyraź zgodę.
 3. Jako biuro zatwierdź nowy termin.
 4. Sprawdź terminarz i obsadę sędziów meczu.
-5. Spróbuj złożyć wniosek dla meczu za mniej niż 7 dni.";"Mecz w terminarzu ma nowy dzień, a obsada wraca do potwierdzenia. Wniosek złożony za późno jest odrzucony z komunikatem. Trener nie widzi wniosków.";Wysoki
+5. Spróbuj złożyć wniosek dla meczu za mniej niż 7 dni.";"Mecz w terminarzu ma nowy dzień, a obsada wraca do potwierdzenia. Wniosek złożony za późno jest odrzucony z komunikatem. Trener nie widzi wniosków.";Wysoki;"Szybki test; Pełna regresja"
 PZB;"Mecze i wyniki";"Wpisanie wyniku i zamknięcie meczu";"Konto biura albo sędziego z obsady. Rozegrany mecz bez wyniku.";"1. Otwórz kartę meczu.
 2. Wpisz wynik (np. 7:5) i zapisz.
 3. Zamknij mecz (protokół: „Zakończ mecz”, podpis).
-4. Otwórz stronę rozgrywek bez logowania i znajdź mecz.";"Wynik zapisany i widoczny na stronie rozgrywek. Po zamknięciu meczu wyniku nie da się zmienić bez uprawnień biura, a zmiana trafia do historii.";Krytyczny
+4. Otwórz stronę rozgrywek bez logowania i znajdź mecz.";"Wynik zapisany i widoczny na stronie rozgrywek. Po zamknięciu meczu wyniku nie da się zmienić bez uprawnień biura, a zmiana trafia do historii.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Mecze i wyniki";"Przeliczenie tabeli po wyniku";"Rozgrywki z kilkoma rozegranymi meczami.";"1. Zapisz tabelę rozgrywek przed wpisaniem wyniku.
 2. Wpisz i zamknij wynik kolejnego meczu.
 3. Otwórz Tabele na stronie rozgrywek.
-4. Ustaw walkower w innym meczu i sprawdź tabelę ponownie.";"Tabela przelicza się sama: mecze, zwycięstwa, porażki, punkty i kolejność. Walkower liczy się zgodnie z regulaminem (np. 0:9).";Krytyczny
+4. Ustaw walkower w innym meczu i sprawdź tabelę ponownie.";"Tabela przelicza się sama: mecze, zwycięstwa, porażki, punkty i kolejność. Walkower liczy się zgodnie z regulaminem (np. 0:9).";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Sędziowie i obsada";"Obsada sędziów meczu i potwierdzenie przez sędziego";"Konto kolegium@ i sedzia@. Mecz bez obsady.";"1. Jako kolegium@ otwórz „Obsada meczów” i przydziel sedzia@ do meczu.
 2. Wyślij do potwierdzenia.
 3. Jako sedzia@ otwórz „Moje obsady” i potwierdź.
-4. Drugi sędzia odmawia z podaniem powodu.";"Sędzia dostaje powiadomienie i widzi mecz w obsadach. Potwierdzenie i odmowa (z powodem) są widoczne u Wydziału ds. Sędziów.";Krytyczny
+4. Drugi sędzia odmawia z podaniem powodu.";"Sędzia dostaje powiadomienie i widzi mecz w obsadach. Potwierdzenie i odmowa (z powodem) są widoczne u Wydziału ds. Sędziów.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Sędziowie i obsada";"Sędzia weryfikuje zawodników na telefonie";"Konto sedzia@ w obsadzie meczu na dziś; telefon przez HTTPS.";"1. Jako sedzia@ otwórz „Weryfikacja zawodników” i pobierz mecz.
 2. Wybierz drużynę i zweryfikuj zawodników (skan e-licencji albo ręcznie).
 3. Włącz tryb samolotowy i zweryfikuj kolejnego zawodnika.
-4. Wyłącz tryb samolotowy.";"Weryfikacja działa także bez sieci i wysyła się sama po powrocie zasięgu. Drugi sędzia nie ma dostępu do drużyny zajętej przez pierwszego.";Wysoki
+4. Wyłącz tryb samolotowy.";"Weryfikacja działa także bez sieci i wysyła się sama po powrocie zasięgu. Drugi sędzia nie ma dostępu do drużyny zajętej przez pierwszego.";Wysoki;"Szybki test; Pełna regresja; Telefon"
 PZB;"Finanse i opłaty";"Należności klubu i opłaty";"Konto biura i klub@.";"1. Jako biuro otwórz „Należności klubów”.
 2. Sprawdź należności DĘBÓW (opłaty startowe, licencje, kary).
 3. Jako klub@ otwórz „Opłaty klubu”.
-4. Jako biuro oznacz jedną należność jako zapłaconą.";"Klub widzi tylko swoje należności i te same kwoty co biuro. Po oznaczeniu zapłaty stan zmienia się u obu stron.";Wysoki
+4. Jako biuro oznacz jedną należność jako zapłaconą.";"Klub widzi tylko swoje należności i te same kwoty co biuro. Po oznaczeniu zapłaty stan zmienia się u obu stron.";Wysoki;"Szybki test; Pełna regresja"
 PZB;"Sprawy i kary";"Zawieszenie zawodnika po karze w protokole";"Konto sędziego z obsady i biura. Mecz w trakcie.";"1. Jako sędzia wpisz w protokole usunięcie zawodnika z boiska.
 2. Zakończ i podpisz protokół.
 3. Jako biuro sprawdź zawieszenia i kartotekę zawodnika.
-4. Sprawdź listę startową najbliższego meczu jego drużyny.";"Zawieszenie (np. 2 mecze) pojawia się w kartotece i na liście zawieszeń. Zawodnik jest nieuprawniony na liście startowej.";Wysoki
+4. Sprawdź listę startową najbliższego meczu jego drużyny.";"Zawieszenie (np. 2 mecze) pojawia się w kartotece i na liście zawieszeń. Zawodnik jest nieuprawniony na liście startowej.";Wysoki;"Szybki test; Pełna regresja"
 PZB;"Panel administracyjny";"Role bez dostępu do cudzych modułów";"Konta trener@, sedzia@, redaktor@.";"1. Jako trener@ wpisz w pasku adresu stronę „Kluby” (lista wszystkich klubów) i „Ustawienia”.
 2. Jako sedzia@ wpisz adres listy osób.
-3. Jako redaktor@ wpisz adres należności klubów.";"Każda próba kończy się odmową dostępu, bez danych na ekranie. Pozycji spoza roli nie ma w menu.";Krytyczny
+3. Jako redaktor@ wpisz adres należności klubów.";"Każda próba kończy się odmową dostępu, bez danych na ekranie. Pozycji spoza roli nie ma w menu.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Strona rozgrywek / redakcja";"Strona rozgrywek bez logowania";"Brak logowania; komputer i telefon.";"1. Otwórz stronę rozgrywek.
 2. Przejdź: Terminarz, Tabele, Statystyki, Kluby, Zawodnicy.
 3. Otwórz stronę meczu z wynikiem.
-4. Sprawdź to samo na telefonie.";"Wszystkie strony działają bez logowania i pokazują aktualne wyniki. Nie ma danych osobowych (PESEL, daty urodzenia). Na telefonie nic nie wystaje poza ekran.";Wysoki
+4. Sprawdź to samo na telefonie.";"Wszystkie strony działają bez logowania i pokazują aktualne wyniki. Nie ma danych osobowych (PESEL, daty urodzenia). Na telefonie nic nie wystaje poza ekran.";Wysoki;"Szybki test; Pełna regresja; Telefon"

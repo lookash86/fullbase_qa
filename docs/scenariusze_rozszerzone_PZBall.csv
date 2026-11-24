@@ -1,136 +1,136 @@
-﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet
+﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet;Zestawy
 PZB;"Logowanie i konta";"Logowanie dwuetapowe: włączenie i logowanie kodem";"Dowolne konto; aplikacja Google/Microsoft Authenticator na telefonie.";"1. Menu konta → „Logowanie dwuetapowe”.
 2. Zeskanuj kod QR, wpisz kod, zapisz kody zapasowe.
 3. Wyloguj się i zaloguj ponownie z kodem z aplikacji.
 4. Spróbuj użyć tego samego kodu drugi raz.
-5. Zaloguj się kodem zapasowym.";"Drugi krok wymaga kodu. Ten sam kod drugi raz — odmowa. Kod zapasowy działa jednorazowo.";Wysoki
+5. Zaloguj się kodem zapasowym.";"Drugi krok wymaga kodu. Ten sam kod drugi raz — odmowa. Kod zapasowy działa jednorazowo.";Wysoki;"Pełna regresja; Telefon"
 PZB;"Logowanie i konta";"Administrator wyłącza logowanie dwuetapowe (zgubiony telefon)";"Konto admin@ i konto z włączonym logowaniem dwuetapowym.";"1. Jako admin@ → Konta → wybierz konto.
 2. Kliknij „Wyłącz logowanie dwuetapowe”.
-3. Zaloguj się na to konto samym hasłem.";"Logowanie działa bez kodu; zmiana jest w rejestrze zdarzeń.";Średni
+3. Zaloguj się na to konto samym hasłem.";"Logowanie działa bez kodu; zmiana jest w rejestrze zdarzeń.";Średni;"Pełna regresja; Telefon"
 PZB;"Logowanie i konta";"Telefon: menu i tabele na małym ekranie";"Telefon (Android lub iPhone), dowolne konto.";"1. Zaloguj się na telefonie.
 2. Otwórz menu przyciskiem.
-3. Otwórz listę osób i listę meczów.";"Menu otwiera się i zamyka; tabele przewijają się w karcie; nic nie wystaje poza ekran.";Średni
+3. Otwórz listę osób i listę meczów.";"Menu otwiera się i zamyka; tabele przewijają się w karcie; nic nie wystaje poza ekran.";Średni;"Pełna regresja; Telefon"
 PZB;"Członkowie / osoby";"Wyszukiwanie osób i filtry";"Konto biura (wydzial@).";"1. Osoby → wyszukaj po nazwisku, po PESEL-u i po numerze licencji.
-2. Użyj filtrów: zawodnicy, trenerzy, sędziowie, bez licencji.";"Każde wyszukiwanie i filtr zwraca właściwe osoby.";Średni
+2. Użyj filtrów: zawodnicy, trenerzy, sędziowie, bez licencji.";"Każde wyszukiwanie i filtr zwraca właściwe osoby.";Średni;"Pełna regresja"
 PZB;"Członkowie / osoby";"Eksport listy osób do Excela";"Konto biura.";"1. Osoby → ustaw filtr.
-2. Kliknij eksport do Excela i otwórz plik.";"Plik otwiera się w Excelu z polskimi znakami; zawiera tylko osoby z filtra.";Niski
+2. Kliknij eksport do Excela i otwórz plik.";"Plik otwiera się w Excelu z polskimi znakami; zawiera tylko osoby z filtra.";Niski;"Pełna regresja"
 PZB;"Członkowie / osoby";"Kartoteka zawodnika: zmiana danych i historia";"Konto biura; dowolny zawodnik.";"1. Otwórz kartotekę → „Zmień dane”.
 2. Zmień telefon, kliknij „Zapisz”.
 3. Ponownie „Zmień dane” → „Anuluj”.
-4. Otwórz zakładkę „Historia zmian”.";"Zmiana zapisana; „Anuluj” niczego nie zmienia; historia pokazuje kto i co zmienił.";Średni
+4. Otwórz zakładkę „Historia zmian”.";"Zmiana zapisana; „Anuluj” niczego nie zmienia; historia pokazuje kto i co zmienił.";Średni;"Pełna regresja; Telefon"
 PZB;"Członkowie / osoby";"Trener nie widzi skanów badań innych zawodników";"Konto trener@.";"1. Jako trener@ otwórz kartotekę zawodnika swojej drużyny → Badania.
-2. Spróbuj otworzyć skan badania.";"Trener nie ma dostępu do skanów badań (dane o zdrowiu).";Wysoki
+2. Spróbuj otworzyć skan badania.";"Trener nie ma dostępu do skanów badań (dane o zdrowiu).";Wysoki;"Pełna regresja"
 PZB;Kluby;"Karta klubu: logo, barwy, strona rozgrywek";"Konto klub@.";"1. Otwórz kartę klubu.
 2. Wgraj logo, wybierz barwę z palety.
-3. Sprawdź „Klub na stronie rozgrywek” (braki do uzupełnienia).";"Logo i barwa widoczne na stronie rozgrywek; lista braków jest aktualna.";Niski
+3. Sprawdź „Klub na stronie rozgrywek” (braki do uzupełnienia).";"Logo i barwa widoczne na stronie rozgrywek; lista braków jest aktualna.";Niski;"Pełna regresja"
 PZB;Kluby;"Zmiana barw klubowych zawodnika (transfer)";"Konta klub@ i klub2@.";"1. Jako klub2@ złóż wniosek o zmianę barw zawodnika DĘBÓW.
 2. Jako klub@ odpowiedz na wniosek (zgoda albo sprzeciw).
-3. Jako biuro sprawdź stan wniosku.";"Wniosek przechodzi przez obie strony; po zgodzie zawodnik jest w nowym klubie z historią w „Kariera klubowa”.";Wysoki
+3. Jako biuro sprawdź stan wniosku.";"Wniosek przechodzi przez obie strony; po zgodzie zawodnik jest w nowym klubie z historią w „Kariera klubowa”.";Wysoki;"Pełna regresja"
 PZB;"Rozgrywki i terminarze";"Import terminarza";"Konto biura; plik terminarza.";"1. Rozgrywki → import terminarza.
-2. Wczytaj plik, sprawdź podgląd, zatwierdź.";"Mecze pojawiają się w terminarzu z kolejkami; błędne wiersze są pokazane przed zapisem.";Wysoki
+2. Wczytaj plik, sprawdź podgląd, zatwierdź.";"Mecze pojawiają się w terminarzu z kolejkami; błędne wiersze są pokazane przed zapisem.";Wysoki;"Pełna regresja"
 PZB;"Rozgrywki i terminarze";"Zmiana terminu: sprzeciw drugiego klubu";"Konta klub@, klub2@, biuro.";"1. Jako klub2@ złóż wniosek o zmianę terminu.
 2. Jako klub@ zgłoś sprzeciw.
-3. Jako biuro rozstrzygnij wniosek z uzasadnieniem.";"Biuro widzi sprzeciw i propozycję systemu; odrzucenie wymaga uzasadnienia; kluby dostają powiadomienie.";Średni
+3. Jako biuro rozstrzygnij wniosek z uzasadnieniem.";"Biuro widzi sprzeciw i propozycję systemu; odrzucenie wymaga uzasadnienia; kluby dostają powiadomienie.";Średni;"Pełna regresja"
 PZB;"Rozgrywki i terminarze";"Kadra na mecz (24–6 godzin przed meczem)";"Konto trener@; mecz za ok. 24 godziny.";"1. Jako trener@ zgłoś kadrę na mecz.
 2. Na telefonie otwórz kartę „Kadra na mecz”.
-3. Spróbuj zmienić kadrę mniej niż 6 godzin przed meczem.";"Kadra zapisana i widoczna na telefonie; po terminie zmiana zablokowana z komunikatem.";Wysoki
+3. Spróbuj zmienić kadrę mniej niż 6 godzin przed meczem.";"Kadra zapisana i widoczna na telefonie; po terminie zmiana zablokowana z komunikatem.";Wysoki;"Pełna regresja; Telefon"
 PZB;"Rozgrywki i terminarze";"Kalendarz: widoki i link do telefonu";"Dowolne konto.";"1. Kalendarz → miesiąc, tydzień, lista.
-2. „Link do kalendarza w telefonie” → dodaj do Google albo iPhone'a.";"Wszystkie widoki pokazują mecze; mecze pojawiają się w kalendarzu telefonu.";Niski
+2. „Link do kalendarza w telefonie” → dodaj do Google albo iPhone'a.";"Wszystkie widoki pokazują mecze; mecze pojawiają się w kalendarzu telefonu.";Niski;"Pełna regresja; Telefon"
 PZB;"Mecze i wyniki";"Karta meczu: obsada, miejsce, stroje";"Konto biura.";"1. Otwórz kartę meczu.
-2. Sprawdź obsadę z podpowiedzią sędziów, miejsce (obiekt), stroje i kadrę meczową.";"Wszystkie sekcje się wczytują; obiekt prowadzi do karty obiektu.";Średni
+2. Sprawdź obsadę z podpowiedzią sędziów, miejsce (obiekt), stroje i kadrę meczową.";"Wszystkie sekcje się wczytują; obiekt prowadzi do karty obiektu.";Średni;"Pełna regresja"
 PZB;"Mecze i wyniki";"Protokół organizacyjny: druk do PDF";"Konto biura; zakończony mecz z protokołem.";"1. Protokoły organizacyjne → filtry (sezon, rozgrywki, klub, sędzia).
-2. Otwórz protokół → „Druk / PDF” → „Zapisz jako PDF”.";"Filtry działają; PDF ma czytelny układ na jednej lub kilku stronach A4.";Średni
+2. Otwórz protokół → „Druk / PDF” → „Zapisz jako PDF”.";"Filtry działają; PDF ma czytelny układ na jednej lub kilku stronach A4.";Średni;"Pełna regresja"
 PZB;"Mecze i wyniki";"Reakcja drużyny na protokół w 30 minut";"Konto klub@; mecz właśnie zakończony.";"1. Jako klub@ otwórz protokół po meczu.
 2. Wybierz: akceptuję / uwagi / zamiar protestu.
-3. Spróbuj zmienić reakcję po 30 minutach.";"Reakcja zapisana; po 30 minutach zmiana niemożliwa.";Wysoki
+3. Spróbuj zmienić reakcję po 30 minutach.";"Reakcja zapisana; po 30 minutach zmiana niemożliwa.";Wysoki;"Pełna regresja"
 PZB;"Mecze i wyniki";"Protest i rozstrzygnięcie sprawy";"Konta klub@ i biura.";"1. Jako klub@ → „Zgłaszam…” → protest.
 2. Jako biuro rozstrzygnij sprawę.
-3. Sprawdź komunikat do klubów i należność (kaucja).";"Protest widoczny u biura; po rozstrzygnięciu kluby dostają komunikat; kaucja w należnościach.";Wysoki
+3. Sprawdź komunikat do klubów i należność (kaucja).";"Protest widoczny u biura; po rozstrzygnięciu kluby dostają komunikat; kaucja w należnościach.";Wysoki;"Pełna regresja"
 PZB;"Mecze i wyniki";"Mecz przerwany: decyzja o dokończeniu";"Konto biura; mecz oznaczony jako przerwany.";"1. Otwórz mecz przerwany.
-2. Wybierz decyzję: dokończenie / od nowa / rozstrzygnięty.";"Decyzja zapisana; terminarz i tabela uwzględniają ją poprawnie.";Średni
+2. Wybierz decyzję: dokończenie / od nowa / rozstrzygnięty.";"Decyzja zapisana; terminarz i tabela uwzględniają ją poprawnie.";Średni;"Pełna regresja"
 PZB;"Mecze i wyniki";"Rozbieżności weryfikacji: wyjaśnienie i cofnięcie";"Konto biura; mecz z rozbieżnością.";"1. Rozbieżności weryfikacji → oznacz „Wyjaśnione” z uwagą.
 2. Cofnij wyjaśnienie.
-3. Sprawdź „Weryfikacja po meczu”.";"Stan i uwaga zapisane; cofnięcie przywraca rozbieżność.";Średni
+3. Sprawdź „Weryfikacja po meczu”.";"Stan i uwaga zapisane; cofnięcie przywraca rozbieżność.";Średni;"Pełna regresja"
 PZB;"Sędziowie i obsada";"Sędzia zgłasza niedostępność";"Konto sedzia@.";"1. Moja dostępność → dodaj niedostępny termin za 20 dni.
 2. Spróbuj dodać termin za 10 dni.
-3. Ustaw miejsce dojazdu.";"Termin za 20 dni zapisany; za 10 dni — odmowa (najpóźniej 14 dni przed).";Średni
+3. Ustaw miejsce dojazdu.";"Termin za 20 dni zapisany; za 10 dni — odmowa (najpóźniej 14 dni przed).";Średni;"Pełna regresja"
 PZB;"Sędziowie i obsada";"Obsada całego okresu jednym kliknięciem";"Konto kolegium@; mecze bez obsady.";"1. Obsada meczów → „Zaproponuj cały okres”.
 2. Sprawdź kandydatów (Polecani / Poza wytycznymi / Niezalecani) i koszt składu.
-3. Wyślij do potwierdzenia.";"Propozycja uwzględnia dostępność i wytyczne; sędziowie dostają prośby o potwierdzenie.";Wysoki
+3. Wyślij do potwierdzenia.";"Propozycja uwzględnia dostępność i wytyczne; sędziowie dostają prośby o potwierdzenie.";Wysoki;"Pełna regresja"
 PZB;"Sędziowie i obsada";"Delegacja sędziego: podpis i PDF";"Konto sedzia@ z podpisanym protokołem meczu.";"1. Moje delegacje → otwórz delegację.
 2. Podpisz palcem.
-3. „Drukuj / PDF”.";"Podpis zapisany; PDF zawiera dane i podpis.";Średni
+3. „Drukuj / PDF”.";"Podpis zapisany; PDF zawiera dane i podpis.";Średni;"Pełna regresja"
 PZB;"Sędziowie i obsada";"Delegacja nie powstaje bez podpisu protokołu";"Konto biura; mecz z niepodpisanym protokołem.";"1. Delegacje → „Wystaw wszystkie”.
-2. Sprawdź komunikat dla meczu bez podpisu.";"Delegacja dla tego sędziego nie powstaje; komunikat mówi, kto czeka i dlaczego.";Średni
+2. Sprawdź komunikat dla meczu bez podpisu.";"Delegacja dla tego sędziego nie powstaje; komunikat mówi, kto czeka i dlaczego.";Średni;"Pełna regresja"
 PZB;"Sędziowie i obsada";"Ocena sędziów przez klub";"Konto klub@; zakończony mecz.";"1. Po meczu otwórz ocenę sędziów.
 2. Wystaw ocenę i zapisz.
-3. Jako sedzia@ otwórz „Moje oceny”.";"Ocena zapisana; sędzia widzi ocenę.";Niski
+3. Jako sedzia@ otwórz „Moje oceny”.";"Ocena zapisana; sędzia widzi ocenę.";Niski;"Pełna regresja"
 PZB;"Sędziowie i obsada";"Wypłaty sędziów: zestawienie do PIT";"Konto biura.";"1. Wypłaty sędziów → zestawienie roku.
 2. Sprawdź braki do PIT-11.
-3. Pobierz pliki Excel.";"Sumy zgadzają się z delegacjami; braki danych są wymienione z nazwiska.";Średni
+3. Pobierz pliki Excel.";"Sumy zgadzają się z delegacjami; braki danych są wymienione z nazwiska.";Średni;"Pełna regresja"
 PZB;"Licencje zawodników";"Wniosek licencyjny odrzucony z uzasadnieniem";"Konta klub@ i wydzial@.";"1. Jako klub@ złóż wniosek.
-2. Jako wydzial@ odrzuć bez uzasadnienia, potem z uzasadnieniem.";"Bez uzasadnienia — odmowa; z uzasadnieniem — klub widzi powód.";Wysoki
+2. Jako wydzial@ odrzuć bez uzasadnienia, potem z uzasadnieniem.";"Bez uzasadnienia — odmowa; z uzasadnieniem — klub widzi powód.";Wysoki;"Pełna regresja"
 PZB;"Licencje zawodników";"Wycofanie telefonu z e-licencją";"Zawodnik z aktywną e-licencją w telefonie.";"1. W kartotece zawodnika → Licencje → wycofaj telefon.
-2. Na telefonie otwórz e-licencję.";"Karta przestaje działać; skan kodu pokazuje odmowę.";Wysoki
+2. Na telefonie otwórz e-licencję.";"Karta przestaje działać; skan kodu pokazuje odmowę.";Wysoki;"Pełna regresja; Telefon"
 PZB;"Licencje zawodników";"Kod e-licencji wysłany e-mailem";"Konto klub@; zawodnik z adresem e-mail.";"1. Kartoteka → Licencje → „Wygeneruj i wyślij e-mailem”.
-2. Otwórz link w aplikacji pocztowej (Gmail/Outlook).";"Link otwiera się w przeglądarce i aktywuje kartę.";Średni
+2. Otwórz link w aplikacji pocztowej (Gmail/Outlook).";"Link otwiera się w przeglądarce i aktywuje kartę.";Średni;"Pełna regresja"
 PZB;"Licencje zawodników";"Wyjątek: związek wpisuje licencję w imieniu klubu";"Konto wydzial@.";"1. Kartoteka zawodnika → Licencje → „W imieniu klubu (wyjątek)”.
-2. Spróbuj bez powodu, potem z powodem.";"Bez powodu — odmowa; z powodem — plakietka „wpisane przez związek”, klub dostaje powiadomienie, należność na klubie.";Średni
+2. Spróbuj bez powodu, potem z powodem.";"Bez powodu — odmowa; z powodem — plakietka „wpisane przez związek”, klub dostaje powiadomienie, należność na klubie.";Średni;"Pełna regresja"
 PZB;"Licencje klubowe";"Komisja licencyjna widzi wnioski";"Konto komisji licencyjnej.";"1. Zaloguj się jako komisja.
-2. Otwórz listę licencji klubowych.";"Komisja widzi listę; nie widzi modułów spoza swojej roli.";Średni
+2. Otwórz listę licencji klubowych.";"Komisja widzi listę; nie widzi modułów spoza swojej roli.";Średni;"Pełna regresja"
 PZB;Szkolenia;"Szkolenie: zapis i lista uczestników";"Konto biura; zaplanowane szkolenie.";"1. Otwórz szkolenie.
 2. Dopisz uczestników.
-3. Sprawdź listę i eksport.";"Uczestnicy zapisani; lista zgodna z zapisami.";Niski
+3. Sprawdź listę i eksport.";"Uczestnicy zapisani; lista zgodna z zapisami.";Niski;"Pełna regresja"
 PZB;"Sprawy i kary";"Sprawa dyscyplinarna: orzeczenie z zawieszeniem i grzywną";"Konto wd@.";"1. Sprawy dyscyplinarne → otwórz sprawę w toku.
 2. Wydaj orzeczenie z zawieszeniem i grzywną.
-3. Sprawdź kartotekę zawodnika i należności klubu.";"Zawieszenie widoczne w kartotece; grzywna w należnościach klubu; orzeczenie do druku i PDF.";Wysoki
+3. Sprawdź kartotekę zawodnika i należności klubu.";"Zawieszenie widoczne w kartotece; grzywna w należnościach klubu; orzeczenie do druku i PDF.";Wysoki;"Pełna regresja"
 PZB;"Sprawy i kary";"Odwołanie do Zarządu";"Konta klub2@ i zarzad@.";"1. Jako zarzad@ → „Odwołania do Zarządu”.
 2. Wydaj decyzję: utrzymane / zmienione / uchylone.
-3. Spróbuj złożyć kolejne odwołanie.";"Decyzja zapisana; kolejnego odwołania nie da się złożyć.";Średni
+3. Spróbuj złożyć kolejne odwołanie.";"Decyzja zapisana; kolejnego odwołania nie da się złożyć.";Średni;"Pełna regresja"
 PZB;"Sprawy i kary";"Trener i rodzic nie mają dostępu do spraw";"Konta trener@ i rodzica.";"1. Jako trener@ wpisz adres listy spraw dyscyplinarnych.
-2. To samo jako rodzic.";"Odmowa dostępu w obu przypadkach.";Wysoki
+2. To samo jako rodzic.";"Odmowa dostępu w obu przypadkach.";Wysoki;"Pełna regresja"
 PZB;"Organy i komisje";"Kancelaria: pismo przychodzące i odpowiedź";"Konto admin@.";"1. Kancelaria → „Nowe pismo przychodzące”.
 2. Sprawdź numer (KP/…/rok) i termin domyślny (14 dni).
-3. Na karcie pisma → „Odpowiedz”.";"Numer nadany sam; odpowiedź powiązana z pismem; pismo oznaczone jako „odpowiedziane”.";Średni
+3. Na karcie pisma → „Odpowiedz”.";"Numer nadany sam; odpowiedź powiązana z pismem; pismo oznaczone jako „odpowiedziane”.";Średni;"Pełna regresja"
 PZB;"Organy i komisje";"Kancelaria klubu widzi tylko swoje pisma";"Konto klub@.";"1. Jako klub@ otwórz pisma ze związkiem.
-2. Sprawdź listę.";"Widać tylko pisma DĘBÓW, nie pisma związku ani innych klubów.";Wysoki
+2. Sprawdź listę.";"Widać tylko pisma DĘBÓW, nie pisma związku ani innych klubów.";Wysoki;"Pełna regresja"
 PZB;"Kadra narodowa";"Powołanie: propozycja, zgoda klubu, powołanie";"Konta wydzial@ i klub@.";"1. Jako wydzial@ → Kadra seniorów → „Pokaż osoby” → zaznacz → „Wyślij propozycje”.
 2. Jako klub@ → „Powołania do kadry” → „Zgoda klubu”.
-3. Jako wydzial@ → „Powołaj”.";"Każdy krok widoczny po obu stronach; zawodnik ma zakładkę „Reprezentacja” w kartotece.";Średni
+3. Jako wydzial@ → „Powołaj”.";"Każdy krok widoczny po obu stronach; zawodnik ma zakładkę „Reprezentacja” w kartotece.";Średni;"Pełna regresja"
 PZB;"Kadra narodowa";"Zgrupowanie: gotowość uczestników";"Konto wydzial@; zgrupowanie z uczestnikami.";"1. Otwórz zgrupowanie.
-2. Sprawdź gotowość (orzeczenie, NNW, licencja, dokument podróży).";"Braki i dokumenty wygasające są oznaczone; zgrupowanie jest w kalendarzu.";Niski
+2. Sprawdź gotowość (orzeczenie, NNW, licencja, dokument podróży).";"Braki i dokumenty wygasające są oznaczone; zgrupowanie jest w kalendarzu.";Niski;"Pełna regresja"
 PZB;"Finanse i opłaty";"Kara za walkower w należnościach klubu";"Konto biura; mecz zakończony walkowerem.";"1. Otwórz mecz z walkowerem.
-2. Sprawdź należności klubu, który nie stawił się.";"Kara naliczona raz, z właściwą kwotą i opisem.";Wysoki
+2. Sprawdź należności klubu, który nie stawił się.";"Kara naliczona raz, z właściwą kwotą i opisem.";Wysoki;"Pełna regresja"
 PZB;"Finanse i opłaty";"Polisa NNW dla drużyny";"Konto klub@.";"1. NNW → dodaj polisę grupową dla drużyny.
-2. Sprawdź kartoteki zawodników (zakładka NNW).";"Polisa widoczna u każdego zawodnika drużyny.";Średni
+2. Sprawdź kartoteki zawodników (zakładka NNW).";"Polisa widoczna u każdego zawodnika drużyny.";Średni;"Pełna regresja"
 PZB;"Strona rozgrywek / redakcja";"Redakcja: publikacja i wycofanie tekstu";"Konto redaktor@.";"1. Redakcja → szkic podsumowania kolejki.
 2. Opublikuj, sprawdź na stronie rozgrywek.
-3. Wycofaj publikację.";"Tekst pojawia się i znika ze strony rozgrywek.";Średni
+3. Wycofaj publikację.";"Tekst pojawia się i znika ze strony rozgrywek.";Średni;"Pełna regresja"
 PZB;"Strona rozgrywek / redakcja";"Udostępnienie linku do meczu (podgląd)";"Strona meczu na stronie rozgrywek.";"1. Skopiuj adres strony meczu.
-2. Wklej w Messengerze albo WhatsAppie.";"Podgląd pokazuje tytuł, wynik i grafikę meczu.";Niski
+2. Wklej w Messengerze albo WhatsAppie.";"Podgląd pokazuje tytuł, wynik i grafikę meczu.";Niski;"Pełna regresja"
 PZB;"Strona rozgrywek / redakcja";"Tryb ciemny i wyszukiwarka";"Brak logowania.";"1. Przełącz Jasna / Ciemna strona.
-2. Wyszukaj zawodnika i klub.";"Oba tryby czytelne; wyszukiwarka znajduje wyniki.";Niski
+2. Wyszukaj zawodnika i klub.";"Oba tryby czytelne; wyszukiwarka znajduje wyniki.";Niski;"Pełna regresja"
 PZB;"Panel administracyjny";"Konta i role: nadanie roli";"Konto admin@.";"1. Konta → wybierz konto bez roli.
 2. Nadaj rolę trenera w klubie.
-3. Zaloguj się na to konto.";"Konto widzi menu trenera; zmiana w rejestrze zdarzeń.";Wysoki
+3. Zaloguj się na to konto.";"Konto widzi menu trenera; zmiana w rejestrze zdarzeń.";Wysoki;"Pełna regresja"
 PZB;"Panel administracyjny";"Stan systemu i kopie zapasowe";"Konto admin@.";"1. Ustawienia → „Stan systemu, kopie zapasowe…”.
 2. Sprawdź wersję, ostatni cron, wiek kopii.
-3. „Pełny eksport danych”.";"Wszystkie informacje widoczne; ostrzeżenie, gdy kopia starsza niż 2 dni; ZIP do pobrania.";Średni
+3. „Pełny eksport danych”.";"Wszystkie informacje widoczne; ostrzeżenie, gdy kopia starsza niż 2 dni; ZIP do pobrania.";Średni;"Pełna regresja"
 PZB;"Panel administracyjny";"Rejestr zdarzeń";"Konto admin@.";"1. Zmień ustawienie sezonu.
-2. Otwórz rejestr zdarzeń.";"Zmiana jest w rejestrze z osobą i czasem.";Niski
+2. Otwórz rejestr zdarzeń.";"Zmiana jest w rejestrze z osobą i czasem.";Niski;"Pełna regresja"
 PZB;"Sezony i ustawienia";"Ustawienia grup sezonu";"Konto admin@.";"1. Ustawienia → grupy sezonu.
-2. Zmień zasadę (np. zmiana terminu meczu — liczba dni) i zapisz.";"Zmiana działa w odpowiedniej funkcji (np. limit dni przy wniosku o zmianę terminu).";Średni
+2. Zmień zasadę (np. zmiana terminu meczu — liczba dni) i zapisz.";"Zmiana działa w odpowiedniej funkcji (np. limit dni przy wniosku o zmianę terminu).";Średni;"Pełna regresja"
 PZB;"Sezony i ustawienia";"Przygotowanie sezonu: lista kroków";"Konto admin@.";"1. Administracja → „Przygotowanie sezonu”.
-2. Sprawdź stan każdego kroku (cennik, kluby, terminarze, licencje).";"Stan kroków zgadza się z danymi.";Niski
+2. Sprawdź stan każdego kroku (cennik, kluby, terminarze, licencje).";"Stan kroków zgadza się z danymi.";Niski;"Pełna regresja"
 PZB;"Powiadomienia i ankiety";"Dzwonek: powiadomienia";"Dowolne konto z nowymi powiadomieniami.";"1. Kliknij dzwonek.
 2. „Otwórz” przy powiadomieniu.
-3. „Oznacz wszystkie jako przeczytane”.";"Powiadomienie prowadzi do właściwej strony; licznik się zeruje.";Średni
+3. „Oznacz wszystkie jako przeczytane”.";"Powiadomienie prowadzi do właściwej strony; licznik się zeruje.";Średni;"Pełna regresja"
 PZB;"Powiadomienia i ankiety";"Komunikat z potwierdzeniem przeczytania";"Konto biura i klub@.";"1. Jako biuro wyślij komunikat do klubów w rozgrywkach.
 2. Jako klub@ przeczytaj.
-3. Jako biuro sprawdź listę „przeczytał / nie przeczytał”.";"Lista pokazuje DĘBY jako „przeczytał”.";Średni
+3. Jako biuro sprawdź listę „przeczytał / nie przeczytał”.";"Lista pokazuje DĘBY jako „przeczytał”.";Średni;"Pełna regresja"
 PZB;"Aplikacja mobilna";"Praca bez sieci: weryfikacja i wysyłka po powrocie zasięgu";"Konto sedzia@ na telefonie (HTTPS), mecz na dziś.";"1. Pobierz mecz.
 2. Włącz tryb samolotowy, zweryfikuj zawodnika, podpisz protokół.
-3. Wyłącz tryb samolotowy.";"Dane czekają w telefonie i wysyłają się same po powrocie sieci; nic nie ginie.";Wysoki
+3. Wyłącz tryb samolotowy.";"Dane czekają w telefonie i wysyłają się same po powrocie sieci; nic nie ginie.";Wysoki;"Pełna regresja; Telefon"
 PZB;"Aplikacja mobilna";"Dodanie do ekranu głównego";"Telefon Android (Chrome) i iPhone (Safari).";"1. Otwórz system w przeglądarce.
 2. Dodaj do ekranu głównego.
-3. Uruchom z ikony.";"Ikona działa; system otwiera się jak aplikacja.";Niski
+3. Uruchom z ikony.";"Ikona działa; system otwiera się jak aplikacja.";Niski;"Pełna regresja; Telefon"

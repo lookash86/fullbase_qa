@@ -90,6 +90,10 @@ function qa_migrations(): array
             )$tail");
             $pdo->exec('CREATE INDEX qa_result_files_run ON qa_result_files(run_id, case_id)');
         },
+        // 12 — 1.16: zestawy scenariuszy (np. „Szybki test; Pełna regresja”), lista rozdzielana średnikiem.
+        12 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_cases', 'suites', "VARCHAR(500) NOT NULL DEFAULT ''");
+        },
     ];
 }
 

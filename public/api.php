@@ -180,6 +180,19 @@ function admin_ids(): array
     return array_map('intval', db()->query("SELECT id FROM qa_users WHERE role='admin' AND active=1")->fetchAll(PDO::FETCH_COLUMN));
 }
 
+/** Zestawy scenariuszy: z tekstu („a; b, c”) albo tablicy → uporządkowana lista bez powtórzeń. */
+function suites_in(mixed $v): array
+{
+    $list = is_array($v) ? $v : preg_split('/[;,\n]+/u', (string)$v);
+    $out = [];
+    foreach ($list as $x) {
+        $x = mb_substr(trim(preg_replace('/\s+/u', ' ', (string)$x)), 0, 40);
+        if ($x !== '' && !in_array(mb_strtolower($x), array_map('mb_strtolower', $out), true)) $out[] = $x;
+    }
+    return array_slice($out, 0, 12);
+}
+function suites_str(array $s): string { return mb_substr(implode('; ', $s), 0, 500); }
+
 function lines(string $s): array
 {
     // Flaga /u jest konieczna: bez niej \R łapie bajt 0x85, który jest częścią litery „ą” (c4 85), i psuje UTF-8.
@@ -814,7 +827,7 @@ if ($action === 'project_save') {
 
 if ($action === 'cases') {
     $rows = $p->query('SELECT c.*, u.display_name author FROM qa_cases c JOIN qa_users u ON u.id=c.created_by ORDER BY c.project_id, c.module, c.id')->fetchAll();
-    foreach ($rows as &$r) { foreach (['id', 'project_id', 'active', 'created_by'] as $k) $r[$k] = (int)$r[$k]; $r['issue_id'] = $r['issue_id'] === null ? null : (int)$r['issue_id']; }
+    foreach ($rows as &$r) { foreach (['id', 'project_id', 'active', 'created_by'] as $k) $r[$k] = (int)$r[$k]; $r['issue_id'] = $r['issue_id'] === null ? null : (int)$r['issue_id']; $r['suites'] = suites_in($r['suites'] ?? ''); }
     out(['cases' => $rows]);
 }
 
@@ -828,6 +841,7 @@ if ($action === 'case_save') {
         'project_id' => $project['id'], 'module' => str_in($b, 'module', 120), 'title' => str_in($b, 'title', 200),
         'preconditions' => str_in($b, 'preconditions', 10000), 'steps' => str_in($b, 'steps', 20000), 'expected' => str_in($b, 'expected', 10000),
         'priority' => enum_in($b, 'priority', QA_PRIORITIES, 'medium'), 'active' => !empty($b['active']) ? 1 : 0,
+        'suites' => suites_str(suites_in($b['suites'] ?? '')),
     ];
     if ($f['title'] === '' || $f['steps'] === '') out(['error' => 'Scenariusz potrzebuje tytułu i kroków.'], 422);
     $now = qa_now();
@@ -835,7 +849,7 @@ if ($action === 'case_save') {
         $cols = implode(',', array_map(fn($k) => "$k=?", array_keys($f)));
         $p->prepare("UPDATE qa_cases SET $cols, updated_at=? WHERE id=?")->execute([...array_values($f), $now, $id]);
     } else {
-        $p->prepare('INSERT INTO qa_cases(project_id,module,title,preconditions,steps,expected,priority,active,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+        $p->prepare('INSERT INTO qa_cases(project_id,module,title,preconditions,steps,expected,priority,active,suites,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')
             ->execute([...array_values($f), $u['id'], $now, $now]);
         $id = (int)$p->lastInsertId();
     }
@@ -859,7 +873,7 @@ if ($action === 'cases_import') {
     rewind($h);
     $norm = fn($s) => strtr(mb_strtolower(trim((string)$s)), ['ą' => 'a', 'ć' => 'c', 'ę' => 'e', 'ł' => 'l', 'ń' => 'n', 'ó' => 'o', 'ś' => 's', 'ź' => 'z', 'ż' => 'z']);
     $names = ['projekt' => 'project', 'obszar' => 'module', 'tytul' => 'title', 'warunki wstepne' => 'preconditions', 'kroki' => 'steps',
-        'oczekiwany wynik' => 'expected', 'priorytet' => 'priority'];
+        'oczekiwany wynik' => 'expected', 'priorytet' => 'priority', 'zestawy' => 'suites', 'zestaw' => 'suites'];
     $head = fgetcsv($h, 0, $sep, '"', '');
     $cols = [];
     foreach ((array)$head as $i => $name) if (isset($names[$norm($name)])) $cols[$names[$norm($name)]] = $i;
@@ -878,7 +892,7 @@ if ($action === 'cases_import') {
         if ($r === [null] || implode('', $r) === '') continue;
         $g = fn($k, $max) => mb_substr(trim((string)($r[$cols[$k] ?? -1] ?? '')), 0, $max);
         $row = ['line' => $n, 'project' => $g('project', 120), 'module' => $g('module', 120), 'title' => $g('title', 200), 'preconditions' => $g('preconditions', 10000),
-            'steps' => $g('steps', 20000), 'expected' => $g('expected', 10000), 'priority' => 'medium', 'status' => 'ok', 'note' => ''];
+            'steps' => $g('steps', 20000), 'expected' => $g('expected', 10000), 'suites' => suites_in($g('suites', 500)), 'priority' => 'medium', 'status' => 'ok', 'note' => ''];
         $pr = null;
         foreach ($projects as $x) if ($norm($x['code']) === $norm($row['project']) || $norm($x['name']) === $norm($row['project'])) $pr = $x;
         $pl = $norm($g('priority', 30));
@@ -892,7 +906,7 @@ if ($action === 'cases_import') {
             if ($row['module'] !== '' && !in_array($row['module'], lines($pr['modules']), true)) $row['note'] .= 'Obszaru nie ma na liście projektu (zapiszemy go mimo to).';
             $exists->execute([$pr['id'], $row['title']]);
             $key = $pr['id'] . '|' . $row['title'];
-            if ((int)$exists->fetchColumn() > 0 || isset($seen[$key])) { $row['status'] = 'duplicate'; $row['note'] = 'Taki scenariusz już jest — pominiemy.'; }
+            if ((int)$exists->fetchColumn() > 0 || isset($seen[$key])) { $row['status'] = 'duplicate'; $row['note'] = $row['suites'] ? 'Taki scenariusz już jest — dopiszemy tylko brakujące zestawy.' : 'Taki scenariusz już jest — pominiemy.'; }
             $seen[$key] = true;
         }
         $rows[] = $row;
@@ -901,14 +915,25 @@ if ($action === 'cases_import') {
     fclose($h);
     $ok = array_values(array_filter($rows, fn($x) => $x['status'] === 'ok'));
     $saved = 0;
-    if ($commit && $ok) {
+    $tagged = 0;
+    if ($commit) {
         $now = qa_now();
-        $ins = $p->prepare('INSERT INTO qa_cases(project_id,module,title,preconditions,steps,expected,priority,active,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,1,?,?,?)');
+        $ins = $p->prepare('INSERT INTO qa_cases(project_id,module,title,preconditions,steps,expected,priority,active,suites,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,1,?,?,?,?)');
+        $sel = $p->prepare('SELECT id, suites FROM qa_cases WHERE project_id=? AND title=?');
+        $upd = $p->prepare('UPDATE qa_cases SET suites=?, updated_at=? WHERE id=?');
         $p->beginTransaction();
-        foreach ($ok as $x) { $ins->execute([$x['project_id'], $x['module'], $x['title'], $x['preconditions'], $x['steps'], $x['expected'], $x['priority'], $u['id'], $now, $now]); $saved++; }
+        foreach ($ok as $x) { $ins->execute([$x['project_id'], $x['module'], $x['title'], $x['preconditions'], $x['steps'], $x['expected'], $x['priority'], suites_str($x['suites']), $u['id'], $now, $now]); $saved++; }
+        foreach ($rows as $x) {
+            if ($x['status'] !== 'duplicate' || !$x['suites']) continue;
+            $sel->execute([$x['project_id'], $x['title']]);
+            foreach ($sel->fetchAll() as $c) {
+                $merged = suites_in([...suites_in($c['suites']), ...$x['suites']]);
+                if (suites_str($merged) !== $c['suites']) { $upd->execute([suites_str($merged), $now, $c['id']]); $tagged++; }
+            }
+        }
         $p->commit();
     }
-    out(['rows' => $rows, 'valid' => count($ok), 'saved' => $saved, 'separator' => $sep]);
+    out(['rows' => $rows, 'valid' => count($ok), 'saved' => $saved, 'tagged' => $tagged, 'separator' => $sep]);
 }
 
 if ($action === 'case_from_issue') {
@@ -967,10 +992,12 @@ if ($action === 'run_create') {
     $name = str_in($b, 'name', 160);
     if ($name === '') out(['error' => 'Nazwij przebieg, np. „Test regresji v0.8”.'], 422);
     $modules = array_values(array_filter(array_map('strval', (array)($b['modules'] ?? []))));
-    $q = $p->prepare('SELECT id, module FROM qa_cases WHERE project_id=? AND active=1 ORDER BY module, id');
+    $q = $p->prepare('SELECT id, module, suites FROM qa_cases WHERE project_id=? AND active=1 ORDER BY module, id');
     $q->execute([$project['id']]);
-    $cases = array_filter($q->fetchAll(), fn($c) => !$modules || in_array($c['module'], $modules, true));
-    if (!$cases) out(['error' => 'Brak aktywnych scenariuszy dla wybranego projektu i obszarów. Najpierw dodaj scenariusze.'], 422);
+    $suite = mb_strtolower(str_in($b, 'suite', 40));
+    $cases = array_filter($q->fetchAll(), fn($c) => (!$modules || in_array($c['module'], $modules, true))
+        && ($suite === '' || in_array($suite, array_map('mb_strtolower', suites_in($c['suites'])), true)));
+    if (!$cases) out(['error' => 'Brak aktywnych scenariuszy dla wybranego projektu, obszarów i zestawu. Najpierw dodaj scenariusze.'], 422);
     $p->beginTransaction();
     $p->prepare('INSERT INTO qa_runs(project_id,name,environment,version,status,created_by,created_at) VALUES(?,?,?,?,\'open\',?,?)')
         ->execute([$project['id'], $name, str_in($b, 'environment', 80), str_in($b, 'version', 60), $u['id'], qa_now()]);

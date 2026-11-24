@@ -481,6 +481,20 @@ $zly = "projekt,tytuł,kroki,priorytet\nXYZ,Coś,1. a,Wysoki\nPZB,,1. a,Wysoki\n
 $zw = kod($admin->post('cases_import', ['csv' => $zly]), 200, 'plik z błędami (przecinki)');
 sprawdz(array_column($zw['rows'] ?? [], 'status') === ['error', 'error', 'ok'] && ($zw['separator'] ?? '') === ',', 'błędne wiersze oznaczone, separator przecinek wykryty');
 kod($admin->post('cases_import', ['csv' => "a;b\n1;2\n"]), 422, 'plik bez wymaganych kolumn odrzucony');
+sekcja('1.16 Zestawy scenariuszy');
+$c1 = array_values(array_filter($admin->get('cases')[1]['cases'] ?? [], fn($c) => $c['title'] === 'Klub nie widzi danych innego klubu'))[0] ?? [];
+sprawdz(($c1['suites'] ?? []) === ['Szybki test', 'Pełna regresja'], 'zestawy z kolumny CSV zapisane', json_encode($c1['suites'] ?? null, JSON_UNESCAPED_UNICODE));
+$cz = kod($tester->post('case_save', ['project_id' => $pzbId, 'title' => 'Zestaw test', 'steps' => '1. a', 'active' => 1, 'suites' => ' Telefon ;telefon, Szybki test ']), 200, 'tester zapisuje scenariusz z zestawami');
+$cs = array_values(array_filter($tester->get('cases')[1]['cases'] ?? [], fn($c) => $c['id'] === ($cz['id'] ?? -1)))[0] ?? [];
+sprawdz(($cs['suites'] ?? []) === ['Telefon', 'Szybki test'], 'zestawy oczyszczone (spacje, powtórzenia, różne separatory)');
+$szybkie = count(array_filter($admin->get('cases')[1]['cases'] ?? [], fn($c) => $c['active'] && $c['project_id'] === $pzbId && in_array('Szybki test', $c['suites'], true)));
+$rz = kod($tester->post('run_create', ['project_id' => $pzbId, 'name' => 'Szybki', 'suite' => 'szybki test']), 200, 'przebieg według zestawu (wielkość liter bez znaczenia)');
+sprawdz(count($tester->get('run&id=' . (int)($rz['id'] ?? 0))[1]['run']['results'] ?? []) === $szybkie && $szybkie === 19, "przebieg ma tylko scenariusze z zestawu ($szybkie)");
+kod($tester->post('run_create', ['project_id' => $pzbId, 'name' => 'X', 'suite' => 'Nie ma takiego']), 422, 'pusty zestaw — czytelny błąd');
+$dopisz = "projekt;tytuł;kroki;zestawy\nPZB;Klub nie widzi danych innego klubu;1. a;Uprawnienia\n";
+$rt = kod($admin->post('cases_import', ['csv' => $dopisz, 'commit' => true]), 200, 'ponowny import z nowym zestawem');
+$c1 = array_values(array_filter($admin->get('cases')[1]['cases'] ?? [], fn($c) => $c['title'] === 'Klub nie widzi danych innego klubu'))[0] ?? [];
+sprawdz(($rt['tagged'] ?? 0) === 1 && ($rt['saved'] ?? -1) === 0 && ($c1['suites'] ?? []) === ['Szybki test', 'Pełna regresja', 'Uprawnienia'], 'import dopisuje zestaw do istniejącego scenariusza, nie tworzy kopii');
 
 /* ---------- 1.12 masowe akcje ---------- */
 

@@ -733,40 +733,43 @@ function modal(title, bodyHtml, okLabel, onOk, wide = false) {
 async function viewCases() {
   setNav('scenariusze');
   await loadCases(true);
-  const F = S.view.caseF ??= { project: store.get('filters', {}).project || '', module: '', text: '', inactive: false };
+  const F = S.view.caseF ??= { project: store.get('filters', {}).project || '', module: '', suite: '', text: '', inactive: false };
   view(`
   <div class="pagehead"><div><div class="eyebrow">Testy</div><h1>Scenariusze testów</h1><p>Opisane krok po kroku sprawdzenia funkcji. Z nich tworzysz przebiegi testów.</p></div>
     <div class="actions">${isAdmin() ? '<button class="btn secondary" id="impCase">↥ Import z CSV</button>' : ''}${canWrite() ? '<button class="btn primary" id="newCase">＋ Nowy scenariusz</button>' : ''}</div></div>
   <div class="filters"><input class="control search" id="cfText" placeholder="Szukaj w scenariuszach…" value="${esc(F.text)}">
     <select class="control" id="cfProject">${opts(S.meta.projects.map(p => [p.id, p.code + ' · ' + p.name]), F.project, 'Każdy projekt')}</select>
     <select class="control" id="cfModule"></select>
+    <select class="control" id="cfSuite">${opts(allSuites(), F.suite, 'Każdy zestaw')}</select>
     <label class="control" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="cfInactive" ${F.inactive ? 'checked' : ''}> nieaktywne</label></div>
   <div id="caseList"></div>`);
   const fillMods = () => { const mods = [...new Set(S.cases.filter(c => !F.project || c.project_id === Number(F.project)).map(c => c.module).filter(Boolean))].sort();
     $('#cfModule').innerHTML = opts(mods, F.module, 'Każdy obszar'); };
   const draw = () => {
     const t = F.text.toLowerCase();
-    const list = S.cases.filter(c => (!F.project || c.project_id === Number(F.project)) && (!F.module || c.module === F.module) && (F.inactive || c.active) && (!t || (c.title + ' ' + c.steps + ' ' + c.module).toLowerCase().includes(t)));
+    const list = S.cases.filter(c => (!F.project || c.project_id === Number(F.project)) && (!F.module || c.module === F.module) && (!F.suite || (c.suites || []).includes(F.suite)) && (F.inactive || c.active) && (!t || (c.title + ' ' + c.steps + ' ' + c.module).toLowerCase().includes(t)));
     const groups = {}; list.forEach(c => { const k = (project(c.project_id)?.code || '') + ' · ' + (c.module || 'Bez obszaru'); (groups[k] ||= []).push(c); });
-    $('#caseList').innerHTML = list.length ? Object.entries(groups).map(([g, cs]) => `<div class="casegroup"><h3>${esc(g)} (${cs.length})</h3><div class="tablewrap"><table><tbody>${cs.map(c => `<tr class="row" data-case="${c.id}"><td style="width:90px" class="key">TC-${String(c.id).padStart(3, '0')}</td><td><div class="ttl">${esc(c.title)}${c.active ? '' : ' <span class="badge">nieaktywny</span>'}</div><div class="sub">${esc(c.expected).slice(0, 140)}</div></td><td style="width:110px">${prB(c.priority)}</td></tr>`).join('')}</tbody></table></div></div>`).join('')
+    $('#caseList').innerHTML = list.length ? Object.entries(groups).map(([g, cs]) => `<div class="casegroup"><h3>${esc(g)} (${cs.length})</h3><div class="tablewrap"><table><tbody>${cs.map(c => `<tr class="row" data-case="${c.id}"><td style="width:90px" class="key">TC-${String(c.id).padStart(3, '0')}</td><td><div class="ttl">${esc(c.title)}${c.active ? '' : ' <span class="badge">nieaktywny</span>'}</div><div class="sub">${(c.suites || []).map(s => `<span class="badge" style="margin-right:4px">${esc(s)}</span>`).join('')}${esc(c.expected).slice(0, 140)}</div></td><td style="width:110px">${prB(c.priority)}</td></tr>`).join('')}</tbody></table></div></div>`).join('')
       : `<div class="card empty"><b>Brak scenariuszy</b>${canWrite() ? 'Dodaj pierwszy scenariusz — np. „Logowanie poprawnym hasłem” — i opisz kroki oraz oczekiwany wynik.' : ''}</div>`;
     $$('[data-case]').forEach(r => r.onclick = () => caseModal(S.cases.find(c => c.id === Number(r.dataset.case)), viewCases));
   };
   $('#cfText').oninput = e => { F.text = e.target.value; draw(); };
   $('#cfProject').onchange = e => { F.project = e.target.value; F.module = ''; fillMods(); draw(); };
   $('#cfModule').onchange = e => { F.module = e.target.value; draw(); };
+  $('#cfSuite').onchange = e => { F.suite = e.target.value; draw(); };
   $('#cfInactive').onchange = e => { F.inactive = e.target.checked; draw(); };
   $('#impCase') && ($('#impCase').onclick = importCasesModal);
   $('#newCase') && ($('#newCase').onclick = () => caseModal({ project_id: Number(F.project) || activeProjects()[0]?.id, module: F.module, priority: 'medium', active: 1 }, viewCases));
   fillMods(); draw();
 }
+function allSuites() { return [...new Set((S.cases || []).flatMap(c => c.suites || []))].sort((a, b) => a.localeCompare(b, 'pl')); }
 function importCasesModal() {
   let csv = '';
-  const o = modal('Import scenariuszy z CSV', `<p class="small" style="margin-top:0">Kolumny (pierwszy wiersz): <b>projekt; obszar; tytuł; warunki wstępne; kroki; oczekiwany wynik; priorytet</b>. Projekt to skrót (np. PZB) albo nazwa. Separator średnik albo przecinek. Najpierw zobaczysz podgląd — nic się nie zapisze bez potwierdzenia.</p>
+  const o = modal('Import scenariuszy z CSV', `<p class="small" style="margin-top:0">Kolumny (pierwszy wiersz): <b>projekt; obszar; tytuł; warunki wstępne; kroki; oczekiwany wynik; priorytet</b> i opcjonalnie <b>zestawy</b>. Projekt to skrót (np. PZB) albo nazwa. Separator średnik albo przecinek. Najpierw zobaczysz podgląd — nic się nie zapisze bez potwierdzenia.</p>
     <div class="field"><input type="file" id="impFile" accept=".csv,text/csv"></div><div id="impPrev" style="margin-top:12px"></div>`,
     'Zapisz scenariusze', async (btn, close) => {
       if (!csv) return toast('Najpierw wybierz plik.', true);
-      await busy(btn, async () => { const r = await api('cases_import', { body: { csv, commit: true } }); close(); toast('Zapisano scenariuszy: ' + r.saved + '.'); await loadCases(true); viewCases(); });
+      await busy(btn, async () => { const r = await api('cases_import', { body: { csv, commit: true } }); close(); toast('Zapisano scenariuszy: ' + r.saved + (r.tagged ? ', dopisano zestawy do istniejących: ' + r.tagged : '') + '.'); await loadCases(true); viewCases(); });
     }, true);
   const ok = $('[data-ok]', o); ok.disabled = true;
   $('#impFile', o).onchange = async e => {
@@ -779,7 +782,7 @@ function importCasesModal() {
       const lbl = { ok: badge('rs-pass', 'do zapisu'), duplicate: badge('', 'już jest'), error: badge('rs-fail', 'błąd') };
       $('#impPrev', o).innerHTML = `<p><b>${r.valid}</b> z ${r.rows.length} scenariuszy do zapisu.</p><div class="tablewrap" style="max-height:340px;overflow:auto"><table><thead><tr><th>Wiersz</th><th>Scenariusz</th><th>Stan</th></tr></thead><tbody>
         ${r.rows.map(x => `<tr><td class="sub">${x.line}</td><td><div class="ttl">${esc(x.title || '—')}</div><div class="sub">${esc(x.project)} · ${esc(x.module || 'bez obszaru')} · ${esc(S.meta.priorities[x.priority] || '')}${x.note ? ' — ' + esc(x.note) : ''}</div></td><td>${lbl[x.status]}</td></tr>`).join('')}</tbody></table></div>`;
-      ok.disabled = !r.valid; ok.textContent = 'Zapisz ' + r.valid + ' scenariuszy';
+      const tag = r.rows.filter(x => x.status === 'duplicate' && x.suites.length).length; ok.disabled = !r.valid && !tag; ok.textContent = r.valid ? 'Zapisz ' + r.valid + ' scenariuszy' : 'Dopisz zestawy (' + tag + ')';
     } catch (ex) { csv = ''; ok.disabled = true; $('#impPrev', o).innerHTML = `<div class="authError show">${esc(ex.message)}</div>`; }
   };
 }
@@ -792,11 +795,12 @@ function caseModal(c, done) {
     <div class="field full"><label>Warunki wstępne</label><textarea id="cpre" style="min-height:60px" placeholder="np. Zalogowany jako sekretarz klubu, istnieje mecz w terminarzu" ${ro ? 'readonly' : ''}>${esc(c.preconditions)}</textarea></div>
     <div class="field full"><label>Kroki <i>*</i></label><textarea id="cst" placeholder="1. …&#10;2. …&#10;3. …" ${ro ? 'readonly' : ''}>${esc(c.steps)}</textarea></div>
     <div class="field full"><label>Oczekiwany wynik</label><textarea id="cex" style="min-height:70px" ${ro ? 'readonly' : ''}>${esc(c.expected)}</textarea></div>
+    <div class="field full"><label>Zestawy (oddziel średnikiem)</label><input id="csu" list="suiteList" value="${esc((c.suites || []).join('; '))}" placeholder="np. Szybki test; Pełna regresja; Telefon" ${ro ? 'readonly' : ''}><datalist id="suiteList">${allSuites().map(s => `<option value="${esc(s)}">`).join('')}</datalist><span class="hint">Zestaw to gotowa lista do przebiegu, np. „Szybki test” na 30 minut.</span></div>
     <div class="field"><label>Priorytet</label><select id="cpr" ${ro ? 'disabled' : ''}>${opts(Object.entries(S.meta.priorities), c.priority)}</select></div>
     <div class="field"><label>&nbsp;</label><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="cact" ${c.active ? 'checked' : ''} ${ro ? 'disabled' : ''}> Aktywny (trafia do nowych przebiegów)</label></div>
     ${c.id ? `<div class="field full hint">Autor: ${esc(c.author)} · zmiana ${fmtDate(c.updated_at)}</div>` : ''}
   </div>`, ro ? null : 'Zapisz', async (btn, close) => {
-    const body = { id: c.id || 0, project_id: Number($('#cp', o).value), module: $('#cm', o).value, title: $('#ct', o).value, preconditions: $('#cpre', o).value, steps: $('#cst', o).value, expected: $('#cex', o).value, priority: $('#cpr', o).value, active: $('#cact', o).checked };
+    const body = { id: c.id || 0, project_id: Number($('#cp', o).value), module: $('#cm', o).value, title: $('#ct', o).value, preconditions: $('#cpre', o).value, steps: $('#cst', o).value, expected: $('#cex', o).value, priority: $('#cpr', o).value, active: $('#cact', o).checked, suites: $('#csu', o).value };
     if (!body.title.trim() || !body.steps.trim()) return toast('Uzupełnij tytuł i kroki.', true);
     await busy(btn, async () => { await api('case_save', { body }); close(); toast('Zapisano scenariusz.'); await loadCases(true); done(); });
   }, true);
@@ -825,14 +829,18 @@ async function viewRuns() {
       <div class="field"><label>Projekt</label><select id="rp">${opts(activeProjects().map(p => [p.id, p.code + ' · ' + p.name]), last.project)}</select></div>
       <div class="field"><label>Środowisko</label><select id="re"></select></div>
       <div class="field"><label>Wersja</label><input id="rv" maxlength="60" value="${esc(last.version || '')}" placeholder="np. v0.8-demo"></div><div class="field"></div>
+      <div class="field full"><label>Zestaw</label><select id="rsu"></select><span class="hint">Gotowa lista, np. „Szybki test”. Możesz ją jeszcze zawęzić obszarami poniżej.</span></div>
       <div class="field full"><div class="pickhead"><span class="lbl">Zakres — obszary do sprawdzenia</span><span><button type="button" class="linkbtn" id="rall">Zaznacz wszystkie</button> · <button type="button" class="linkbtn" id="rnone">Wyczyść</button></span></div>
         <div id="rmods" class="picklist"></div><div class="picksum" id="rcount"></div></div></div>`,
       'Utwórz przebieg', async (btn, close) => {
         const modules = $$('#rmods input:checked', o).map(i => i.value);
-        await busy(btn, async () => { const r = await api('run_create', { body: { name: $('#rn', o).value, project_id: Number($('#rp', o).value), environment: $('#re', o).value, version: $('#rv', o).value, modules } });
+        await busy(btn, async () => { const r = await api('run_create', { body: { name: $('#rn', o).value, project_id: Number($('#rp', o).value), environment: $('#re', o).value, version: $('#rv', o).value, modules, suite: $('#rsu', o).value } });
           close(); toast('Przebieg utworzony.'); location.hash = '#/przebieg/' + r.id; });
       }, true);
-    const fill = () => { const p = project($('#rp', o).value), cs = S.cases.filter(c => c.active && c.project_id === p?.id);
+    const fill = () => { const p = project($('#rp', o).value), csAll = S.cases.filter(c => c.active && c.project_id === p?.id);
+      const suites = [...new Set(csAll.flatMap(c => c.suites || []))].sort((a, b) => a.localeCompare(b, 'pl'));
+      const curS = $('#rsu', o).value; $('#rsu', o).innerHTML = opts(suites.map(s => [s, s + ' (' + csAll.filter(c => (c.suites || []).includes(s)).length + ')']), curS, 'Bez zestawu — wybór obszarów');
+      const cs = csAll.filter(c => !$('#rsu', o).value || (c.suites || []).includes($('#rsu', o).value));
       $('#re', o).innerHTML = opts(p?.environments || [], last.environment, '—');
       // Obszary w kolejności z projektu (jak w menu systemu), potem ewentualne spoza listy.
       const order = p?.modules || [], used = [...new Set(cs.map(c => c.module || ''))];
@@ -848,7 +856,7 @@ async function viewRuns() {
       $('#rall', o).onclick = () => { $$('#rmods input', o).forEach(i => { i.checked = true; }); cnt(); };
       $('#rnone', o).onclick = () => { $$('#rmods input', o).forEach(i => { i.checked = false; }); cnt(); };
       cnt(); };
-    fill(); $('#rp', o).onchange = fill;
+    fill(); $('#rp', o).onchange = fill; $('#rsu', o).onchange = fill;
   });
 }
 async function viewRun(id) {
