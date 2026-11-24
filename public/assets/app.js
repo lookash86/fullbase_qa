@@ -252,6 +252,7 @@ async function route() {
 async function viewDashboard() {
   setNav('pulpit');
   await loadRuns(true).catch(() => { S.runs = []; });
+  const M = await api('metrics').catch(() => null);
   const is = S.issues, cnt = f => is.filter(f).length;
   const week = Date.now() - 7 * 864e5;
   const openIs = is.filter(i => OPEN.includes(i.status));
@@ -280,6 +281,11 @@ async function viewDashboard() {
     </div>
     <div class="stack">
       <div class="card"><div class="section"><h3>Otwarte wg obszaru</h3>${mods.length ? mods.map(([k, v]) => `<div class="barrow"><span>${esc(k)}</span><div class="bar"><i style="width:${Math.round(v / max * 100)}%"></i></div><b>${v}</b></div>`).join('') : '<p class="muted small" style="margin:0">Brak otwartych zgłoszeń.</p>'}</div></div>
+      ${M ? `<div class="card"><div class="section"><h3>Miary jakości</h3>
+        <div class="kv"><div><small>Średni czas od zgłoszenia do zamknięcia (90 dni)</small><span><b>${M.avg_days === null ? '—' : M.avg_days + ' dni'}</b>${M.median_days !== null ? ` · mediana ${M.median_days} dni` : ''}</span><div class="sub">${M.closed_90} zamkniętych</div></div>
+        <div><small>Poprawki odrzucone przez testera (90 dni)</small><span><b>${M.reopen_rate === null ? '—' : M.reopen_rate + '%'}</b></span><div class="sub">${M.reopened_90} z ${M.verified_90} weryfikowanych zgłoszeń wróciło do naprawy</div></div></div>
+        <h3 style="margin-top:14px">Błędy według obszaru (30 dni)</h3>${M.areas_30.length ? M.areas_30.slice(0, 8).map(a => `<div class="barrow"><span>${esc(a.module)} · ${esc(a.project)}</span><div class="bar"><i style="width:${Math.round(a.count / M.areas_30[0].count * 100)}%"></i></div><b>${a.count}${a.critical ? ` <span class="badge sv-blocker" title="krytyczne">${a.critical}</span>` : ''}</b></div>`).join('') : '<p class="muted small" style="margin:0">Brak błędów w ostatnich 30 dniach.</p>'}
+        <p class="hint" style="margin:10px 0 0">Obszar, który stale jest na górze, wymaga przebudowy, a nie łatania.</p></div></div>` : ''}
       <div class="card"><div class="section"><h3>Otwarte wg rodzaju</h3>${byKind.map(([k, v]) => `<div class="barrow"><span>${kdB(k)}</span><div class="bar"><i style="width:${openIs.length ? Math.round(v / openIs.length * 100) : 0}%"></i></div><b>${v}</b></div>`).join('')}</div></div>
     </div>
   </div>`);

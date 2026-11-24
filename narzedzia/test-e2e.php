@@ -622,6 +622,17 @@ $admin->post('result_save', ['run_id' => $gr2, 'case_id' => $gc, 'result' => 'pa
 $g = $admin->get('readiness&project_id=' . $gid)[1];
 sprawdz(($g['ready'] ?? false) === true && ($g['critical_cases'][0]['version'] ?? '') === '1.1', 'liczy się ostatni wynik — po zaliczeniu gotowe');
 
+/* ---------- 3.2 miary jakości ---------- */
+
+sekcja('3.2 Miary jakości');
+kod($gosc->get('metrics'), 401, 'miary wymagają logowania');
+$mm = kod($obs->get('metrics'), 200, 'obserwator widzi miary');
+sprawdz(($mm['closed_90'] ?? 0) >= 1 && is_numeric($mm['avg_days'] ?? null), 'średni czas do zamknięcia policzony');
+sprawdz(($mm['reopened_90'] ?? 0) >= 1 && ($mm['verified_90'] ?? 0) >= ($mm['reopened_90'] ?? 0) && is_int($mm['reopen_rate'] ?? null), 'odsetek odrzuconych poprawek policzony', json_encode($mm));
+$obszar = array_values(array_filter($mm['areas_30'] ?? [], fn($a) => $a['module'] === 'Mecze i wyniki'))[0] ?? [];
+sprawdz(($obszar['count'] ?? 0) >= 1 && ($obszar['critical'] ?? 0) >= 1, 'błędy według obszaru z liczbą krytycznych');
+sprawdz(($admin->get('metrics&project_id=' . $gid)[1]['closed_90'] ?? -1) === 0, 'filtr projektu działa');
+
 /* ---------- 1.20 kopie zapasowe ---------- */
 
 sekcja('1.20 Kopie zapasowe');

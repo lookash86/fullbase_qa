@@ -1098,6 +1098,36 @@ if ($action === 'run_create') {
     out(['ok' => true, 'id' => $runId]);
 }
 
+/* ---------- miary jakości (3.2) ---------- */
+
+if ($action === 'metrics') {
+    $pid = (int)($_GET['project_id'] ?? 0);
+    $w = $pid ? ' AND i.project_id=' . $pid : ''; // liczba całkowita — bezpieczne
+    $since90 = date('Y-m-d H:i:s', time() - 90 * 86400);
+    $since30 = date('Y-m-d H:i:s', time() - 30 * 86400);
+    // średni czas od zgłoszenia do zamknięcia (zamknięte w ostatnich 90 dniach, bez odrzuconych)
+    $q = $p->prepare("SELECT created_at, closed_at FROM qa_issues i WHERE status='closed' AND closed_at>=?$w");
+    $q->execute([$since90]);
+    $days = array_map(fn($r) => max(0, strtotime($r['closed_at']) - strtotime($r['created_at'])) / 86400, $q->fetchAll());
+    sort($days);
+    $avg = $days ? array_sum($days) / count($days) : null;
+    $median = $days ? $days[intdiv(count($days), 2)] : null;
+    // odsetek ponownych otwarć: ile zgłoszeń, które przeszły weryfikację, choć raz jej nie przeszło
+    $q = $p->prepare("SELECT a.issue_id, MAX(CASE WHEN a.message LIKE 'Weryfikacja negatywna%' THEN 1 ELSE 0 END) neg
+        FROM qa_activity a JOIN qa_issues i ON i.id=a.issue_id WHERE a.kind='verify' AND a.created_at>=?$w GROUP BY a.issue_id");
+    $q->execute([$since90]);
+    $ver = $q->fetchAll();
+    $reopened = count(array_filter($ver, fn($r) => (int)$r['neg'] === 1));
+    // błędy według obszaru — zgłoszone w ostatnich 30 dniach (rodzaj „błąd”)
+    $q = $p->prepare("SELECT i.module, p.code, COUNT(*) n, SUM(CASE WHEN i.severity IN ('blocker','data') THEN 1 ELSE 0 END) crit
+        FROM qa_issues i JOIN qa_projects p ON p.id=i.project_id WHERE i.kind='bug' AND i.created_at>=?$w GROUP BY i.module, p.code ORDER BY n DESC, crit DESC");
+    $q->execute([$since30]);
+    $areas = array_map(fn($r) => ['module' => $r['module'] ?: 'Bez obszaru', 'project' => $r['code'], 'count' => (int)$r['n'], 'critical' => (int)$r['crit']], $q->fetchAll());
+    out(['closed_90' => count($days), 'avg_days' => $avg === null ? null : round($avg, 1), 'median_days' => $median === null ? null : round($median, 1),
+        'verified_90' => count($ver), 'reopened_90' => $reopened, 'reopen_rate' => $ver ? round($reopened / count($ver) * 100) : null,
+        'areas_30' => $areas]);
+}
+
 /* ---------- gotowość wydania (1.18 = 3.1) ---------- */
 
 if ($action === 'readiness') {
