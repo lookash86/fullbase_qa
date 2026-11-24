@@ -307,6 +307,7 @@ function viewIssues(kind) {
     <div class="actions"><div class="seg"><button data-mode="list" class="${mode === 'list' ? 'on' : ''}">Lista</button><button data-mode="board" class="${mode === 'board' ? 'on' : ''}">Tablica</button></div>
     <a class="btn secondary" href="api.php?action=export" title="Pobierz wszystkie zgłoszenia (CSV do Excela)">↧ CSV</a>
     ${canWrite() ? '<a class="btn primary" href="#/nowe">＋ Nowe</a>' : ''}</div></div>
+  ${kind === 'zgloszenia' ? viewsBar() : ''}
   <div class="filters">
     <input class="control search" id="fText" placeholder="Szukaj: numer, tytuł, obszar, osoba…" value="${esc(F.text)}">
     <select class="control" id="fProject">${opts(S.meta.projects.map(p => [p.id, p.code + ' · ' + p.name]), F.project, 'Każdy projekt')}</select>
@@ -316,10 +317,11 @@ function viewIssues(kind) {
     <select class="control" id="fPriority">${opts(Object.entries(S.meta.priorities), F.priority, 'Każdy priorytet')}</select>
     <select class="control" id="fModule">${opts(modules, F.module, 'Każdy obszar')}</select>
     <select class="control" id="fRole">${opts(roles, F.role, 'Każda rola')}</select>
-    ${kind === 'moje' ? '' : `<select class="control" id="fWho">${opts([['me', 'Moje'], ['assigned', 'Przypisane do mnie']], F.who, 'Wszyscy')}</select>`}
+    ${kind === 'moje' ? '' : `<select class="control" id="fWho">${opts([['me', 'Moje'], ['assigned', 'Przypisane do mnie'], ['unassigned', 'Nieprzypisane']], F.who, 'Wszyscy')}</select>`}
   </div>
   <div id="issueList"></div>`);
   const bind = (id, key) => { const el = $('#' + id); if (!el) return; el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', () => { F[key] = el.value; if (key === 'project') store.set('filters', { project: el.value }); drawIssueList(); }); };
+  if (kind === 'zgloszenia') bindViews();
   bind('fText', 'text'); bind('fProject', 'project'); bind('fStatus', 'status'); bind('fKind', 'kind'); bind('fSeverity', 'severity'); bind('fPriority', 'priority'); bind('fModule', 'module'); bind('fRole', 'role'); bind('fWho', 'who');
   $$('[data-mode]').forEach(b => b.onclick = () => { store.set('mode', b.dataset.mode); $$('[data-mode]').forEach(x => x.classList.toggle('on', x === b)); drawIssueList(); });
   drawIssueList();
@@ -336,6 +338,7 @@ function filteredIssues() {
     if (F.role && i.sys_role !== F.role) return false;
     if (F.who === 'me' && i.reporter_id !== S.user.id && i.assignee_id !== S.user.id) return false;
     if (F.who === 'assigned' && i.assignee_id !== S.user.id) return false;
+    if (F.who === 'unassigned' && i.assignee_id) return false;
     if (t && ![i.key, i.title, i.module, i.reporter_name, i.assignee_name, i.environment, i.version, i.sys_role, i.sys_account].join(' ').toLowerCase().includes(t)) return false;
     return true;
   });
@@ -343,7 +346,8 @@ function filteredIssues() {
 const PRI = { critical: 0, high: 1, medium: 2, low: 3 };
 const SEV = { blocker: 0, data: 1, annoying: 2, cosmetic: 3 };
 function drawIssueList() {
-  const list = filteredIssues(), box = $('#issueList'), mode = store.get('mode', 'list');
+  const box = $('#issueList'), mode = store.get('mode', 'list'), srt = store.get('sort', { k: 'id', d: -1 });
+  const list = sortIssues(filteredIssues(), srt);
   if (mode === 'board') {
     box.innerHTML = `<div class="board">${BOARD.map(([st, label]) => { const items = list.filter(i => i.status === st).sort((a, b) => (SEV[a.severity] - SEV[b.severity]) || (PRI[a.priority] - PRI[b.priority]));
       return `<div class="col"><h4>${label}<span class="muted">${items.length}</span></h4>${items.map(i => `<div class="tile" data-go="#/z/${i.id}"><div class="key">${esc(i.key)}</div><div class="ttl">${esc(i.title)}</div><div class="meta">${svB(i.severity)}${prB(i.priority)}${i.kind !== 'bug' ? kdB(i.kind) : ''}${i.assignee_name ? `<span class="badge">→ ${esc(i.assignee_name.split(' ')[0])}</span>` : ''}</div></div>`).join('')}</div>`; }).join('')}</div>
@@ -352,13 +356,49 @@ function drawIssueList() {
   }
   const sel = S.view.sel ??= new Set();
   const adm = isAdmin();
-  box.innerHTML = `${adm ? '<div class="bulkbar" id="bulkbar" hidden></div>' : ''}<div class="tablewrap">${list.length ? `<table><thead><tr>${adm ? '<th class="selcell"><input type="checkbox" id="selAll" title="Zaznacz wszystkie widoczne"></th>' : ''}<th>Numer</th><th>Problem</th><th class="hide-m">Obszar</th><th>Waga / priorytet</th><th>Status</th><th class="hide-m">Zgłosił</th><th class="hide-m">Zmiana</th></tr></thead><tbody>
+  box.innerHTML = `${adm ? '<div class="bulkbar" id="bulkbar" hidden></div>' : ''}<div class="tablewrap">${list.length ? `<table><thead><tr>${adm ? '<th class="selcell"><input type="checkbox" id="selAll" title="Zaznacz wszystkie widoczne"></th>' : ''}${[['id', 'Numer', ''], ['title', 'Problem', ''], ['module', 'Obszar', 'hide-m'], ['sev', 'Waga / priorytet', ''], ['status', 'Status', ''], ['reporter', 'Zgłosił', 'hide-m'], ['upd', 'Zmiana', 'hide-m']].map(([k, l, c]) => `<th class="sortable ${c}" data-sort="${k}">${l}${srt.k === k ? (srt.d > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>
     ${list.map(i => `<tr class="row" data-go="#/z/${i.id}">${adm ? `<td class="selcell"><input type="checkbox" data-sel="${i.id}" ${sel.has(i.id) ? 'checked' : ''}></td>` : ''}<td class="key">${esc(i.key)}</td><td><div class="ttl">${esc(i.title)}</div><div class="sub">${i.kind !== 'bug' ? kdB(i.kind) + ' ' : ''}${i.attachments ? '📎 ' + i.attachments + ' ' : ''}${i.comments ? '💬 ' + i.comments + ' ' : ''}${i.sys_role || i.sys_account ? '👤 ' + esc([i.sys_role, i.sys_account].filter(Boolean).join(' · ')) + ' ' : ''}${i.assignee_name ? '→ ' + esc(i.assignee_name) : ''}${i.status === 'fixed' && i.fixed_in ? ' · sprawdzaj na ≥ ' + esc(i.fixed_in) : ''}</div></td>
       <td class="hide-m">${esc(i.module || '—')}<div class="sub">${esc(i.project_code)}</div></td><td>${svB(i.severity)}<div class="sub" style="margin-top:4px">${prB(i.priority)}</div></td><td>${stB(i.status)}${rejectInfo(i)}</td><td class="hide-m">${esc(i.reporter_name)}</td><td class="hide-m sub">${ago(i.updated_at)}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>Brak zgłoszeń dla tych filtrów</b>Zmień filtry${canWrite() ? ' albo <a href="#/nowe">dodaj nowe zgłoszenie</a>' : ''}.</div>`}
     <div class="listfoot"><span>${list.length} z ${S.issues.length}</span><span>Kliknij wiersz, aby otworzyć</span></div></div>`;
   bindRowLinks(box);
+  $$('[data-sort]', box).forEach(th => th.onclick = () => { const k = th.dataset.sort; store.set('sort', { k, d: srt.k === k ? -srt.d : (['id', 'upd'].includes(k) ? -1 : 1) }); drawIssueList(); });
   if (adm) bindBulk(box, list);
+}
+const STATUS_ORDER = { new: 0, reopened: 1, confirmed: 2, progress: 3, fixed: 4, closed: 5, rejected: 6 };
+function sortIssues(list, { k, d }) {
+  const val = {
+    id: i => i.id, title: i => i.title.toLowerCase(), module: i => (i.module || '').toLowerCase(), status: i => STATUS_ORDER[i.status] ?? 9,
+    sev: i => SEV[i.severity] * 10 + PRI[i.priority], reporter: i => (i.reporter_name || '').toLowerCase(), upd: i => i.updated_at,
+  }[k] || (i => i.id);
+  return [...list].sort((a, b) => { const x = val(a), y = val(b); return (x < y ? -1 : x > y ? 1 : 0) * d || b.id - a.id; });
+}
+/* Widoki listy: gotowe zestawy filtrów + własne (zapamiętane w tej przeglądarce). */
+const VIEW_KEYS = ['q', 'project', 'status', 'kind', 'severity', 'priority', 'module', 'role', 'who'];
+function builtinViews() {
+  return [
+    ['Otwarte', ''], ['Krytyczne otwarte', 'severity=crit*'], ['Do weryfikacji', 'status=fixed'],
+    ...(isAdmin() ? [['Nowe do przeglądu', 'status=new'], ['Nieprzypisane', 'who=unassigned']] : [['Moje', 'who=me']]),
+    ['Przypisane do mnie', 'who=assigned'], ['Zamknięte', 'status=closed'],
+  ];
+}
+function currentQuery() {
+  const F = S.view.filters, map = { q: F.text, project: F.project, status: F.status === 'open*' ? '' : F.status, kind: F.kind, severity: F.severity, priority: F.priority, module: F.module, role: F.role, who: F.who };
+  const p = new URLSearchParams(); VIEW_KEYS.forEach(k => { if (map[k]) p.set(k, map[k]); }); return p.toString();
+}
+function viewsBar() {
+  const cur = parseHash().q.toString(), own = store.get('views', []);
+  return `<div class="views" id="views">${builtinViews().map(([n, q]) => `<a class="chipview${q === cur ? ' on' : ''}" href="#/zgloszenia${q ? '?' + q : ''}">${esc(n)}</a>`).join('')}
+    ${own.map((v, i) => `<span class="chipview own${v.q === cur ? ' on' : ''}"><a href="#/zgloszenia${v.q ? '?' + esc(v.q) : ''}">${esc(v.name)}</a><button data-delview="${i}" title="Usuń widok">×</button></span>`).join('')}
+    <button class="linkbtn" id="saveView">＋ Zapisz obecne filtry jako widok</button></div>`;
+}
+function bindViews() {
+  $('#saveView').onclick = () => {
+    const name = prompt('Nazwa widoku (np. „Sędziowie — krytyczne”):'); if (!name?.trim()) return;
+    const own = store.get('views', []); own.push({ name: name.trim().slice(0, 40), q: currentQuery() }); store.set('views', own);
+    location.hash = '#/zgloszenia' + (own.at(-1).q ? '?' + own.at(-1).q : ''); viewIssues('zgloszenia'); toast('Zapisano widok.');
+  };
+  $$('[data-delview]').forEach(b => b.onclick = () => { const own = store.get('views', []); own.splice(Number(b.dataset.delview), 1); store.set('views', own); viewIssues('zgloszenia'); });
 }
 /* Masowe akcje (administrator): zaznacz zgłoszenia → status / przypisanie / priorytet. */
 function bindBulk(box, list) {
