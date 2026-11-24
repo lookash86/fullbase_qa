@@ -981,6 +981,29 @@ if ($action === 'run_create') {
     out(['ok' => true, 'id' => $runId]);
 }
 
+if ($action === 'run_rerun') {
+    require_post();
+    need_role($u, 'admin', 'tester');
+    $b = body();
+    $q = $p->prepare('SELECT * FROM qa_runs WHERE id=?');
+    $q->execute([(int)($b['id'] ?? 0)]);
+    $src = $q->fetch();
+    if (!$src) out(['error' => 'Nie znaleziono przebiegu.'], 404);
+    $q = $p->prepare("SELECT r.case_id FROM qa_results r JOIN qa_cases c ON c.id=r.case_id WHERE r.run_id=? AND r.result IN ('fail','blocked') AND c.active=1 ORDER BY c.module, c.id");
+    $q->execute([$src['id']]);
+    $cases = $q->fetchAll(PDO::FETCH_COLUMN);
+    if (!$cases) out(['error' => 'W tym przebiegu nie ma niezaliczonych ani zablokowanych scenariuszy.'], 422);
+    $name = str_in($b, 'name', 160) ?: mb_substr('Powtórka: ' . $src['name'], 0, 160);
+    $p->beginTransaction();
+    $p->prepare('INSERT INTO qa_runs(project_id,name,environment,version,status,created_by,created_at) VALUES(?,?,?,?,\'open\',?,?)')
+        ->execute([$src['project_id'], $name, $src['environment'], str_in($b, 'version', 60) ?: $src['version'], $u['id'], qa_now()]);
+    $runId = (int)$p->lastInsertId();
+    $ins = $p->prepare('INSERT INTO qa_results(run_id,case_id,result,note) VALUES(?,?,\'pending\',\'\')');
+    foreach ($cases as $c) $ins->execute([$runId, (int)$c]);
+    $p->commit();
+    out(['ok' => true, 'id' => $runId, 'cases' => count($cases)]);
+}
+
 if ($action === 'run') {
     $id = (int)($_GET['id'] ?? 0);
     $q = $p->prepare('SELECT n.*, u.display_name author, p.code project_code, p.name project_name FROM qa_runs n JOIN qa_users u ON u.id=n.created_by JOIN qa_projects p ON p.id=n.project_id WHERE n.id=?');

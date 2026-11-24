@@ -826,7 +826,7 @@ async function viewRun(id) {
     <span class="small">✓ ${counts('pass')} zaliczone · ✗ ${counts('fail')} niezaliczone · ⛔ ${counts('blocked')} zablokowane · ↷ ${counts('skip')} pominięte</span></div>
     <div class="progress"><i class="p-pass" style="width:${pc('pass')}%"></i><i class="p-fail" style="width:${pc('fail')}%"></i><i class="p-blocked" style="width:${pc('blocked')}%"></i><i class="p-skip" style="width:${pc('skip')}%"></i></div></div>
   <div class="pagehead" style="margin-bottom:12px"><div class="seg">${[['all', 'Wszystkie'], ['pending', 'Do wykonania'], ['fail', 'Problemy']].map(([k, l]) => `<button data-show="${k}" class="${F.show === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-    <div class="actions">${canWrite() ? (r.status === 'open' ? '<button class="btn secondary" id="runClose">Zakończ przebieg</button>' : '<button class="btn secondary" id="runOpen">Wznów przebieg</button>') : ''}</div></div>
+    <div class="actions">${canWrite() && counts('fail') + counts('blocked') ? `<button class="btn soft" id="runRerun" title="Nowy przebieg tylko z niezaliczonych i zablokowanych — np. po poprawkach">↻ Powtórz niezaliczone (${counts('fail') + counts('blocked')})</button>` : ''}${canWrite() ? (r.status === 'open' ? '<button class="btn secondary" id="runClose">Zakończ przebieg</button>' : '<button class="btn secondary" id="runOpen">Wznów przebieg</button>') : ''}</div></div>
   <div id="cases"></div>`);
   const draw = () => {
     const list = r.results.filter(x => F.show === 'all' || (F.show === 'pending' ? x.result === 'pending' : ['fail', 'blocked'].includes(x.result)));
@@ -887,6 +887,14 @@ async function viewRun(id) {
   const setStatus = (status, btn) => busy(btn, async () => { await api('run_status', { body: { id, status } }); toast(status === 'closed' ? 'Przebieg zakończony.' : 'Przebieg wznowiony.'); viewRun(id); });
   $('#runClose') && ($('#runClose').onclick = e => { const p = counts('pending'); if (p && !confirm(`${p} scenariuszy nie wykonano. Zakończyć mimo to?`)) return; setStatus('closed', e.currentTarget); });
   $('#runOpen') && ($('#runOpen').onclick = e => setStatus('open', e.currentTarget));
+  $('#runRerun') && ($('#runRerun').onclick = () => {
+    const o = modal('Powtórz niezaliczone', `<p class="small" style="margin-top:0">Nowy przebieg tylko z niezaliczonych i zablokowanych scenariuszy (${counts('fail') + counts('blocked')}). Przydaje się po wgraniu poprawek.</p>
+      <div class="field"><label>Nazwa</label><input id="rrN" maxlength="160" value="${esc(('Powtórka: ' + r.name).slice(0, 160))}"></div>
+      <div class="field" style="margin-top:10px"><label>Wersja do sprawdzenia</label><input id="rrV" maxlength="60" value="${esc(r.version || '')}" placeholder="np. 0.9.3"></div>`,
+      'Utwórz przebieg', async (btn, close) => {
+        await busy(btn, async () => { const x = await api('run_rerun', { body: { id: r.id, name: $('#rrN', o).value, version: $('#rrV', o).value } }); close(); toast('Utworzono przebieg z ' + x.cases + ' scenariuszami.'); S.view.openCase = null; location.hash = '#/przebieg/' + x.id; });
+      });
+  });
   if (S.view.openCase == null && open) S.view.openCase = r.results.find(x => x.result === 'pending')?.case_id ?? null;
   draw();
   const opened = $('.runcase.open'); if (opened && S.view.scrollToCase !== false) opened.scrollIntoView({ block: 'center' });

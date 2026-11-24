@@ -575,6 +575,13 @@ sprawdz((int)($wynik['issue_id'] ?? 0) === (int)($z2['issue']['id'] ?? -1), 'wyn
 $zf = $tester->get('issue&id=' . (int)($z2['issue']['id'] ?? 0))[1]['issue']['files'] ?? [];
 sprawdz(count($zf) === 1 && $zf[0]['orig_name'] === 'wynik.png', '1.13: zrzut z wyniku przeszedł do zgłoszenia');
 kod($tester->post('run_status', ['id' => $idRun, 'status' => 'closed']), 200, 'tester zamyka przebieg');
+kod($obs->post('run_rerun', ['id' => $idRun]), 403, '1.14: obserwator nie tworzy powtórki');
+kod($tester->post('run_rerun', ['id' => $idRun], false), 419, '1.14: powtórka bez tokenu CSRF odrzucona');
+$rr = kod($tester->post('run_rerun', ['id' => $idRun, 'version' => '0.9.4']), 200, '1.14: powtórka niezaliczonych');
+$nr = $tester->get('run&id=' . (int)($rr['id'] ?? 0))[1]['run'] ?? [];
+sprawdz(count($nr['results'] ?? []) === 1 && ($nr['results'][0]['case_id'] ?? 0) === $idCase && ($nr['version'] ?? '') === '0.9.4' && str_starts_with($nr['name'] ?? '', 'Powtórka:'), '1.14: w powtórce jest tylko niezaliczony scenariusz, z nową wersją');
+$tester->post('result_save', ['run_id' => (int)($rr['id'] ?? 0), 'case_id' => $idCase, 'result' => 'pass']);
+kod($tester->post('run_rerun', ['id' => (int)($rr['id'] ?? 0)]), 422, '1.14: gdy wszystko zaliczone — nie ma czego powtarzać');
 kod($tester->post('result_save', ['run_id' => $idRun, 'case_id' => $idCase, 'result' => 'pass']), 422, 'zamknięty przebieg nie przyjmuje wyników');
 kod($tester->post('case_delete&id=' . $idCase), 403, 'tester nie usuwa scenariuszy');
 
