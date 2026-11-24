@@ -48,6 +48,18 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 
 **Gotowe, gdy:** 1.9 przechodzi na SQLite i MySQL, a serwer zaktualizował się bez ręcznego SQL.
 
+## Etap 1b — wygoda pracy (prośba właściciela 24.11.2026, przed wdrożeniem)
+
+- [ ] **1.12 Masowe akcje na liście** (admin): zaznaczenie wielu zgłoszeń → status (z wersją przy „Do weryfikacji”), przypisanie, priorytet.
+- [ ] **1.13 Szybkie przechodzenie scenariuszy:** skróty klawiszowe w przebiegu (Z/N/B/P, strzałki), zrzut ekranu przy wyniku testu (przechodzi do zgłoszenia utworzonego z tego wyniku).
+- [ ] **1.14 „Powtórz niezaliczone”:** nowy przebieg tylko z niezaliczonych i zablokowanych scenariuszy.
+- [ ] **1.15 Sortowanie i zapisane widoki listy zgłoszeń** (gotowe widoki + własne, zapamiętane w przeglądarce).
+- [ ] **1.16 Zestawy scenariuszy** (np. „Szybki test”, „Pełna regresja”, „Telefon”) — wybór zestawu przy nowym przebiegu, kolumna w imporcie CSV.
+- [ ] **1.17 Wersje i lista zmian:** strona „Wersje” — co naprawiono w wersji X (do weryfikacji / potwierdzone), kopiowanie jako opis wydania.
+- [ ] **1.18 Gotowość wydania** (= 3.1).
+- [ ] **1.19 Dostęp Claude Code do rejestru:** klucze API (admin), `narzedzia/qa.php` — pobranie zgłoszenia z plikami, komentarz, „Do weryfikacji” z wersją.
+- [ ] **1.20 Automatyczna kopia zapasowa** (raz na dobę, 14 ostatnich, pobieranie przez administratora).
+
 ---
 
 ## Etap 2 — zgłaszanie prosto z systemu (po ok. 2 tygodniach testów)
