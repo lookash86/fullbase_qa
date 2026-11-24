@@ -17,6 +17,8 @@ Odhaczaj `[x]` od razu po zakończeniu punktu.
 - [ ] **0.5 [Ł+C] Konta testowe w demo PZBall** dla każdej roli: admin związku, wydział gier, klub, trener, sędzia (lokalnie istnieją już jako `*@pzball.test`). Hasła trzymamy w menedżerze haseł, **nie** w rejestrze.
 - [x] **0.6 [C] 15–20 scenariuszy ścieżek krytycznych PZBall,** spisanych na podstawie `kod\fullbase-silnik` (moduły i role), jako plik do importu (zadanie 1.8). Minimum: logowanie każdej roli, dodanie osoby/zawodnika, licencja zawodnika, licencja klubowa, terminarz i zmiana terminu, wpisanie wyniku i zamknięcie meczu, przeliczenie tabeli, obsada sędziów, opłaty, uprawnienia (klub nie widzi danych innego klubu).
 - [x] **0.7 [C] `docs/ZASADY_DLA_TESTERA.md`** — jedna strona: jak zgłaszać, co jest krytyczne, jedno zgłoszenie = jeden problem, zawsze zrzut ekranu, jak weryfikować poprawkę. Wersja do druku albo PDF dla testera.
+- [ ] **0.9 [C] Scenariusze pod zakres pilotażu PZBall** (`kodullbase-silnik\docs\KIERUNEK.md`): bez zamrożonych funkcji (np. licencja klubowa, kadra, kancelaria), nowy zestaw „Dzień meczowy na telefonie” (e-licencja, weryfikacja bez sieci, kadra jednym kodem, protokół z podpisami, protest) do próby weryfikacji na prawdziwych telefonach.
+- [ ] **0.3b [Ł+C] Serwer na VPS** (propozycja 24.11.2026 wieczorem, zastępuje home.pl z 0.3): testy.fullbase.pl na tym samym VPS co test-pzball, według `docs/PRZENIESIENIE_VPS.md`; wgranie na polecenie właściciela.
 - [ ] **0.8 [Ł] Rytm pracy.** Codziennie ok. 10 minut na przegląd nowych zgłoszeń: potwierdź, odrzuć albo ustaw priorytet. Czas reakcji: krytyczny w 24 h, wysoki do najbliższej wersji, średni i niski według planu.
 
 **Gotowe, gdy:** tester ma działający login, konta w demo i listę scenariuszy do przejścia.
@@ -64,10 +66,13 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 
 ## Etap 2 — zgłaszanie prosto z systemu (po ok. 2 tygodniach testów)
 
-> **ODŁOŻONY (decyzja właściciela 24.11.2026):** bez zmian w silniku. Tester zgłasza ręcznie w rejestrze (pola, zrzut Ctrl+V, konto i rola z 1.1b). Wracamy do tego tylko na wyraźne polecenie.
+> **PRZYWRÓCONY (decyzja właściciela 24.11.2026 wieczorem, zastępuje „odłożony” z rana):** QA zostaje osobną aplikacją (nie modułem silnika — działa, gdy system nie działa,
+> a zgłoszenia nie trafiają do baz klientów) i łączy się z silnikiem przez API. Start po ok. 2 tygodniach testów ręcznych — wtedy wiadomo, czego w zgłoszeniach brakuje.
+> Zapisane też w `kodullbase-silnik\docs\KIERUNEK.md` („Testy i jakość”). Robi Claude (projekt przejęty 24.11.2026).
 
 - [ ] **2.1 Klucz API rejestru dla instalacji.** Osobny klucz dla demo, pzball i kluby, z ograniczeniem do jednej akcji `report`.
 - [ ] **2.2 Przycisk „Zgłoś problem” w silniku** (tylko środowisko „Próba”/demo, włączany w `config.php`). Okienko z polami „co się stało” i „czego oczekiwałeś”. Automatycznie dołącza adres strony, wersję silnika, rolę i ID użytkownika testowego, przeglądarkę, zrzut ekranu i ostatnie błędy JS. Wymaga zmian w `kod\fullbase-silnik` i ma przejść jego testy.
+- [ ] **2.4 Wersje z wydań silnika.** Każde wydanie silnika (paczka, numer wersji) zakłada się w rejestrze samo, więc „naprawiono w wersji” zawsze się zgadza z serwerem.
 - [ ] **2.3 Powiązanie z dziennikiem błędów silnika.** Jeśli w ciągu ±2 minut od zgłoszenia silnik zapisał wyjątek, jego treść trafia do zgłoszenia jako komentarz systemowy, widoczny tylko dla administratora.
 
 ---
@@ -120,3 +125,4 @@ Kolejność ma znaczenie: 1.0 jest warunkiem dla 1.1–1.3.
 - 2026-11-24 — 3.3 opisane (nie wykonane): `docs/PRZENIESIENIE_VPS.md` zgodnie z `fullbase-silnik/docs/WDROZENIE_VPS.md` (ten sam serwer, osobny użytkownik `fb-qa`, SQLite zostaje, msmtp, DNS bez zmiany adresu, sprawdzenie, kopie poza serwerem). Decyzje w tabeli do potwierdzenia przez właściciela.
 - 2026-11-24 — **STAN NA KONIEC SESJI (noc).** Wersja **2.2.1**, paczka `Fullbase\wydania\FULLBASE-QA-v2.2.1.zip` (używać tej; starsze v2.1–v2.2 nieaktualne). Plan wykonany poza punktami właściciela: zrobione 0.1, 0.2, 0.6, 0.7, 1.0–1.20 (z 1.1b), 3.1, 3.2; 3.3 opisane; Etap 2 odłożony decyzją właściciela. Testy SQLite 256/256 + test-js. Lokalnie: 8091 silnik, 8092 czysta instalacja rejestru (instalator), 8093 instalacja pokazowa (katalog tymczasowy, hasła kont: patrz rozmowa — lokalne). **Czeka na właściciela:** `git push` (ok. 35 commitów tylko lokalnie), 0.3 wgranie v2.2.1 na testy.fullbase.pl, 0.4 konto testera z e-mailem, 0.5, 0.8, decyzje w `docs/PRZENIESIENIE_VPS.md`, opcjonalnie MySQL lokalnie. **Następny krok dla Claude:** poprawki wyglądu po przeklikaniu przez właściciela; potem tylko zgłoszenia z prawdziwych testów.
 - 2026-11-24 (telefon + przegląd, wersja 2.2.2): widok na telefonie (pola 16px bez powiększania na iPhonie, przewijane tabele, większe przyciski wyników, okienka na całą szerokość, napisy „wybierz z galerii” zamiast Ctrl+V). Przegląd bezpieczeństwa: nic krytycznego. Poprawione: tester nie usuwa zrzutów z zamkniętego przebiegu; reset hasła nie zależy od wielkości liter w loginie (SQLite); `run_status` zwraca 404 dla nieistniejącego przebiegu. Świadomie zostawione: obserwator może komentować (tak było zaplanowane i jest w testach); tester może ponownie otworzyć przebieg; różnica czasu odpowiedzi przy resecie hasła (ograniczona limitem 5 prób / 15 min). Testy 258/258. Zip: `wydania/FULLBASE-QA-v2.2.2.zip`.
+- 2026-11-24 (wieczór) — Projekt przejmuje Claude z sesji silnika (decyzja właściciela). Etap 2 przywrócony: osobna aplikacja + API (2.1–2.4), po ok. 2 tygodniach testów. Dopisane 0.9 (scenariusze pod pilotaż, „Dzień meczowy na telefonie”) i 0.3b (serwer na VPS). Kolejność po stronie silnika: najpierw prezentacje dla PZBall, potem 0.9 i 0.3b, razem z próbą weryfikacji na telefonach.
