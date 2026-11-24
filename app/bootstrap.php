@@ -44,7 +44,7 @@ function qa_now(): string { return date('Y-m-d H:i:s'); }
 
 function qa_ensure_dirs(): void
 {
-    foreach ([QA_DATA, QA_DATA . '/sessions', QA_DATA . '/uploads'] as $d) {
+    foreach ([QA_DATA, QA_DATA . '/sessions', QA_DATA . '/uploads', QA_DATA . '/kopie'] as $d) {
         if (!is_dir($d)) @mkdir($d, 0770, true);
     }
     $ht = QA_DATA . '/.htaccess';

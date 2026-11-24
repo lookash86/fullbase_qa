@@ -196,7 +196,8 @@ function renderShell() {
       <a href="#/gotowosc" data-nav="gotowosc"><span class="ico">⚑</span>Gotowość wydania</a>
       ${isAdmin() ? `<div class="navlabel">Ustawienia</div>
       <a href="#/uzytkownicy" data-nav="uzytkownicy"><span class="ico">◎</span>Użytkownicy</a>
-      <a href="#/projekty" data-nav="projekty"><span class="ico">◇</span>Projekty i obszary</a>` : ''}
+      <a href="#/projekty" data-nav="projekty"><span class="ico">◇</span>Projekty i obszary</a>
+      <a href="#/kopie" data-nav="kopie"><span class="ico">⛁</span>Kopie zapasowe</a>` : ''}
     </nav>
     <div class="sideuser"><div class="avatar">${esc(initials(u.name))}</div><div class="who"><b>${esc(u.name)}</b><small>${esc(S.meta.roles[u.role])} · <a href="#/konto" style="color:#cfe0dd">konto</a></small></div><button id="outBtn">Wyloguj</button></div>
   </aside>
@@ -240,6 +241,7 @@ async function route() {
       case 'projekty': return viewProjects();
       case 'konto': return viewAccount();
       case 'wersje': return viewVersions();
+      case 'kopie': return await viewBackups();
       case 'gotowosc': return await viewReadiness();
       default: location.hash = '#/pulpit';
     }
@@ -1098,6 +1100,18 @@ function viewVersions() {
     <div class="filters"><select class="control" id="vfProject">${opts(S.meta.projects.map(p => [p.id, p.code + ' · ' + p.name]), F.project, 'Każdy projekt')}</select></div><div id="verList"></div>`);
   $('#vfProject').onchange = e => { F.project = e.target.value; draw(); };
   draw();
+}
+
+/* ---------- kopie zapasowe (1.20) ---------- */
+async function viewBackups() {
+  setNav('kopie');
+  if (!isAdmin()) return view('<div class="card empty"><b>Brak uprawnień</b></div>');
+  const d = await api('backups');
+  view(`<div class="pagehead"><div><div class="eyebrow">Ustawienia</div><h1>Kopie zapasowe</h1><p>Rejestr sam robi kopię bazy raz na dobę i trzyma ${d.keep} ostatnich (w <code>data/kopie</code> na serwerze). Załączniki są w <code>data/uploads</code> — kopiuj je przez FTP razem z całym katalogiem <code>data/</code>.</p></div>
+      <div class="actions"><button class="btn primary" id="bkNow">Zrób kopię teraz</button></div></div>
+    <div class="card"><div class="section"><h3>Kopie bazy (${d.backups.length})</h3><p class="small muted" style="margin-top:0">Ostatnia: ${d.last ? fmtDate(d.last) + ' (' + ago(d.last) + ')' : 'jeszcze nie było'}. Raz w tygodniu pobierz najnowszą i zapisz poza serwerem (np. na dysku firmowym).</p>
+      ${d.backups.length ? `<table><tbody>${d.backups.map(b => `<tr><td><div class="ttl">${esc(b.name)}</div><div class="sub">${fmtDate(b.created_at)} · ${fmtSize(b.size)}</div></td><td style="width:120px;text-align:right"><a class="btn secondary sm" href="api.php?action=backup_file&name=${encodeURIComponent(b.name)}">↧ Pobierz</a></td></tr>`).join('')}</tbody></table>` : '<p class="muted small">Brak kopii.</p>'}</div></div>`);
+  $('#bkNow').onclick = e => busy(e.currentTarget, async () => { const r = await api('backup_now', { body: {} }); toast('Zrobiono kopię ' + r.name + '.'); await viewBackups(); });
 }
 
 /* ---------- konto ---------- */

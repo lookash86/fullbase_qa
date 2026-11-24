@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 require dirname(__DIR__) . '/app/mail.php';
+require dirname(__DIR__) . '/app/backup.php';
 
 qa_security_headers();
 if (!qa_config()) out(['error' => 'Aplikacja nie jest zainstalowana.', 'install' => true], 503);
@@ -335,6 +336,8 @@ if ($action === 'reset_confirm') {
 
 $u = auth();
 $p = db();
+$DRIVER = (qa_config()['db']['driver'] ?? 'sqlite') === 'mysql' ? 'mysql' : 'sqlite';
+if (!$API_KEY_USER) qa_backup_maybe($p, $DRIVER); // raz na dobę
 
 if ($action === 'password') {
     require_post();
@@ -828,6 +831,32 @@ if ($action === 'user_save') {
         }
     }
     out(['ok' => true]);
+}
+
+/* ---------- kopie zapasowe (1.20) ---------- */
+
+if ($action === 'backups') {
+    need_role($u, 'admin');
+    out(['backups' => qa_backup_list(), 'keep' => QA_BACKUP_KEEP, 'last' => qa_meta_get($p, 'backup_at')]);
+}
+
+if ($action === 'backup_now') {
+    require_post();
+    need_role($u, 'admin');
+    try { out(['ok' => true, 'name' => qa_backup_create($p, $DRIVER)]); }
+    catch (Throwable $e) { error_log('FULLBASE QA kopia: ' . $e->getMessage()); out(['error' => 'Nie udało się zrobić kopii. Szczegóły są w dzienniku błędów serwera.'], 500); }
+}
+
+if ($action === 'backup_file') {
+    need_role($u, 'admin');
+    $name = (string)($_GET['name'] ?? '');
+    $path = QA_BACKUP_DIR . '/' . $name;
+    if (!preg_match('/^qa-[0-9a-f-]+\.(sqlite|json)$/', $name) || !is_file($path)) out(['error' => 'Nie ma takiej kopii.'], 404);
+    header('Content-Type: application/octet-stream');
+    header('Content-Length: ' . filesize($path));
+    header('Content-Disposition: attachment; filename="' . $name . '"');
+    readfile($path);
+    exit;
 }
 
 /* ---------- klucze API (1.19) ---------- */

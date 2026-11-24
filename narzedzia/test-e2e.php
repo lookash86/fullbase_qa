@@ -235,7 +235,7 @@ else {
     exec('node ' . escapeshellarg(ZRODLO . '/narzedzia/test-js.js') . ' 2>&1', $wyJs, $kodJs2);
     sprawdz($kodJs2 === 0, 'logika frontendu (narzedzia/test-js.js)', implode(' | ', array_filter($wyJs, fn($l) => str_contains($l, 'BŁĄD'))));
 }
-foreach (['app/bootstrap.php', 'app/schema.php', 'app/migrate.php', 'app/mail.php', 'public/api.php', 'public/install.php', 'public/index.php'] as $plikPhp) {
+foreach (['app/bootstrap.php', 'app/schema.php', 'app/migrate.php', 'app/mail.php', 'app/backup.php', 'narzedzia/qa.php', 'public/api.php', 'public/install.php', 'public/index.php'] as $plikPhp) {
     exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg(ZRODLO . '/' . $plikPhp) . ' 2>&1', $wy2, $kodPhp);
     sprawdz($kodPhp === 0, "składnia $plikPhp");
 }
@@ -621,6 +621,27 @@ $gr2 = $admin->post('run_create', ['project_id' => $gid, 'name' => 'R2', 'versio
 $admin->post('result_save', ['run_id' => $gr2, 'case_id' => $gc, 'result' => 'pass']);
 $g = $admin->get('readiness&project_id=' . $gid)[1];
 sprawdz(($g['ready'] ?? false) === true && ($g['critical_cases'][0]['version'] ?? '') === '1.1', 'liczy się ostatni wynik — po zaliczeniu gotowe');
+
+/* ---------- 1.20 kopie zapasowe ---------- */
+
+sekcja('1.20 Kopie zapasowe');
+$bk = kod($admin->get('backups'), 200, 'admin widzi listę kopii');
+sprawdz(count($bk['backups'] ?? []) >= 1 && !empty($bk['last']), 'pierwsza kopia zrobiła się sama (raz na dobę)');
+kod($tester->get('backups'), 403, 'tester nie widzi kopii');
+kod($tester->post('backup_now'), 403, 'tester nie robi kopii');
+kod($admin->post('backup_now', [], false), 419, 'kopia bez tokenu CSRF odrzucona');
+$nb = kod($admin->post('backup_now'), 200, 'admin robi kopię teraz');
+[$k, , $plik] = $admin->get('backup_file&name=' . urlencode((string)($nb['name'] ?? '')));
+sprawdz($k === 200 && ($MYSQL ? str_contains($plik, 'fullbase-qa-mysql-json') : str_starts_with($plik, 'SQLite format 3')), 'pobrana kopia to prawdziwa baza');
+if (!$MYSQL) {
+    $tmp = tempnam(sys_get_temp_dir(), 'fbqa'); file_put_contents($tmp, $plik);
+    $ile = (int)(new PDO('sqlite:' . $tmp))->query('SELECT COUNT(*) FROM qa_issues')->fetchColumn(); @unlink($tmp);
+    sprawdz($ile > 5, "kopia zawiera zgłoszenia ($ile)");
+}
+kod($tester->get('backup_file&name=' . urlencode((string)($nb['name'] ?? ''))), 403, 'tester nie pobiera kopii');
+kod($admin->get('backup_file&name=' . urlencode('../config.php')), 404, 'nie da się pobrać pliku spoza katalogu kopii');
+for ($i = 0; $i < 15; $i++) $admin->post('backup_now');
+sprawdz(count($admin->get('backups')[1]['backups'] ?? []) === 14, 'zostaje 14 ostatnich kopii');
 
 /* ---------- 1.19 klucze API i narzędzie dla Claude Code ---------- */
 
