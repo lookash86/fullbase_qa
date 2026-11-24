@@ -538,7 +538,7 @@ async function viewIssueForm(id, q = new URLSearchParams()) {
   };
 }
 function dropZone() {
-  return `<div class="drop" id="drop"><b>Wklej screenshot (Ctrl+V)</b>, przeciągnij pliki tutaj albo <label style="color:var(--teal);cursor:pointer;font-weight:700">wybierz z dysku<input type="file" id="fileIn" multiple hidden accept="image/*,.pdf,.txt,.log,.csv,.json,.mp4,.webm,.zip"></label>
+  return `<div class="drop" id="drop">${TOUCH ? '<b>Dodaj zrzut ekranu lub zdjęcie:</b> ' : '<b>Wklej screenshot (Ctrl+V)</b>, przeciągnij pliki tutaj albo '}<label style="color:var(--teal);cursor:pointer;font-weight:700">${TOUCH ? 'wybierz z galerii lub plików' : 'wybierz z dysku'}<input type="file" id="fileIn" multiple hidden accept="image/*,.pdf,.txt,.log,.csv,.json,.mp4,.webm,.zip"></label>
     <div class="hint">Obrazy, PDF, logi, krótkie nagrania ekranu · do 10 plików · maks. ${fmtSize(S.meta.upload_max)} każdy</div><div class="pending" id="pending"></div></div>`;
 }
 function bindDrop(root, onChange) {
@@ -960,6 +960,7 @@ async function viewRun(id) {
   const opened = $('.runcase.open'); if (opened && S.view.scrollToCase !== false) opened.scrollIntoView({ block: 'center' });
 }
 
+const TOUCH = window.matchMedia && matchMedia('(pointer: coarse)').matches; // telefon/tablet: bez Ctrl+V i przeciągania
 function rfileHtml(f) {
   const url = 'api.php?action=rfile&id=' + f.id, img = f.mime.startsWith('image/');
   return `<div class="file"><a href="${url}" target="_blank" rel="noopener">${img ? `<img src="${url}" alt="${esc(f.orig_name)}" loading="lazy">` : '<div class="ficon">📄</div>'}<div class="fname" title="${esc(f.orig_name)}">${esc(f.orig_name)}</div></a>${isAdmin() || f.user_id === S.user.id ? `<button class="del" data-rfdel="${f.id}" title="Usuń plik">×</button>` : ''}</div>`;
