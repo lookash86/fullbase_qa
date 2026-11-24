@@ -76,6 +76,18 @@ Bez sekcji `mail` wysyłka jest wyłączona (aplikacja działa, ale bez powiadom
 
 Katalog strony → `public/`. Upewnij się, że użytkownik PHP może zapisywać do `data/` i (jednorazowo, na czas instalacji) do katalogu głównego aplikacji, gdzie powstaje `config.php`. Nginx nie czyta `.htaccess`, więc `app/`, `data/` i `config.php` muszą leżeć poza katalogiem strony. Przy tej strukturze to jest spełnione.
 
+## Claude Code i rejestr (klucz API)
+
+1. W rejestrze: **Użytkownicy → Klucze API → „Nowy klucz”**. Klucz pokazuje się raz.
+2. W terminalu VS Code (PowerShell) ustaw zmienne i otwórz VS Code ponownie:
+   ```
+   setx FBQA_URL "https://testy.fullbase.pl/"
+   setx FBQA_KEY "fbqa_…"
+   ```
+3. W Claude Code (w dowolnym repozytorium, np. `fullbase-silnik`) wystarczy napisać: „napraw PZB-0012, zgłoszenie pobierzesz przez `php ../fullbase-qa/narzedzia/qa.php pokaz PZB-0012`”. Polecenia: `lista`, `pokaz`, `komentarz`, `status`, `do-weryfikacji`, `gotowosc` (pomoc: `php narzedzia/qa.php pomoc`).
+
+Klucz działa z uprawnieniami osoby, która go utworzyła, ale tylko do czytania zgłoszeń i plików, komentarzy i zmiany statusu. Gdy wycieknie: „Wycofaj”.
+
 ## Testy
 
 ```

@@ -5,3 +5,5 @@ data/*
 !data/.htaccess
 # paczki wydań
 *.zip
+# pliki zgłoszeń pobrane przez narzedzia/qa.php
+.fbqa-pliki/

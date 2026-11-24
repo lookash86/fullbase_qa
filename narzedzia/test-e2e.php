@@ -622,6 +622,52 @@ $admin->post('result_save', ['run_id' => $gr2, 'case_id' => $gc, 'result' => 'pa
 $g = $admin->get('readiness&project_id=' . $gid)[1];
 sprawdz(($g['ready'] ?? false) === true && ($g['critical_cases'][0]['version'] ?? '') === '1.1', 'liczy się ostatni wynik — po zaliczeniu gotowe');
 
+/* ---------- 1.19 klucze API i narzędzie dla Claude Code ---------- */
+
+sekcja('1.19 Klucze API (Claude Code)');
+kod($tester->post('api_key_create', ['name' => 'x']), 403, 'tester nie tworzy kluczy API');
+kod($admin->post('api_key_create', ['name' => 'x'], false), 419, 'klucz bez tokenu CSRF odrzucony');
+$kr = kod($admin->post('api_key_create', ['name' => 'Claude Code — test']), 200, 'admin tworzy klucz API');
+$KLUCZ = (string)($kr['key'] ?? '');
+sprawdz((bool)preg_match('/^fbqa_[0-9a-f]{40}$/', $KLUCZ), 'klucz ma właściwą postać');
+$lk = $admin->get('api_keys')[1]['keys'] ?? [];
+sprawdz(count($lk) === 1 && !isset($lk[0]['key_hash']) && str_starts_with($KLUCZ, $lk[0]['prefix']), 'lista kluczy pokazuje tylko początek, bez skrótu');
+$kc = new Klient($BAZA, 'klucz');
+$zKluczem = function (string $met, string $akcja, ?array $dane = null, string $k = '') use ($BAZA, $KLUCZ): array {
+    $ctx = stream_context_create(['http' => ['method' => $met, 'header' => "X-QA-Key: " . ($k ?: $KLUCZ) . "\r\nContent-Type: application/json", 'content' => $dane === null ? '' : json_encode($dane), 'ignore_errors' => true]]);
+    $o = (string)@file_get_contents("$BAZA/api.php?action=$akcja", false, $ctx);
+    $nag = function_exists('http_get_last_response_headers') ? (http_get_last_response_headers() ?? []) : ($http_response_header ?? []);
+    return [preg_match('#^HTTP/\S+\s+(\d+)#', $nag[0] ?? '', $m) ? (int)$m[1] : 0, json_decode($o, true) ?: [], $o];
+};
+kod($zKluczem('GET', 'issues'), 200, 'kluczem: lista zgłoszeń');
+kod($zKluczem('GET', 'issue&id=' . $idZgl), 200, 'kluczem: szczegóły zgłoszenia');
+kod($zKluczem('POST', 'comment&id=' . $idZgl, ['message' => 'Komentarz z Claude Code']), 200, 'kluczem: komentarz bez tokenu CSRF (nagłówek, nie ciasteczko)');
+kod($zKluczem('GET', 'users'), 403, 'kluczem: brak dostępu do użytkowników');
+kod($zKluczem('POST', 'user_save', ['username' => 'zly', 'display_name' => 'x', 'role' => 'admin', 'password' => 'Bardzo-dlugie-1']), 403, 'kluczem: nie można zakładać kont');
+kod($zKluczem('POST', 'issue_delete&id=' . $idZgl, []), 403, 'kluczem: nie można usuwać zgłoszeń');
+kod($zKluczem('GET', 'issues', null, 'fbqa_' . str_repeat('0', 40)), 401, 'zmyślony klucz odrzucony');
+// narzędzie qa.php
+$cel = (int)($tester->post('issue_create', ['project_id' => $pzbId, 'title' => 'Do naprawy przez Claude', 'description' => 'Opis', 'steps' => '1. krok'])[1]['issue']['id'] ?? 0);
+$tester->wyslijPlik($cel, 'ekran.png', $png, 'image/png');
+$admin->post('issue_status&id=' . $cel, ['status' => 'confirmed']);
+putenv("FBQA_URL=$BAZA/"); putenv("FBQA_KEY=$KLUCZ");
+$cli = fn(string $a) => shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(ZRODLO . '/narzedzia/qa.php') . " $a 2>&1") ?? '';
+$stary = getcwd(); chdir($kat);
+$o = $cli('pokaz ' . sprintf('PZB-%04d', $cel));
+sprawdz(str_contains($o, '# ' . sprintf('PZB-%04d', $cel) . ': Do naprawy przez Claude') && str_contains($o, '## Kroki do odtworzenia problemu'), 'qa.php pokaz: zgłoszenie w Markdownie', mb_substr($o, 0, 200));
+$pob = glob($kat . '/.fbqa-pliki/' . sprintf('PZB-%04d', $cel) . '/*ekran.png');
+sprawdz($pob && file_get_contents($pob[0]) === $png, 'qa.php pokaz: załącznik pobrany na dysk');
+sprawdz(str_contains($cli('lista --projekt=PZB'), sprintf('PZB-%04d', $cel)), 'qa.php lista: zgłoszenie na liście otwartych');
+$o = $cli('do-weryfikacji ' . sprintf('PZB-%04d', $cel) . ' 3.0 "Poprawione w walidacji"');
+$d = $admin->get('issue&id=' . $cel)[1]['issue'] ?? [];
+sprawdz($d['status'] === 'fixed' && $d['fixed_in'] === '3.0' && in_array('Poprawione w walidacji', array_column($d['activity'], 'message'), true), 'qa.php do-weryfikacji: status, wersja i komentarz', trim($o));
+sprawdz(str_contains($cli('gotowosc PZB'), 'otwarte krytyczne'), 'qa.php gotowosc');
+chdir($stary);
+kod($admin->post('api_key_revoke', ['id' => $lk[0]['id'] ?? 0]), 200, 'admin wycofuje klucz');
+kod($zKluczem('GET', 'issues'), 401, 'wycofany klucz nie działa');
+putenv('FBQA_KEY'); putenv('FBQA_URL');
+poczta($kat);
+
 /* ---------- 9. eksport i wylogowanie ---------- */
 
 sekcja('Eksport i wylogowanie');

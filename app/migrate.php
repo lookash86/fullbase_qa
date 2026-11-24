@@ -94,6 +94,20 @@ function qa_migrations(): array
         12 => function (PDO $pdo, string $driver): void {
             qa_add_column($pdo, $driver, 'qa_cases', 'suites', "VARCHAR(500) NOT NULL DEFAULT ''");
         },
+        // 13 — 1.19: klucze API (np. dla Claude Code). W bazie tylko skrót SHA-256 klucza.
+        13 => function (PDO $pdo, string $driver): void {
+            if (qa_has_table($pdo, $driver, 'qa_api_keys')) return;
+            $my = $driver === 'mysql';
+            $id = $my ? 'BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+            $ref = $my ? 'BIGINT UNSIGNED' : 'INTEGER';
+            $tail = $my ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
+            $pdo->exec("CREATE TABLE qa_api_keys (
+                id $id, name VARCHAR(80) NOT NULL, key_hash CHAR(64) NOT NULL, prefix VARCHAR(16) NOT NULL, user_id $ref NOT NULL,
+                created_at VARCHAR(19) NOT NULL, last_used_at VARCHAR(19) NULL, revoked_at VARCHAR(19) NULL,
+                FOREIGN KEY (user_id) REFERENCES qa_users(id)
+            )$tail");
+            $pdo->exec('CREATE INDEX qa_api_keys_hash ON qa_api_keys(key_hash)');
+        },
     ];
 }
 

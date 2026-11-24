@@ -982,6 +982,17 @@ async function viewUsers() {
   <div class="card pad" style="margin-top:16px"><h3>Role</h3><p class="small" style="margin:0"><b>Administrator</b> — wszystko: statusy, przypisania, rozwiązania, użytkownicy, projekty, usuwanie.<br><b>Tester</b> — zgłasza błędy i braki, dodaje pliki i komentarze, edytuje własne nowe zgłoszenia, weryfikuje poprawki (zamyka lub otwiera ponownie), pisze scenariusze i prowadzi przebiegi testów.<br><b>Obserwator</b> — przegląda i komentuje (np. zarząd PZBall).</p></div>`);
   const edit = u => userModal(u || { role: 'tester', active: 1 });
   $('#newUser').onclick = () => edit(null);
+  const keys = (await api('api_keys')).keys;
+  const kc = document.createElement('div'); kc.className = 'card pad'; kc.style.marginTop = '16px';
+  kc.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h3 style="margin:0">Klucze API — dostęp dla Claude Code</h3><button class="btn secondary sm" id="newKey">＋ Nowy klucz</button></div>
+    <p class="small muted">Klucz pozwala narzędziu <code>narzedzia/qa.php</code> (Claude Code w VS Code) czytać zgłoszenia z plikami, dodawać komentarze i zmieniać status — z Twoimi uprawnieniami. Nie daje dostępu do użytkowników, projektów ani usuwania. Klucz trzymaj tylko w zmiennej środowiskowej <code>FBQA_KEY</code>, nigdy w repozytorium.</p>
+    ${keys.length ? `<table><tbody>${keys.map(k => `<tr><td><div class="ttl">${esc(k.name)}</div><div class="sub"><code>${esc(k.prefix)}…</code> · ${esc(k.user_name)} · utworzony ${fmtDate(k.created_at)} · ${k.last_used_at ? 'użyty ' + ago(k.last_used_at) : 'jeszcze nieużyty'}</div></td><td style="width:120px;text-align:right">${k.revoked_at ? badge('st-rejected', 'wycofany') : `<button class="btn danger sm" data-revoke="${k.id}">Wycofaj</button>`}</td></tr>`).join('')}</tbody></table>` : '<p class="muted small" style="margin:0">Brak kluczy.</p>'}`;
+  $('#view').append(kc);
+  $('#newKey').onclick = () => { const o = modal('Nowy klucz API', '<div class="field"><label>Nazwa</label><input id="kN" maxlength="80" value="Claude Code — ' + esc(new Date().toLocaleDateString('pl-PL')) + '"></div>', 'Utwórz', async (btn, close) => {
+    await busy(btn, async () => { const r = await api('api_key_create', { body: { name: $('#kN', o).value } }); close();
+      modal('Skopiuj klucz — pokazujemy go tylko raz', `<p class="small">W terminalu VS Code (PowerShell) ustaw go jako zmienną środowiskową użytkownika:</p><div class="field"><textarea id="kV" readonly style="min-height:90px;font-family:monospace;font-size:12px">setx FBQA_URL "${esc(location.href.split('#')[0].replace(/[^/]*$/, ''))}"\nsetx FBQA_KEY "${esc(r.key)}"</textarea></div><p class="hint">Potem zamknij i otwórz VS Code. Nie wysyłaj klucza w czacie ani e-mailem. Gdy wycieknie — kliknij „Wycofaj”.</p>`, null, null, true);
+      $('#kV').select(); viewUsers(); }); }); };
+  $$('[data-revoke]').forEach(b => b.onclick = () => { if (confirm('Wycofać klucz? Narzędzia, które go używają, stracą dostęp.')) busy(b, async () => { await api('api_key_revoke', { body: { id: Number(b.dataset.revoke) } }); toast('Klucz wycofany.'); viewUsers(); }); });
   $$('[data-u]').forEach(r => r.onclick = () => edit(users.find(u => u.id === Number(r.dataset.u))));
 }
 function genPassword() {

@@ -6,10 +6,42 @@ require dirname(__DIR__) . '/app/mail.php';
 
 qa_security_headers();
 if (!qa_config()) out(['error' => 'Aplikacja nie jest zainstalowana.', 'install' => true], 503);
-qa_session_start();
 
 $action = (string)($_GET['action'] ?? '');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+/*
+ * Klucz API (1.19) — dla narzędzi, np. Claude Code (narzedzia/qa.php). Nagłówek X-QA-Key (albo Authorization: Bearer).
+ * Bez sesji i bez CSRF (klucz nie jest wysyłany przez przeglądarkę automatycznie), tylko akcje z listy poniżej,
+ * z uprawnieniami użytkownika, który utworzył klucz.
+ */
+const QA_KEY_ACTIONS = ['meta', 'issues', 'issue', 'file', 'rfile', 'comment', 'issue_status', 'cases', 'runs', 'run', 'readiness'];
+$API_KEY_USER = null;
+$rawKey = (string)($_SERVER['HTTP_X_QA_KEY'] ?? '');
+if ($rawKey === '' && preg_match('/^Bearer\s+(fbqa_[0-9a-f]{40})$/', (string)($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? ''), $km)) $rawKey = $km[1];
+if ($rawKey !== '') {
+    $kdb = db();
+    $ip = substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64);
+    $since = date('Y-m-d H:i:s', time() - 900);
+    $q = $kdb->prepare("SELECT COUNT(*) FROM qa_login_attempts WHERE ip=? AND username='#apikey' AND created_at>?");
+    $q->execute([$ip, $since]);
+    if ((int)$q->fetchColumn() >= 8) out(['error' => 'Zbyt wiele błędnych kluczy. Spróbuj za 15 minut.'], 429);
+    $q = $kdb->prepare('SELECT k.id kid, u.id, u.username, u.display_name, u.email, u.role, u.notify FROM qa_api_keys k JOIN qa_users u ON u.id=k.user_id
+        WHERE k.key_hash=? AND k.revoked_at IS NULL AND u.active=1');
+    $q->execute([hash('sha256', $rawKey)]);
+    $kr = $q->fetch();
+    if (!$kr) {
+        $kdb->prepare('INSERT INTO qa_login_attempts(ip,username,created_at) VALUES(?,?,?)')->execute([$ip, '#apikey', qa_now()]);
+        out(['error' => 'Nieprawidłowy albo wycofany klucz API.'], 401);
+    }
+    if (!in_array($action, QA_KEY_ACTIONS, true)) out(['error' => 'Kluczem API nie można wykonać tej czynności.'], 403);
+    $kdb->prepare('UPDATE qa_api_keys SET last_used_at=? WHERE id=?')->execute([qa_now(), $kr['kid']]);
+    $API_KEY_USER = ['id' => (int)$kr['id'], 'username' => $kr['username'], 'name' => $kr['display_name'], 'email' => $kr['email'],
+        'role' => $kr['role'], 'must_change_pw' => false, 'notify' => (bool)$kr['notify'], 'api_key' => true];
+    $_SESSION = [];
+} else {
+    qa_session_start();
+}
 
 /* ---------- pomocnicze ---------- */
 
@@ -43,6 +75,7 @@ function require_post(): void
 {
     global $method;
     if ($method !== 'POST') out(['error' => 'Niedozwolona metoda.'], 405);
+    if ($GLOBALS['API_KEY_USER']) return; // klucz API: bez ciasteczek, więc bez ryzyka CSRF
     check_origin();
     $t = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     if ($t === '' || !hash_equals($_SESSION['csrf'] ?? '', $t)) out(['error' => 'Sesja wygasła. Odśwież stronę.', 'csrf' => true], 419);
@@ -50,6 +83,7 @@ function require_post(): void
 function current_user(): ?array
 {
     static $u = false;
+    if ($GLOBALS['API_KEY_USER']) return $GLOBALS['API_KEY_USER'];
     if ($u !== false) return $u;
     $u = null;
     if (!empty($_SESSION['uid'])) {
@@ -793,6 +827,33 @@ if ($action === 'user_save') {
             $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=1 WHERE id=?')->execute([qa_hash_password($pw), $id]);
         }
     }
+    out(['ok' => true]);
+}
+
+/* ---------- klucze API (1.19) ---------- */
+
+if ($action === 'api_keys') {
+    need_role($u, 'admin');
+    $rows = $p->query('SELECT k.id, k.name, k.prefix, k.created_at, k.last_used_at, k.revoked_at, u.display_name user_name FROM qa_api_keys k JOIN qa_users u ON u.id=k.user_id ORDER BY k.revoked_at IS NOT NULL, k.id DESC')->fetchAll();
+    foreach ($rows as &$r) $r['id'] = (int)$r['id'];
+    out(['keys' => $rows]);
+}
+
+if ($action === 'api_key_create') {
+    require_post();
+    need_role($u, 'admin');
+    $name = str_in(body(), 'name', 80);
+    if ($name === '') out(['error' => 'Nazwij klucz, np. „Claude Code — laptop”.'], 422);
+    $key = 'fbqa_' . bin2hex(random_bytes(20));
+    $p->prepare('INSERT INTO qa_api_keys(name,key_hash,prefix,user_id,created_at) VALUES(?,?,?,?,?)')
+        ->execute([$name, hash('sha256', $key), substr($key, 0, 12), $u['id'], qa_now()]);
+    out(['ok' => true, 'key' => $key]); // pokazujemy jeden raz — w bazie zostaje tylko skrót
+}
+
+if ($action === 'api_key_revoke') {
+    require_post();
+    need_role($u, 'admin');
+    $p->prepare('UPDATE qa_api_keys SET revoked_at=? WHERE id=? AND revoked_at IS NULL')->execute([qa_now(), (int)(body()['id'] ?? 0)]);
     out(['ok' => true]);
 }
 
