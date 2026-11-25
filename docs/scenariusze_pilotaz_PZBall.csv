@@ -1,0 +1,68 @@
+﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet;Zestawy
+PZB;"Przygotowanie";"Mecz pokazowy na dziś";"Konto admin@pzball.test na test-pzball.fullbase.pl.";"1. Zaloguj się jako admin@.
+2. Ustawienia → karta „Tryb demonstracyjny” → „Utwórz mecz pokazowy na dziś”.
+3. Otwórz listę meczów i znajdź mecz z dzisiejszą datą.";"Powstaje mecz za ok. 4 godziny, z obsadą sędziów (sedzia@ i sedzia2@). Drugi raz tego dnia przycisk nie tworzy kolejnego meczu. Ten mecz służy do scenariuszy „Dzień meczowy na telefonie”.";Krytyczny;"Dzień meczowy na telefonie; Pilotaż"
+PZB;"Dzień meczowy";"Kod aktywacyjny e-licencji wysłany e-mailem";"Konto klub@ (BORSUKI). Zawodnik BORSUKÓW z aktywną licencją i adresem e-mail w kartotece (wpisz swój adres testowy).";"1. Jako klub@ otwórz kartotekę zawodnika → zakładka Licencje → „E-licencja w telefonie”.
+2. Kliknij „Wygeneruj i wyślij e-mailem”.
+3. Otwórz wiadomość na telefonie i kliknij link.";"Wiadomość przychodzi w ciągu kilku minut. Link otwiera stronę karty i aktywuje e-licencję. Kod pokazuje się w panelu tylko raz. Gdy link otworzy się w przeglądarce wbudowanej (np. w aplikacji poczty), strona prosi o otwarcie w zwykłej przeglądarce.";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"E-licencja na telefonie: kod QR i praca bez sieci";"Aktywowana e-licencja na telefonie (scenariusz wyżej).";"1. Otwórz e-licencję na telefonie.
+2. Sprawdź licznik pod kodem QR („Kod ważny jeszcze N s”).
+3. Włącz tryb samolotowy i otwórz e-licencję ponownie.
+4. Dodaj e-licencję do ekranu głównego (menu „Więcej”).";"Kod QR zmienia się co 30 sekund. Bez sieci karta otwiera się i kod dalej się zmienia (napis „Bez sieci — kod działa”). Ikona na ekranie głównym otwiera kartę od razu. Pod kodem widać stan: uprawniony do gry albo powód.";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"Trener zgłasza kadrę na mecz";"Konto trener@ albo klub@. Mecz drużyny klubu za 6–24 godziny (mecz pokazowy albo z terminarza).";"1. Otwórz kartę meczu → karta „Kadra na mecz”.
+2. Zaznacz zawodników i osobę ze sztabu, zapisz.
+3. Spróbuj dopisać osobę nieuprawnioną.";"Kadra zapisuje się z godziną i autorem. Osoby nieuprawnionej nie da się zaznaczyć. Bez osoby ze sztabu zapis jest odrzucony z komunikatem. Poza oknem 24–6 godzin przed meczem zmiany są zamknięte.";Wysoki;"Dzień meczowy na telefonie; Pilotaż"
+PZB;"Dzień meczowy";"Sędzia pobiera mecz do telefonu";"Konto sedzia@ na telefonie. Mecz pokazowy z obsadą tego sędziego.";"1. Na telefonie zaloguj się jako sedzia@.
+2. Menu → „Moje sędziowanie” → „Weryfikacja zawodników”.
+3. Wybierz dzisiejszy mecz i pobierz go.
+4. Sprawdź godziny: „Weryfikacja od …” i „do …”.";"Mecz pobiera się do telefonu. Aplikacja pokazuje okno weryfikacji: od 3 godzin do 30 minut przed meczem. Przed otwarciem okna skanowanie jest zablokowane z godziną otwarcia.";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"Weryfikacja zawodnika kodem QR bez sieci";"Mecz pobrany na telefon sędziego, okno weryfikacji otwarte. Drugi telefon z e-licencją zawodnika z listy startowej.";"1. Na telefonie sędziego włącz tryb samolotowy.
+2. Przejdź do „Skanuj” i zeskanuj kod QR z e-licencji zawodnika.
+3. Dopuść zawodnika.
+4. Wyłącz tryb samolotowy i odczekaj minutę.";"Bez sieci wynik pokazuje się od razu: UPRAWNIONY ze zdjęciem i danymi. Po dopuszczeniu decyzja czeka na wysłanie („Do wysłania: 1 · czeka na sieć”). Po powrocie sieci wysyła się sama („Wysłano do systemu”).";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"Zrzut ekranu e-licencji jest odrzucony";"Mecz pobrany, okno otwarte. Zrzut ekranu kodu QR zrobiony co najmniej 3 minuty wcześniej.";"1. Pokaż sędziemu zrzut ekranu zamiast żywej e-licencji.
+2. Zeskanuj go.";"Wynik: KOD ODRZUCONY z powodem (stary kod). Odrzucony kod trafia do systemu i Wydział Gier widzi go na stronie rozbieżności.";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"Zawodnik nieuprawniony — powód i niedopuszczenie";"Mecz pobrany. Zawodnik na liście startowej bez ważnych badań albo zawieszony.";"1. Zeskanuj jego e-licencję albo wybierz go ręcznie ze składu drużyny.
+2. Przeczytaj powód.
+3. Nie dopuść zawodnika.";"Wynik: NIEUPRAWNIONY z powodem na górze. Decyzja zapisuje powód. W składzie drużyny powód widać pod nazwiskiem.";Wysoki;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"Weryfikacja całej kadry jednym kodem";"Kadra zgłoszona przez trenera. Telefon trenera z kartą „Kadra na mecz”.";"1. Trener pokazuje kod kadry, sędzia go skanuje.
+2. Sędzia przechodzi przez każdą osobę: „Zgadza się ze zdjęciem — dopuszczam” albo „Nieobecny”.
+3. Na końcu „Kadra zweryfikowana”.";"Sędzia widzi kolejno każdą osobę ze zdjęciem, najpierw zawodników, potem sztab. Nieuprawnionego nie da się dopuścić. Po zatwierdzeniu decyzje mają sposób „kod kadry”.";Wysoki;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"Drużyna zajęta przez drugiego sędziego";"Mecz z dwoma sędziami boiskowymi (sedzia@ i sedzia2@) na dwóch telefonach, z siecią.";"1. sedzia@ w składzie gospodarzy klika „Weryfikuję tę drużynę”.
+2. sedzia2@ otwiera tę samą drużynę.";"sedzia2@ widzi „Drużyna innego sędziego” i nie może podejmować decyzji. Drugą drużynę może zająć.";Średni;"Dzień meczowy na telefonie; Telefon"
+PZB;"Dzień meczowy";"Protokół organizacyjny na telefonie: kara i Zakończ mecz";"Konto sędziego zapisowego albo głównego z obsady meczu, na telefonie.";"1. Menu → „Protokół organizacyjny” (telefon), wybierz mecz.
+2. Wpisz rozpoczęcie, jedną karę z osobą i momentem meczu.
+3. Kliknij „Zakończ mecz”, wpisz wynik.
+4. Powtórz krok 2 bez sieci i sprawdź wysłanie po powrocie sieci.";"Wpisy zapisują się z godziną z telefonu. Bez sieci czekają i wysyłają się same. Po „Zakończ mecz” zaczyna się 30 minut na uwagi i podpisy, a terminy protestu liczą się od tej chwili.";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+PZB;"Dzień meczowy";"Podpisy po meczu i wynik w tabeli";"Mecz po „Zakończ mecz”. Konta klub@ i klub2@ (obie drużyny), sędzia główny i zapisowy.";"1. Każda drużyna wybiera „Akceptuję” albo wpisuje uwagi i podpisuje.
+2. Sędzia zapisowy podpisuje, potem sędzia główny.
+3. Otwórz stronę rozgrywek i tabelę.";"Sędzia główny podpisuje ostatni. Po podpisach obu sędziów wynik trafia do tabeli bez zatwierdzania przez biuro. Drużyna bez reakcji w 30 minut jest uznana za akceptującą.";Krytyczny;"Dzień meczowy na telefonie; Pilotaż"
+PZB;"Po meczu";"Protest drużyny w terminie";"Mecz po „Zakończ mecz”. Drużyna wpisała w protokole zamiar protestu.";"1. Jako klub@ → „Zgłoszenia po meczu” → protest → wpisz treść i złóż.
+2. Jako wd@ (Wydział Dyscypliny) otwórz sprawę.
+3. Spróbuj złożyć protest po terminie (60 minut).";"Protest w terminie składa się i trafia do Wydziału Dyscypliny, powstaje kaucja w opłatach klubu. Po terminie system nie pozwala złożyć protestu.";Wysoki;"Pilotaż"
+PZB;"Po meczu";"Walkower";"Konto sędziego z obsady albo wydzial@. Mecz zaplanowany.";"1. Na karcie meczu „Walkower” → przyczyna „Drużyna nie stawiła się na mecz”.
+2. Jako wydzial@ rozstrzygnij z uzasadnieniem.";"Mecz ma wynik walkowerowy i status walkower. Klub ukarany ma należność za nieprzybycie. Wynik jest w tabeli.";Wysoki;"Pilotaż"
+PZB;"Po meczu";"Mecz przerwany";"Mecz w trakcie (protokół rozpoczęty).";"1. W protokole „Mecz przerwany” → zmiana, wynik, powód (np. deszcz).
+2. Jako wydzial@ wybierz skutek (rozstrzygnięty albo dokończenie z nowym terminem).";"System podpowiada skutek według liczby rozegranych zmian. Dokończenie zachowuje kadrę meczową z pierwszego terminu.";Średni;"Pilotaż"
+PZB;"Terminy";"Zmiana terminu meczu z propozycją systemu";"Konta klub2@ (KORMORANY), klub@ (BORSUKI), wydzial@. Mecz tych drużyn za więcej niż 7 dni.";"1. Jako klub2@ złóż wniosek z 1–3 terminami.
+2. Jako klub@ nie odpowiadaj (albo odpowiedz sprzeciwem).
+3. Jako wydzial@ otwórz wniosek po terminie odpowiedzi.";"Bez odpowiedzi przeciwnika wniosek przechodzi w „propozycję systemu” z terminem, który nie koliduje z innymi meczami i boiskiem. Wydział zatwierdza, sędziowie dostają nowe zapytanie o obsadę.";Wysoki;"Pilotaż"
+PZB;"Sędziowie";"Obsada z potwierdzeniem przez sędziego";"Konta kolegium@ i sedzia@. Mecz za więcej niż 3 dni bez obsady.";"1. Jako kolegium@ → „Obsada meczów” → zaproponuj sędziego i wyślij do potwierdzenia.
+2. Jako sedzia@ → „Mecze do potwierdzenia” → Potwierdzam.
+3. Sprawdź, kiedy klub widzi skład sędziów.";"Sędzia dostaje powiadomienie, potwierdzenie wpisuje go do obsady. Klub widzi skład sędziów dopiero 48 godzin przed meczem.";Wysoki;"Pilotaż"
+PZB;"Sędziowie";"Delegacja z noclegiem i podpisem palcem";"Konto sedzia@ z rozegranym meczem i delegacją.";"1. Jako sedzia@ otwórz delegację, wpisz kilometry (system podpowiada) i nocleg z fakturą.
+2. Podpisz palcem na telefonie.
+3. Jako wydzial@ sprawdź delegację i rozlicz.";"Nocleg do limitu jest zwracany według faktury, ponad limit czeka na decyzję biura. Podpis widać na dokumencie. Rozliczona delegacja trafia do wypłat do PIT.";Wysoki;"Pilotaż; Telefon"
+PZB;"Licencje";"Odnowienie licencji całej drużyny";"Konto klub@. Sezon planowany otwarty.";"1. Menu „Odnowienie licencji” → zaznacz zawodników → złóż paczkę.
+2. Jako wydzial@ → paczki wniosków → „Zatwierdź wnioski bez uwag”.";"Paczka ma numer i sumę opłat, klub ma należność. Wnioski z uwagami (badania, NNW, obywatelstwo) zostają do decyzji. Klub dostaje powiadomienie po rozpatrzeniu.";Wysoki;"Pilotaż"
+PZB;"Licencje";"Badania i NNW: wgranie skanu i weryfikacja";"Konta klub@ i wydzial@. Zawodnik bez aktualnych badań.";"1. Jako klub@ w kartotece → Badania → wgraj zdjęcie orzeczenia z datą ważności.
+2. Jako wydzial@ zweryfikuj albo poproś o lepsze zdjęcie.";"Prośba o lepsze zdjęcie wraca do klubu z powodem. Po weryfikacji zawodnik jest uprawniony (także na e-licencji). Otwarcie skanu przez biuro jest w rejestrze zdarzeń.";Wysoki;"Pilotaż"
+PZB;"Opłaty";"Opłaty klubu i przelew z kodem QR";"Konto klub@.";"1. Menu „Opłaty klubu” → otwórz należność.
+2. Sprawdź dane do przelewu i kod QR.
+3. Jako wydzial@ zaksięguj wpłatę.";"Należność ma numer konta, tytuł NAL-… i kod QR do zeskanowania w aplikacji banku. Po zaksięgowaniu stan zmienia się na zapłacona.";Średni;"Pilotaż"
+PZB;"Uprawnienia";"Trener i rodzic nie widzą spraw klubu";"Konta trener@ i rodzic@.";"1. Jako trener@ spróbuj otworzyć opłaty klubu, zmianę terminu i protest.
+2. Jako rodzic@ otwórz kartotekę dziecka i spróbuj otworzyć innego zawodnika.";"Trener widzi sprawy meczowe swojej drużyny, nie widzi opłat ani wniosków zarządu. Rodzic widzi tylko swoje dziecko. Odmowa pokazuje okno z informacją, kto to robi.";Krytyczny;"Pilotaż"
+PZB;"Strona rozgrywek";"Strona rozgrywek bez danych prywatnych";"Bez logowania, test-pzball.fullbase.pl → odnośnik „Strona rozgrywek”.";"1. Otwórz terminarz, tabelę, mecz z wynikiem, stronę zawodnika.
+2. Poszukaj daty urodzenia, PESEL-u, adresu.";"Wyniki tylko zatwierdzone, tabela z formą, statystyki. Nigdzie nie ma PESEL-u, daty urodzenia ani kontaktu. Strony PLB, PLSK i Pucharu pokazują tylko swoje rozgrywki.";Wysoki;"Pilotaż"
+PZB;"Teksty";"Spójność tekstów z Pomocą";"Dowolne konto. Menu konta → Pomoc.";"1. Otwórz trzy tematy Pomocy dla swojej roli i przejdź opisane kroki.
+2. Porównaj nazwy przycisków i pozycji menu z tekstem Pomocy.";"Kroki w Pomocy prowadzą do tych samych przycisków i pozycji menu. Zgłoś każdą różnicę nazwy, literówkę i niejasne zdanie jako „kosmetyka”.";Średni;"Pilotaż"
