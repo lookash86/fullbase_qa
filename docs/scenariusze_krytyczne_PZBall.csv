@@ -10,14 +10,14 @@ PZB;"Logowanie i konta";"Reset hasła przez e-mail";"Konto testowe z adresem e-m
 2. Wpisz adres e-mail.
 3. Otwórz link z wiadomości (sprawdź też spam) i ustaw nowe hasło.
 4. Otwórz ten sam link drugi raz.";"Przychodzi e-mail z linkiem. Nowe hasło działa. Link użyty drugi raz nie działa.";Wysoki;"Szybki test; Pełna regresja"
-PZB;"Członkowie / osoby";"Klub dodaje nową osobę (zawodnika)";"Konto klubu (klub@ — DĘBY).";"1. Wejdź w „Osoby”.
+PZB;"Członkowie / osoby";"Klub dodaje nową osobę (zawodnika)";"Konto klubu (klub@ — BORSUKI, członek zarządu).";"1. Wejdź w „Osoby”.
 2. Dodaj nową osobę: imię, nazwisko, data urodzenia, PESEL testowy.
 3. Zapisz i otwórz kartotekę.
-4. Wyszukaj osobę po nazwisku.";"Osoba zapisuje się w klubie DĘBY, kartoteka ma zakładki (Licencje, Badania, NNW, Historia zmian). Wyszukiwarka ją znajduje.";Krytyczny;"Szybki test; Pełna regresja"
-PZB;"Członkowie / osoby";"Klub nie widzi danych innego klubu";"Konta klub@ (DĘBY) i klub2@ (STAL).";"1. Zaloguj się jako klub@ i zapisz nazwisko jednego zawodnika DĘBÓW.
+4. Wyszukaj osobę po nazwisku.";"Osoba zapisuje się w klubie BORSUKI, kartoteka ma zakładki (Licencje, Badania, NNW, Historia zmian). Wyszukiwarka ją znajduje.";Krytyczny;"Szybki test; Pełna regresja"
+PZB;"Członkowie / osoby";"Klub nie widzi danych innego klubu";"Konta klub@ (BORSUKI) i klub2@ (KORMORANY, kierownik drużyny).";"1. Zaloguj się jako klub@ i zapisz nazwisko jednego zawodnika BORSUKÓW.
 2. Wyloguj się i zaloguj jako klub2@.
 3. Wyszukaj tego zawodnika w „Osoby”.
-4. Spróbuj otworzyć jego kartotekę adresem skopiowanym z konta klub@.";"STAL nie widzi zawodnika DĘBÓW ani w wyszukiwarce, ani po wpisaniu adresu (odmowa dostępu). Dotyczy też licencji, badań i opłat.";Krytyczny;"Szybki test; Pełna regresja"
+4. Spróbuj otworzyć jego kartotekę adresem skopiowanym z konta klub@.";"KORMORANY nie widzą zawodnika BORSUKÓW ani w wyszukiwarce, ani po wpisaniu adresu (odmowa dostępu). Dotyczy też licencji, badań i opłat.";Krytyczny;"Szybki test; Pełna regresja"
 PZB;"Licencje zawodników";"Wniosek o licencję zawodnika: złożenie i zatwierdzenie";"Konto klub@ i konto biura (wydzial@). Zawodnik klubu bez licencji na bieżący sezon.";"1. Jako klub@ otwórz kartotekę zawodnika → Licencje → złóż wniosek.
 2. Wgraj skan badania lekarskiego.
 3. Jako wydzial@ otwórz wnioski do rozpatrzenia i zatwierdź wniosek.
@@ -33,8 +33,8 @@ PZB;"Rozgrywki i terminarze";"Lista startowa: dopisanie zawodnika i zatwierdzeni
 2. Dopisz zawodnika z licencją (numer z kartoteki) i osobę do sztabu.
 3. Zgłoś listę do zatwierdzenia.
 4. Jako biuro zatwierdź listę.";"Zawodnik bez ważnej licencji albo zawieszony jest oznaczony jako nieuprawniony. Po zatwierdzeniu lista jest zablokowana do edycji przez klub.";Krytyczny;"Szybki test; Pełna regresja"
-PZB;"Rozgrywki i terminarze";"Zmiana terminu meczu na wniosek klubu";"Konta klub@ (DĘBY), klub2@ (STAL), biuro. Mecz DĘBY — STAL za więcej niż 7 dni.";"1. Jako klub2@ złóż wniosek o zmianę terminu.
-2. Jako klub@ wyraź zgodę.
+PZB;"Rozgrywki i terminarze";"Zmiana terminu meczu na wniosek klubu";"Konta klub@ (BORSUKI, członek zarządu), klub2@ (KORMORANY, kierownik drużyny), biuro. Mecz BORSUKI — KORMORANY za więcej niż 7 dni. Wniosek i odpowiedź składa zarząd klubu.";"1. Jako klub@ złóż wniosek o zmianę terminu.
+2. Jako klub2@ sprawdź, że kierownik nie ma przycisku odpowiedzi (odpowiada zarząd KORMORANÓW; bez odpowiedzi w terminie system sam proponuje termin).
 3. Jako biuro zatwierdź nowy termin.
 4. Sprawdź terminarz i obsadę sędziów meczu.
 5. Spróbuj złożyć wniosek dla meczu za mniej niż 7 dni.";"Mecz w terminarzu ma nowy dzień, a obsada wraca do potwierdzenia. Wniosek złożony za późno jest odrzucony z komunikatem. Trener nie widzi wniosków.";Wysoki;"Szybki test; Pełna regresja"
@@ -55,7 +55,7 @@ PZB;"Sędziowie i obsada";"Sędzia weryfikuje zawodników na telefonie";"Konto s
 3. Włącz tryb samolotowy i zweryfikuj kolejnego zawodnika.
 4. Wyłącz tryb samolotowy.";"Weryfikacja działa także bez sieci i wysyła się sama po powrocie zasięgu. Drugi sędzia nie ma dostępu do drużyny zajętej przez pierwszego.";Wysoki;"Szybki test; Pełna regresja; Telefon"
 PZB;"Finanse i opłaty";"Należności klubu i opłaty";"Konto biura i klub@.";"1. Jako biuro otwórz „Należności klubów”.
-2. Sprawdź należności DĘBÓW (opłaty startowe, licencje, kary).
+2. Sprawdź należności BORSUKÓW (opłaty startowe, licencje, kary).
 3. Jako klub@ otwórz „Opłaty klubu”.
 4. Jako biuro oznacz jedną należność jako zapłaconą.";"Klub widzi tylko swoje należności i te same kwoty co biuro. Po oznaczeniu zapłaty stan zmienia się u obu stron.";Wysoki;"Szybki test; Pełna regresja"
 PZB;"Sprawy i kary";"Zawieszenie zawodnika po karze w protokole";"Konto sędziego z obsady i biura. Mecz w trakcie.";"1. Jako sędzia wpisz w protokole usunięcie zawodnika z boiska.

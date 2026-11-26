@@ -23,9 +23,9 @@ PZB;"Członkowie / osoby";"Trener nie widzi skanów badań innych zawodników";"
 PZB;Kluby;"Karta klubu: logo, barwy, strona rozgrywek";"Konto klub@.";"1. Otwórz kartę klubu.
 2. Wgraj logo, wybierz barwę z palety.
 3. Sprawdź „Klub na stronie rozgrywek” (braki do uzupełnienia).";"Logo i barwa widoczne na stronie rozgrywek; lista braków jest aktualna.";Niski;"Pełna regresja"
-PZB;Kluby;"Zmiana barw klubowych zawodnika (transfer)";"Konta klub@ i klub2@.";"1. Jako klub2@ złóż wniosek o zmianę barw zawodnika DĘBÓW.
-2. Jako klub@ odpowiedz na wniosek (zgoda albo sprzeciw).
-3. Jako biuro sprawdź stan wniosku.";"Wniosek przechodzi przez obie strony; po zgodzie zawodnik jest w nowym klubie z historią w „Kariera klubowa”.";Wysoki;"Pełna regresja"
+PZB;Kluby;"Zmiana barw klubowych zawodnika (transfer)";"Konta klub@ i klub2@.";"1. Jako klub@ (zarząd BORSUKÓW) złóż wniosek o zmianę barw zawodnika KORMORANÓW.
+2. Jako klub2@ (kierownik KORMORANÓW) sprawdź, że widzi wniosek, ale nie ma przycisku odpowiedzi — odpowiada zarząd klubu.
+3. Jako biuro sprawdź stan wniosku.";"Wniosek czeka na odpowiedź zarządu klubu odstępującego — kierownik go widzi, ale nie odpowiada. Biuro widzi stan wniosku. Po zgodzie i zatwierdzeniu zawodnik jest w nowym klubie z historią w „Kariera klubowa”.";Wysoki;"Pełna regresja"
 PZB;"Rozgrywki i terminarze";"Import terminarza";"Konto biura; plik terminarza.";"1. Rozgrywki → import terminarza.
 2. Wczytaj plik, sprawdź podgląd, zatwierdź.";"Mecze pojawiają się w terminarzu z kolejkami; błędne wiersze są pokazane przed zapisem.";Wysoki;"Pełna regresja"
 PZB;"Rozgrywki i terminarze";"Zmiana terminu: sprzeciw drugiego klubu";"Konta klub@, klub2@, biuro.";"1. Jako klub2@ złóż wniosek o zmianę terminu.
@@ -93,7 +93,7 @@ PZB;"Organy i komisje";"Kancelaria: pismo przychodzące i odpowiedź";"Konto adm
 2. Sprawdź numer (KP/…/rok) i termin domyślny (14 dni).
 3. Na karcie pisma → „Odpowiedz”.";"Numer nadany sam; odpowiedź powiązana z pismem; pismo oznaczone jako „odpowiedziane”.";Średni;"Pełna regresja"
 PZB;"Organy i komisje";"Kancelaria klubu widzi tylko swoje pisma";"Konto klub@.";"1. Jako klub@ otwórz pisma ze związkiem.
-2. Sprawdź listę.";"Widać tylko pisma DĘBÓW, nie pisma związku ani innych klubów.";Wysoki;"Pełna regresja"
+2. Sprawdź listę.";"Widać tylko pisma BORSUKÓW, nie pisma związku ani innych klubów.";Wysoki;"Pełna regresja"
 PZB;"Kadra narodowa";"Powołanie: propozycja, zgoda klubu, powołanie";"Konta wydzial@ i klub@.";"1. Jako wydzial@ → Kadra seniorów → „Pokaż osoby” → zaznacz → „Wyślij propozycje”.
 2. Jako klub@ → „Powołania do kadry” → „Zgoda klubu”.
 3. Jako wydzial@ → „Powołaj”.";"Każdy krok widoczny po obu stronach; zawodnik ma zakładkę „Reprezentacja” w kartotece.";Średni;"Pełna regresja"
@@ -127,7 +127,7 @@ PZB;"Powiadomienia i ankiety";"Dzwonek: powiadomienia";"Dowolne konto z nowymi p
 3. „Oznacz wszystkie jako przeczytane”.";"Powiadomienie prowadzi do właściwej strony; licznik się zeruje.";Średni;"Pełna regresja"
 PZB;"Powiadomienia i ankiety";"Komunikat z potwierdzeniem przeczytania";"Konto biura i klub@.";"1. Jako biuro wyślij komunikat do klubów w rozgrywkach.
 2. Jako klub@ przeczytaj.
-3. Jako biuro sprawdź listę „przeczytał / nie przeczytał”.";"Lista pokazuje DĘBY jako „przeczytał”.";Średni;"Pełna regresja"
+3. Jako biuro sprawdź listę „przeczytał / nie przeczytał”.";"Lista pokazuje BORSUKI jako „przeczytał”.";Średni;"Pełna regresja"
 PZB;"Aplikacja mobilna";"Praca bez sieci: weryfikacja i wysyłka po powrocie zasięgu";"Konto sedzia@ na telefonie (HTTPS), mecz na dziś.";"1. Pobierz mecz.
 2. Włącz tryb samolotowy, zweryfikuj zawodnika, podpisz protokół.
 3. Wyłącz tryb samolotowy.";"Dane czekają w telefonie i wysyłają się same po powrocie sieci; nic nie ginie.";Wysoki;"Pełna regresja; Telefon"
