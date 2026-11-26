@@ -12,13 +12,13 @@ Odhaczaj `[x]` od razu po zakończeniu punktu.
 
 - [x] **0.1 [Ł+C] Repozytorium.** W VS Code: `git init` w `kod\fullbase-qa`, pierwszy commit „FULLBASE QA 2.0.1”, prywatne repo GitHub `lookash86/fullbase_qa` (z podkreślnikiem).
 - [x] **0.2 [C] Uruchomienie lokalne.** `narzedzia\uruchom-lokalnie.cmd` → instalacja na SQLite → przeklikanie: zgłoszenie, zrzut ekranu wklejony Ctrl+V, zmiana statusu.
-- [ ] **0.3 [Ł] Serwer.** Subdomena `testy.fullbase.pl` na home.pl → katalog `/testy.fullbase.pl/public` („bez separacji serwisu”) → SSL → wgranie plików → `install.php` od razu po wgraniu → konto administratora (szczegóły w README.md).
-- [ ] **0.4 [Ł] Konto testera** w rejestrze (Użytkownicy → rola Tester). Hasło tymczasowe przekazujesz SMS-em.
+- [x] **0.3 [Ł] Serwer.** (zastąpione przez 0.3b — VPS, 26.11.2026) Subdomena `testy.fullbase.pl` na home.pl → katalog `/testy.fullbase.pl/public` („bez separacji serwisu”) → SSL → wgranie plików → `install.php` od razu po wgraniu → konto administratora (szczegóły w README.md).
+- [x] **0.4 [Ł] Konto testera** w rejestrze (Użytkownicy → rola Tester). Hasło tymczasowe przekazujesz SMS-em.
 - [ ] **0.5 [Ł+C] Konta testowe w demo PZBall** dla każdej roli: admin związku, wydział gier, klub, trener, sędzia (lokalnie istnieją już jako `*@pzball.test`). Hasła trzymamy w menedżerze haseł, **nie** w rejestrze.
 - [x] **0.6 [C] 15–20 scenariuszy ścieżek krytycznych PZBall,** spisanych na podstawie `kod\fullbase-silnik` (moduły i role), jako plik do importu (zadanie 1.8). Minimum: logowanie każdej roli, dodanie osoby/zawodnika, licencja zawodnika, licencja klubowa, terminarz i zmiana terminu, wpisanie wyniku i zamknięcie meczu, przeliczenie tabeli, obsada sędziów, opłaty, uprawnienia (klub nie widzi danych innego klubu).
 - [x] **0.7 [C] `docs/ZASADY_DLA_TESTERA.md`** — jedna strona: jak zgłaszać, co jest krytyczne, jedno zgłoszenie = jeden problem, zawsze zrzut ekranu, jak weryfikować poprawkę. Wersja do druku albo PDF dla testera.
-- [ ] **0.9 [C] Scenariusze pod zakres pilotażu PZBall** (`kodullbase-silnik\docs\KIERUNEK.md`): bez zamrożonych funkcji (np. licencja klubowa, kadra, kancelaria), nowy zestaw „Dzień meczowy na telefonie” (e-licencja, weryfikacja bez sieci, kadra jednym kodem, protokół z podpisami, protest) do próby weryfikacji na prawdziwych telefonach.
-- [ ] **0.3b [Ł+C] Serwer na VPS** (propozycja 24.11.2026 wieczorem, zastępuje home.pl z 0.3): testy.fullbase.pl na tym samym VPS co test-pzball, według `docs/PRZENIESIENIE_VPS.md`; wgranie na polecenie właściciela.
+- [x] **0.9 [C] Scenariusze pod zakres pilotażu PZBall** (`kodullbase-silnik\docs\KIERUNEK.md`): bez zamrożonych funkcji (np. licencja klubowa, kadra, kancelaria), nowy zestaw „Dzień meczowy na telefonie” (e-licencja, weryfikacja bez sieci, kadra jednym kodem, protokół z podpisami, protest) do próby weryfikacji na prawdziwych telefonach.
+- [x] **0.3b [Ł+C] Serwer na VPS** (propozycja 24.11.2026 wieczorem, zastępuje home.pl z 0.3): testy.fullbase.pl na tym samym VPS co test-pzball, według `docs/PRZENIESIENIE_VPS.md`; wgranie na polecenie właściciela.
 - [ ] **0.8 [Ł] Rytm pracy.** Codziennie ok. 10 minut na przegląd nowych zgłoszeń: potwierdź, odrzuć albo ustaw priorytet. Czas reakcji: krytyczny w 24 h, wysoki do najbliższej wersji, średni i niski według planu.
 
 **Gotowe, gdy:** tester ma działający login, konta w demo i listę scenariuszy do przejścia.
