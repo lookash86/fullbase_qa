@@ -34,6 +34,8 @@ function qa_base_url(): string
 {
     $cfg = qa_mail_config();
     if (!empty($cfg['base_url'])) return rtrim((string)$cfg['base_url'], '/') . '/';
+    // Bez base_url adres z nagłówka Host działa tylko na tym komputerze — na serwerze podrobiony Host dałby link z tokenem do obcej domeny (audyt 26.11.2026).
+    if (!in_array((string)($_SERVER['REMOTE_ADDR'] ?? ''), ['127.0.0.1', '::1'], true) && PHP_SAPI !== 'cli') return '';
     $host = preg_replace('/[^a-z0-9.:-]/i', '', (string)($_SERVER['HTTP_HOST'] ?? 'localhost'));
     $dir = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
     return (qa_is_https() ? 'https' : 'http') . '://' . $host . $dir . '/';

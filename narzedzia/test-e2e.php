@@ -454,8 +454,23 @@ kod($anon->post('reset_confirm', ['token' => str_repeat('a', 64), 'new' => 'Nowe
 $noweH = $los();
 kod($anon->post('reset_confirm', ['token' => $tok, 'new' => $noweH]), 200, 'ustawienie nowego hasła z linku');
 kod($anon->post('reset_confirm', ['token' => $tok, 'new' => $los()]), 422, 'link działa tylko raz');
+kod($tester2->get('issues'), 401, 'reset hasła wylogowuje sesję na innym urządzeniu');
 $t2b = new Klient($BAZA, 'tester2b');
 kod($t2b->zaloguj('tester2', $noweH), 200, 'logowanie nowym hasłem');
+// Audyt 26.11.2026: 8 złych prób z innego adresu IP nie blokuje właściciela konta (blokada konta — dopiero przy 30 próbach).
+$wstaw = bazaTestu()->prepare('INSERT INTO qa_login_attempts(ip,username,created_at) VALUES(?,?,?)');
+for ($i = 0; $i < 8; $i++) $wstaw->execute(['10.0.0.9', 'tester2', date('Y-m-d H:i:s')]);
+$t2c = new Klient($BAZA, 'tester2c');
+kod($t2c->zaloguj('tester2', $noweH), 200, 'cudze złe próby z innego adresu nie blokują konta');
+for ($i = 0; $i < 30; $i++) $wstaw->execute(['10.0.0.9', 'tester2', date('Y-m-d H:i:s')]);
+kod((new Klient($BAZA, 'tester2d'))->zaloguj('tester2', $noweH), 429, '30 złych prób na konto — blokada konta');
+bazaTestu()->exec("DELETE FROM qa_login_attempts WHERE ip = '10.0.0.9'");
+// Zmiana własnego hasła: ta sesja zostaje, inna sesja tego konta jest wylogowana.
+$noweH2 = $los();
+kod($t2b->post('password', ['current' => $noweH, 'new' => $noweH2]), 200, 'zmiana własnego hasła');
+kod($t2b->get('issues'), 200, 'po zmianie hasła ta sesja działa');
+kod($t2c->get('issues'), 401, 'zmiana hasła wylogowuje inną sesję');
+kod($tester2->zaloguj('tester2', $noweH2), 200, 'tester2 loguje się znowu (dalsze kroki testu)');
 // link po godzinie
 $anon->post('reset_request', ['login' => 'tester2@example.test']);
 $m = poczta($kat);

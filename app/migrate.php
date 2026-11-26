@@ -108,6 +108,10 @@ function qa_migrations(): array
             )$tail");
             $pdo->exec('CREATE INDEX qa_api_keys_hash ON qa_api_keys(key_hash)');
         },
+        // 14 — audyt 26.11.2026: losowy znacznik zmiany hasła — sesje sprzed niej przestają działać (zmiana albo reset hasła wylogowuje inne urządzenia).
+        14 => function (PDO $pdo, string $driver): void {
+            qa_add_column($pdo, $driver, 'qa_users', 'password_stamp', 'VARCHAR(32) NULL');
+        },
     ];
 }
 

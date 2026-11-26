@@ -88,10 +88,11 @@ function current_user(): ?array
     if ($u !== false) return $u;
     $u = null;
     if (!empty($_SESSION['uid'])) {
-        $q = db()->prepare('SELECT id,username,display_name,email,role,active,must_change_pw,notify FROM qa_users WHERE id=?');
+        $q = db()->prepare('SELECT id,username,display_name,email,role,active,must_change_pw,notify,password_stamp FROM qa_users WHERE id=?');
         $q->execute([(int)$_SESSION['uid']]);
         $r = $q->fetch();
-        if ($r && (int)$r['active'] === 1) {
+        // Sesja sprzed zmiany hasła (inne urządzenie) — wylogowana.
+        if ($r && (int)$r['active'] === 1 && (string)($r['password_stamp'] ?? '') === (string)($_SESSION['pw_at'] ?? '')) {
             $u = ['id' => (int)$r['id'], 'username' => $r['username'], 'name' => $r['display_name'], 'email' => $r['email'],
                 'role' => $r['role'], 'must_change_pw' => (bool)$r['must_change_pw'], 'notify' => (bool)$r['notify']];
         } else {
@@ -251,24 +252,31 @@ if ($action === 'login') {
     if ($name === '' || $pw === '') out(['error' => 'Wpisz login albo e-mail i hasło.'], 422);
     $p = db();
     $since = date('Y-m-d H:i:s', time() - 900);
-    $q = $p->prepare('SELECT COUNT(*) FROM qa_login_attempts WHERE (ip=? OR username=?) AND created_at>?');
-    $q->execute([client_ip(), mb_substr($name, 0, 80), $since]);
-    if ((int)$q->fetchColumn() >= 8) out(['error' => 'Zbyt wiele nieudanych prób. Spróbuj ponownie za 15 minut.'], 429);
     $q = $p->prepare("SELECT * FROM qa_users WHERE username=? OR (email<>'' AND LOWER(email)=?) ORDER BY CASE WHEN username=? THEN 0 ELSE 1 END, id LIMIT 1");
     $q->execute([$name, $name, $name]);
     $r = $q->fetch();
+    // Próby liczone pod loginem konta (nie pod wpisanym tekstem). Blokada: 8 prób z tego adresu IP; samo konto — dopiero przy 30 próbach z wielu adresów (audyt 26.11.2026:
+    // 8 złych prób z dowolnego adresu blokowało właściciela konta).
+    $klucz = mb_substr($r ? (string)$r['username'] : $name, 0, 80);
+    $q = $p->prepare('SELECT COUNT(*) FROM qa_login_attempts WHERE ip=? AND created_at>?');
+    $q->execute([client_ip(), $since]);
+    $zIp = (int)$q->fetchColumn();
+    $q = $p->prepare('SELECT COUNT(*) FROM qa_login_attempts WHERE username=? AND created_at>?');
+    $q->execute([$klucz, $since]);
+    if ($zIp >= 8 || (int)$q->fetchColumn() >= 30) out(['error' => 'Zbyt wiele nieudanych prób. Spróbuj ponownie za 15 minut.'], 429);
     if (!$r || (int)$r['active'] !== 1 || !password_verify($pw, $r['password_hash'])) {
-        $p->prepare('INSERT INTO qa_login_attempts(ip,username,created_at) VALUES(?,?,?)')->execute([client_ip(), mb_substr($name, 0, 80), qa_now()]);
+        $p->prepare('INSERT INTO qa_login_attempts(ip,username,created_at) VALUES(?,?,?)')->execute([client_ip(), $klucz, qa_now()]);
         usleep(400000);
         out(['error' => 'Nieprawidłowy login, e-mail lub hasło.'], 401);
     }
     if (password_needs_rehash($r['password_hash'], PASSWORD_DEFAULT)) {
         $p->prepare('UPDATE qa_users SET password_hash=? WHERE id=?')->execute([qa_hash_password($pw), $r['id']]);
     }
-    $p->prepare('DELETE FROM qa_login_attempts WHERE username=? OR created_at<?')->execute([$name, $since]);
+    $p->prepare('DELETE FROM qa_login_attempts WHERE username=? OR created_at<?')->execute([$klucz, $since]);
     $p->prepare('UPDATE qa_users SET last_login_at=? WHERE id=?')->execute([qa_now(), $r['id']]);
     session_regenerate_id(true);
     $_SESSION['uid'] = (int)$r['id'];
+    $_SESSION['pw_at'] = (string)($r['password_stamp'] ?? '');
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
     out(['user' => current_user(), 'csrf' => $_SESSION['csrf']]);
 }
@@ -302,7 +310,8 @@ if ($action === 'reset_request') {
     if ($user) {
         $p->prepare('INSERT INTO qa_password_resets(user_id,token_hash,ip,created_at,expires_at) VALUES(?,?,?,?,?)')
             ->execute([$userId, hash('sha256', $token), client_ip(), qa_now(), date('Y-m-d H:i:s', time() + 3600)]);
-        qa_mail((string)$user['email'], 'Ustawienie nowego hasła — FULLBASE QA',
+        if (qa_base_url() === '') error_log('FULLBASE QA: brak mail.base_url w config.php — link resetu hasła nie wysłany.');
+        else qa_mail((string)$user['email'], 'Ustawienie nowego hasła — FULLBASE QA',
             "Dzień dobry,\n\nktoś (prawdopodobnie Ty) poprosił o ustawienie nowego hasła do FULLBASE QA.\n\nOtwórz link, aby ustawić nowe hasło (ważny 1 godzinę, działa jeden raz):\n"
             . qa_base_url() . '#/reset/' . $token . "\n\nJeśli to nie Ty — zignoruj tę wiadomość; hasło się nie zmieni.");
     } else {
@@ -329,8 +338,8 @@ if ($action === 'reset_confirm') {
     if (!$r) out(['error' => $bad], 422);
     $p->beginTransaction();
     $p->prepare('UPDATE qa_password_resets SET used_at=? WHERE id=?')->execute([qa_now(), $r['id']]);
-    $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=0 WHERE id=?')->execute([qa_hash_password($new), $r['user_id']]);
-    $p->prepare('DELETE FROM qa_login_attempts WHERE username=(SELECT username FROM qa_users WHERE id=?)')->execute([$r['user_id']]);
+    $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=0, password_stamp=? WHERE id=?')->execute([qa_hash_password($new), bin2hex(random_bytes(12)), $r['user_id']]);
+    $p->prepare("DELETE FROM qa_login_attempts WHERE username IN (SELECT username FROM qa_users WHERE id=?) OR username IN (SELECT LOWER(email) FROM qa_users WHERE id=? AND email<>'')")->execute([$r['user_id'], $r['user_id']]);
     $p->commit();
     out(['ok' => true]);
 }
@@ -349,8 +358,10 @@ if ($action === 'password') {
     $new = (string)($b['new'] ?? '');
     if ($e = qa_password_problem($new)) out(['error' => $e], 422);
     if (hash_equals((string)($b['current'] ?? ''), $new)) out(['error' => 'Nowe hasło musi różnić się od obecnego.'], 422);
-    $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=0 WHERE id=?')->execute([qa_hash_password($new), $u['id']]);
+    $znacznik = bin2hex(random_bytes(12));
+    $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=0, password_stamp=? WHERE id=?')->execute([qa_hash_password($new), $znacznik, $u['id']]);
     session_regenerate_id(true);
+    $_SESSION['pw_at'] = $znacznik;   // ta sesja zostaje, inne urządzenia są wylogowane
     out(['ok' => true]);
 }
 
@@ -829,7 +840,7 @@ if ($action === 'user_save') {
         $p->prepare('UPDATE qa_users SET username=?,display_name=?,email=?,role=?,active=? WHERE id=?')->execute([$username, $name, $email, $role, $active, $id]);
         if ($pw !== '') {
             if ($e = qa_password_problem($pw)) out(['error' => $e], 422);
-            $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=1 WHERE id=?')->execute([qa_hash_password($pw), $id]);
+            $p->prepare('UPDATE qa_users SET password_hash=?, must_change_pw=1, password_stamp=? WHERE id=?')->execute([qa_hash_password($pw), bin2hex(random_bytes(12)), $id]);
         }
     }
     out(['ok' => true]);
