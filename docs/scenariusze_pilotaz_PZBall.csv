@@ -34,7 +34,7 @@ PZB;"Dzień meczowy";"Protokół organizacyjny na telefonie: kara i Zakończ mec
 2. Wpisz rozpoczęcie, jedną karę z osobą i momentem meczu.
 3. Kliknij „Zakończ mecz”, wpisz wynik.
 4. Powtórz krok 2 bez sieci i sprawdź wysłanie po powrocie sieci.";"Wpisy zapisują się z godziną z telefonu. Bez sieci czekają i wysyłają się same. Po „Zakończ mecz” zaczyna się 30 minut na uwagi i podpisy, a terminy protestu liczą się od tej chwili.";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
-PZB;"Dzień meczowy";"Podpisy po meczu i wynik w tabeli";"Mecz po „Zakończ mecz”. Konta klub@ i klub2@ (obie drużyny), sędzia główny i zapisowy.";"1. Każda drużyna wybiera „Akceptuję” albo wpisuje uwagi i podpisuje.
+PZB;"Dzień meczowy";"Podpisy po meczu i wynik w tabeli";"Mecz po „Zakończ mecz”. Konto klub@ (BORSUKI), sędzia główny i zapisowy. Mecz pokazowy gra BORSUKI z WYDRAMI — WYDRY nie mają konta w demo, więc ich reakcję wpisuje sędzia główny („zgłoszona ustnie”).";"1. Każda drużyna wybiera „Akceptuję” albo wpisuje uwagi i podpisuje.
 2. Sędzia zapisowy podpisuje, potem sędzia główny.
 3. Otwórz stronę rozgrywek i tabelę.";"Sędzia główny podpisuje ostatni. Po podpisach obu sędziów wynik trafia do tabeli bez zatwierdzania przez biuro. Drużyna bez reakcji w 30 minut jest uznana za akceptującą.";Krytyczny;"Dzień meczowy na telefonie; Pilotaż"
 PZB;"Po meczu";"Protest drużyny w terminie";"Mecz po „Zakończ mecz”. Drużyna wpisała w protokole zamiar protestu.";"1. Jako klub@ → „Zgłoszenia po meczu” → protest → wpisz treść i złóż.
@@ -44,8 +44,8 @@ PZB;"Po meczu";"Walkower";"Konto sędziego z obsady albo wydzial@. Mecz zaplanow
 2. Jako wydzial@ rozstrzygnij z uzasadnieniem.";"Mecz ma wynik walkowerowy i status walkower. Klub ukarany ma należność za nieprzybycie. Wynik jest w tabeli.";Wysoki;"Pilotaż"
 PZB;"Po meczu";"Mecz przerwany";"Mecz w trakcie (protokół rozpoczęty).";"1. W protokole „Mecz przerwany” → zmiana, wynik, powód (np. deszcz).
 2. Jako wydzial@ wybierz skutek (rozstrzygnięty albo dokończenie z nowym terminem).";"System podpowiada skutek według liczby rozegranych zmian. Dokończenie zachowuje kadrę meczową z pierwszego terminu.";Średni;"Pilotaż"
-PZB;"Terminy";"Zmiana terminu meczu z propozycją systemu";"Konta klub2@ (KORMORANY), klub@ (BORSUKI), wydzial@. Mecz tych drużyn za więcej niż 7 dni.";"1. Jako klub2@ złóż wniosek z 1–3 terminami.
-2. Jako klub@ nie odpowiadaj (albo odpowiedz sprzeciwem).
+PZB;"Terminy";"Zmiana terminu meczu z propozycją systemu";"Konta klub@ (BORSUKI, członek zarządu) i wydzial@. Mecz BORSUKI z KORMORANAMI za więcej niż 7 dni. Wniosek i odpowiedź składa zarząd klubu — klub2@ to kierownik drużyny KORMORANÓW, więc odpowiedzi nie złoży (to też warto sprawdzić).";"1. Jako klub@ złóż wniosek z 1–3 terminami.
+2. Za KORMORANY nikt nie odpowiada (klub2@ nie ma przycisku odpowiedzi).
 3. Jako wydzial@ otwórz wniosek po terminie odpowiedzi.";"Bez odpowiedzi przeciwnika wniosek przechodzi w „propozycję systemu” z terminem, który nie koliduje z innymi meczami i boiskiem. Wydział zatwierdza, sędziowie dostają nowe zapytanie o obsadę.";Wysoki;"Pilotaż"
 PZB;"Sędziowie";"Obsada z potwierdzeniem przez sędziego";"Konta kolegium@ i sedzia@. Mecz za więcej niż 3 dni bez obsady.";"1. Jako kolegium@ → „Obsada meczów” → zaproponuj sędziego i wyślij do potwierdzenia.
 2. Jako sedzia@ → „Mecze do potwierdzenia” → Potwierdzam.
