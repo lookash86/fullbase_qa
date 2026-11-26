@@ -113,7 +113,7 @@ function authFrame(inner) {
 }
 function renderLogin(msg = '') {
   authFrame(`<h1>Zaloguj się</h1><p class="muted">Konto zakłada administrator systemu.</p>
-    <form id="loginForm"><label>Login<input id="lgUser" autocomplete="username" autocapitalize="none" required></label>
+    <form id="loginForm"><label>Login albo e-mail<input id="lgUser" autocomplete="username" autocapitalize="none" required></label>
     <label>Hasło<input id="lgPass" type="password" autocomplete="current-password" required></label>
     <div class="authError ${msg ? 'show' : ''}" id="lgErr" role="alert">${esc(msg)}</div>
     <button class="btn primary wide" type="submit">Zaloguj</button></form>

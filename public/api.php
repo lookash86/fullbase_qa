@@ -245,21 +245,22 @@ if ($action === 'login') {
     if ($method !== 'POST') out(['error' => 'Niedozwolona metoda.'], 405);
     check_origin();
     $b = body();
-    $name = mb_strtolower(str_in($b, 'username', 80));
+    // Login albo adres e-mail konta (26.11.2026); dopasowanie po loginie ma pierwszeństwo przed e-mailem.
+    $name = mb_strtolower(str_in($b, 'username', 190));
     $pw = (string)($b['password'] ?? '');
-    if ($name === '' || $pw === '') out(['error' => 'Wpisz login i hasło.'], 422);
+    if ($name === '' || $pw === '') out(['error' => 'Wpisz login albo e-mail i hasło.'], 422);
     $p = db();
     $since = date('Y-m-d H:i:s', time() - 900);
     $q = $p->prepare('SELECT COUNT(*) FROM qa_login_attempts WHERE (ip=? OR username=?) AND created_at>?');
-    $q->execute([client_ip(), $name, $since]);
+    $q->execute([client_ip(), mb_substr($name, 0, 80), $since]);
     if ((int)$q->fetchColumn() >= 8) out(['error' => 'Zbyt wiele nieudanych prób. Spróbuj ponownie za 15 minut.'], 429);
-    $q = $p->prepare('SELECT * FROM qa_users WHERE username=?');
-    $q->execute([$name]);
+    $q = $p->prepare("SELECT * FROM qa_users WHERE username=? OR (email<>'' AND LOWER(email)=?) ORDER BY CASE WHEN username=? THEN 0 ELSE 1 END, id LIMIT 1");
+    $q->execute([$name, $name, $name]);
     $r = $q->fetch();
     if (!$r || (int)$r['active'] !== 1 || !password_verify($pw, $r['password_hash'])) {
-        $p->prepare('INSERT INTO qa_login_attempts(ip,username,created_at) VALUES(?,?,?)')->execute([client_ip(), $name, qa_now()]);
+        $p->prepare('INSERT INTO qa_login_attempts(ip,username,created_at) VALUES(?,?,?)')->execute([client_ip(), mb_substr($name, 0, 80), qa_now()]);
         usleep(400000);
-        out(['error' => 'Nieprawidłowy login lub hasło.'], 401);
+        out(['error' => 'Nieprawidłowy login, e-mail lub hasło.'], 401);
     }
     if (password_needs_rehash($r['password_hash'], PASSWORD_DEFAULT)) {
         $p->prepare('UPDATE qa_users SET password_hash=? WHERE id=?')->execute([qa_hash_password($pw), $r['id']]);

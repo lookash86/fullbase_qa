@@ -282,6 +282,9 @@ kod($gosc->post('login', ['username' => 'admin', 'password' => $H['ZLE']]), 401,
 sekcja('Administrator');
 $admin = new Klient($BAZA, 'admin');
 kod($admin->zaloguj('admin', $hasloAdmina), 200, 'admin się loguje');
+$mailem = new Klient($BAZA, 'admin e-mailem');
+kod($mailem->zaloguj('Admin@Example.test', $hasloAdmina), 200, 'logowanie adresem e-mail (bez wielkości liter)');
+kod($mailem->zaloguj('admin@example.test', $H['ZLE']), 401, 'logowanie e-mailem ze złym hasłem odrzucone');
 $meta = kod($admin->get('meta'), 200, 'słowniki');
 $pzb = null;
 foreach ($meta['projects'] ?? [] as $pr) if ($pr['code'] === 'PZB') $pzb = $pr;
