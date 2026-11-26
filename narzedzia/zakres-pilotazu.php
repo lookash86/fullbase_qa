@@ -4,6 +4,10 @@
  * a funkcjom zamrożonym — także „Zamrożone”. Powtarzalne (zestaw już wpisany nie dubluje się). Import CSV w rejestrze dopisuje brakujące zestawy scenariuszom, które już są.
  * Uruchom: php narzedzia/zakres-pilotazu.php
  */
+/** Obszary spoza listy projektu PZB (app/schema.php) => obszar z listy — import zapisałby je z uwagą „Obszaru nie ma na liście”. */
+const OBSZARY_ZAMIANA = ['Dzień meczowy' => 'Mecze i wyniki', 'Po meczu' => 'Mecze i wyniki', 'Przygotowanie' => 'Mecze i wyniki', 'Licencje' => 'Licencje zawodników',
+    'Opłaty' => 'Finanse i opłaty', 'Strona rozgrywek' => 'Strona rozgrywek / redakcja', 'Sędziowie' => 'Sędziowie i obsada', 'Teksty' => 'Inny obszar',
+    'Terminy' => 'Rozgrywki i terminarze', 'Uprawnienia' => 'Panel administracyjny'];
 const OBSZARY_POZA = ['Kadra narodowa', 'Organy i komisje', 'Szkolenia', 'Licencje klubowe'];
 /** Tytuły scenariuszy funkcji zamrożonych w obszarach pilotażu (KIERUNEK, „Zamrożone”: koszt składu, podpowiedź obsady, redakcja, grafiki, szkice). */
 const TYTULY_ZAMROZONE = ['Koszt składu sędziowskiego', 'Obsada całego okresu jednym kliknięciem', 'Redakcja: publikacja i wycofanie tekstu', 'Podsumowanie kolejki z wynikami',
@@ -18,6 +22,7 @@ foreach (['krytyczne', 'priorytetowe', 'rozszerzone', 'pilotaz'] as $nazwa) {
     $zm = 0;
     while (($r = fgetcsv($h, 0, ';', '"', '')) !== false) {
         if (count($r) < 8) { $wiersze[] = $r; continue; }
+        $r[1] = OBSZARY_ZAMIANA[$r[1]] ?? $r[1];
         $zestawy = array_values(array_filter(array_map('trim', explode(';', $r[7])), fn($x) => $x !== ''));
         $zamrozone = in_array($r[2], TYTULY_ZAMROZONE, true) || in_array($r[1], OBSZARY_POZA, true);
         $dodaj = $zamrozone || in_array($r[1], OBSZARY_POZA, true) ? ['Poza pilotażem', 'Zamrożone'] : ['Pilotaż'];

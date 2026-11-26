@@ -237,17 +237,17 @@ $dodaj('Aplikacja mobilna', 'Powiadomienia push na telefonie', 'Konto sedzia@ na
 ], 'Na telefonie powiadomienie; dotknięcie otwiera sprawę; liczba na ikonie aplikacji.', 'Średni', [P, T]);
 
 /* ---------------- Turnieje (w pilotażu na start wyłączone) ---------------- */
-$dodaj('Turnieje', 'Mistrzostwa: skład na turniej i weryfikacja komisji', 'Dane pokazowe: Mistrzostwa Polski Kadetów U15 (przed turniejem); klub@ z drużyną.', [
+$dodaj('Rozgrywki i terminarze', 'Mistrzostwa: skład na turniej i weryfikacja komisji', 'Dane pokazowe: Mistrzostwa Polski Kadetów U15 (przed turniejem); klub@ z drużyną.', [
     'Jako klub@ → turniej → Skład: dodaj zawodników, sprawdź warunki gry.',
     'Jako komisja techniczna (admin@) zweryfikuj osoby i zatwierdź drużynę.',
     'Wydrukuj listę do podpisu.',
 ], 'Po terminie składów zmienia tylko komisja; osoba nieuprawniona oznaczona; lista do druku z podpisami.', 'Średni', [R, T]);
-$dodaj('Turnieje', 'Mistrzostwa: weryfikacja składu bez sieci', 'Konto komisji technicznej; telefon; zawodnicy z e-licencją.', [
+$dodaj('Rozgrywki i terminarze', 'Mistrzostwa: weryfikacja składu bez sieci', 'Konto komisji technicznej; telefon; zawodnicy z e-licencją.', [
     'Otwórz „Weryfikacja składu” mistrzostw, pobierz turniej.',
     'Włącz tryb samolotowy, zeskanuj e-licencję zawodnika.',
     'Wyłącz tryb samolotowy.',
 ], 'Skan działa bez sieci; decyzja wysyła się po powrocie sieci; drużyna zweryfikowana.', 'Średni', [R, T]);
-$dodaj('Turnieje', 'Harmonogram, akceptacja związku i raport', 'Turniej klubu w kalendarzu związku.', [
+$dodaj('Rozgrywki i terminarze', 'Harmonogram, akceptacja związku i raport', 'Turniej klubu w kalendarzu związku.', [
     'Organizator układa harmonogram (warianty), wysyła do akceptacji.',
     'Związek akceptuje; organizator wpisuje wyniki i klasyfikację, wysyła.',
     'Otwórz raport dzienny i końcowy, dyplomy.',

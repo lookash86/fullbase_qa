@@ -118,13 +118,13 @@ PZB;"Aplikacja mobilna";"E-licencja po angielsku";"Telefon z aktywną e-licencj�
 2. Pokaż kod sędziemu do skanu.";"Teksty po angielsku, nazwy własne bez zmian; kod QR ten sam i przechodzi skan.";Niski;"Pilotaż; Telefon"
 PZB;"Aplikacja mobilna";"Powiadomienia push na telefonie";"Konto sedzia@ na telefonie z zainstalowaną aplikacją.";"1. Moje konto → Telefon / Powiadomienia: włącz powiadomienia push.
 2. Jako kolegium@ wyślij sędziemu zapytanie o obsadę.";"Na telefonie powiadomienie; dotknięcie otwiera sprawę; liczba na ikonie aplikacji.";Średni;"Pilotaż; Telefon"
-PZB;Turnieje;"Mistrzostwa: skład na turniej i weryfikacja komisji";"Dane pokazowe: Mistrzostwa Polski Kadetów U15 (przed turniejem); klub@ z drużyną.";"1. Jako klub@ → turniej → Skład: dodaj zawodników, sprawdź warunki gry.
+PZB;"Rozgrywki i terminarze";"Mistrzostwa: skład na turniej i weryfikacja komisji";"Dane pokazowe: Mistrzostwa Polski Kadetów U15 (przed turniejem); klub@ z drużyną.";"1. Jako klub@ → turniej → Skład: dodaj zawodników, sprawdź warunki gry.
 2. Jako komisja techniczna (admin@) zweryfikuj osoby i zatwierdź drużynę.
 3. Wydrukuj listę do podpisu.";"Po terminie składów zmienia tylko komisja; osoba nieuprawniona oznaczona; lista do druku z podpisami.";Średni;"Poza pilotażem; Telefon"
-PZB;Turnieje;"Mistrzostwa: weryfikacja składu bez sieci";"Konto komisji technicznej; telefon; zawodnicy z e-licencją.";"1. Otwórz „Weryfikacja składu” mistrzostw, pobierz turniej.
+PZB;"Rozgrywki i terminarze";"Mistrzostwa: weryfikacja składu bez sieci";"Konto komisji technicznej; telefon; zawodnicy z e-licencją.";"1. Otwórz „Weryfikacja składu” mistrzostw, pobierz turniej.
 2. Włącz tryb samolotowy, zeskanuj e-licencję zawodnika.
 3. Wyłącz tryb samolotowy.";"Skan działa bez sieci; decyzja wysyła się po powrocie sieci; drużyna zweryfikowana.";Średni;"Poza pilotażem; Telefon"
-PZB;Turnieje;"Harmonogram, akceptacja związku i raport";"Turniej klubu w kalendarzu związku.";"1. Organizator układa harmonogram (warianty), wysyła do akceptacji.
+PZB;"Rozgrywki i terminarze";"Harmonogram, akceptacja związku i raport";"Turniej klubu w kalendarzu związku.";"1. Organizator układa harmonogram (warianty), wysyła do akceptacji.
 2. Związek akceptuje; organizator wpisuje wyniki i klasyfikację, wysyła.
 3. Otwórz raport dzienny i końcowy, dyplomy.";"Publicznie tylko zaakceptowany harmonogram; po zatwierdzeniu wyników poprawia tylko związek; raport i dyplomy do druku.";Niski;"Poza pilotażem"
 PZB;"Kadra narodowa";"Narzędzia sztabu i skład na zawody";"admin@ (albo selekcjoner).";"1. Kadra narodowa → kadra → Narzędzia sztabu: notatka o zawodniku, obserwowany spoza kadry.
