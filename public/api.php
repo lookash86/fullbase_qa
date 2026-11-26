@@ -814,7 +814,7 @@ if ($action === 'user_save') {
     $role = enum_in($b, 'role', QA_ROLES, 'tester');
     $active = !empty($b['active']) ? 1 : 0;
     $pw = (string)($b['password'] ?? '');
-    if (!preg_match('/^[a-z0-9._-]{3,80}$/', $username)) out(['error' => 'Login: 3–80 znaków, tylko małe litery, cyfry, kropka, myślnik i podkreślenie.'], 422);
+    if (!preg_match('/^[a-z0-9._@+-]{3,80}$/', $username)) out(['error' => 'Login: adres e-mail albo 3–80 znaków (małe litery, cyfry, kropka, myślnik, podkreślenie).'], 422);
     if ($name === '') out(['error' => 'Wpisz imię i nazwisko.'], 422);
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) out(['error' => 'Adres e-mail jest nieprawidłowy.'], 422);
     $q = $p->prepare('SELECT id FROM qa_users WHERE username=? AND id<>?');

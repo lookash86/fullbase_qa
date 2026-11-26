@@ -42,7 +42,7 @@ if (!$installed && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $login = mb_strtolower(trim((string)($_POST['admin_login'] ?? '')));
     $aname = trim((string)($_POST['admin_name'] ?? ''));
     $pw = (string)($_POST['admin_pass'] ?? '');
-    if (!preg_match('/^[a-z0-9._-]{3,80}$/', $login)) $errors[] = 'Login administratora: 3–80 znaków (małe litery, cyfry, . _ -).';
+    if (!preg_match('/^[a-z0-9._@+-]{3,80}$/', $login)) $errors[] = 'Login administratora: adres e-mail albo 3–80 znaków (małe litery, cyfry, . _ -).';
     if ($aname === '') $errors[] = 'Wpisz imię i nazwisko administratora.';
     if ($e = qa_password_problem($pw)) $errors[] = $e;
     if ($pw !== (string)($_POST['admin_pass2'] ?? '')) $errors[] = 'Hasła nie są takie same.';

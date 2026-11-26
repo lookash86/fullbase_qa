@@ -293,6 +293,8 @@ $pzbId = (int)($pzb['id'] ?? 0);
 kod($admin->post('user_save', ['username' => 'tester1', 'display_name' => 'Tester Jeden', 'email' => 'tester1@example.test', 'role' => 'tester', 'active' => 1, 'password' => $H['T1_TMP']]), 200, 'admin zakłada testera');
 kod($admin->post('user_save', ['username' => 'tester2', 'display_name' => 'Tester Dwa', 'email' => 'tester2@example.test', 'role' => 'tester', 'active' => 1, 'password' => $H['T2_TMP']]), 200, 'admin zakłada drugiego testera');
 kod($admin->post('user_save', ['username' => 'obserwator', 'display_name' => 'Obserwator', 'role' => 'viewer', 'active' => 1, 'password' => $H['OBS_TMP']]), 200, 'admin zakłada obserwatora');
+kod($admin->post('user_save', ['username' => 'tester3@example.test', 'display_name' => 'Tester Trzy', 'email' => 'tester3@example.test', 'role' => 'tester', 'active' => 1, 'password' => $H['T2_TMP']]), 200, 'login może być adresem e-mail');
+kod($admin->post('user_save', ['username' => 'Zły Login!', 'display_name' => 'X', 'role' => 'tester', 'active' => 1, 'password' => $H['T2_TMP']]), 422, 'login ze spacją i wykrzyknikiem odrzucony');
 kod($admin->post('user_save', ['username' => 'x1', 'display_name' => 'X', 'role' => 'tester', 'active' => 1, 'password' => $H['X_TMP']], false), 419, 'zapis bez tokenu CSRF odrzucony');
 
 /* ---------- 4. tester: pierwsze logowanie ---------- */
