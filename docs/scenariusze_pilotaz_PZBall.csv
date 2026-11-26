@@ -1,5 +1,5 @@
 ﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet;Zestawy
-PZB;"Przygotowanie";"Mecz pokazowy na dziś";"Konto admin@pzball.test na test-pzball.fullbase.pl.";"1. Zaloguj się jako admin@.
+PZB;Przygotowanie;"Mecz pokazowy na dziś";"Konto admin@pzball.test na test-pzball.fullbase.pl.";"1. Zaloguj się jako admin@.
 2. Ustawienia → karta „Tryb demonstracyjny” → „Utwórz mecz pokazowy na dziś”.
 3. Otwórz listę meczów i znajdź mecz z dzisiejszą datą.";"Powstaje mecz za ok. 4 godziny, z obsadą sędziów (sedzia@ i sedzia2@). Drugi raz tego dnia przycisk nie tworzy kolejnego meczu. Ten mecz służy do scenariuszy „Dzień meczowy na telefonie”.";Krytyczny;"Dzień meczowy na telefonie; Pilotaż"
 PZB;"Dzień meczowy";"Kod aktywacyjny e-licencji wysłany e-mailem";"Konto klub@ (BORSUKI). Zawodnik BORSUKÓW z aktywną licencją i adresem e-mail w kartotece (wpisz swój adres testowy).";"1. Jako klub@ otwórz kartotekę zawodnika → zakładka Licencje → „E-licencja w telefonie”.
@@ -29,7 +29,7 @@ PZB;"Dzień meczowy";"Weryfikacja całej kadry jednym kodem";"Kadra zgłoszona p
 2. Sędzia przechodzi przez każdą osobę: „Zgadza się ze zdjęciem — dopuszczam” albo „Nieobecny”.
 3. Na końcu „Kadra zweryfikowana”.";"Sędzia widzi kolejno każdą osobę ze zdjęciem, najpierw zawodników, potem sztab. Nieuprawnionego nie da się dopuścić. Po zatwierdzeniu decyzje mają sposób „kod kadry”.";Wysoki;"Dzień meczowy na telefonie; Telefon; Pilotaż"
 PZB;"Dzień meczowy";"Drużyna zajęta przez drugiego sędziego";"Mecz z dwoma sędziami boiskowymi (sedzia@ i sedzia2@) na dwóch telefonach, z siecią.";"1. sedzia@ w składzie gospodarzy klika „Weryfikuję tę drużynę”.
-2. sedzia2@ otwiera tę samą drużynę.";"sedzia2@ widzi „Drużyna innego sędziego” i nie może podejmować decyzji. Drugą drużynę może zająć.";Średni;"Dzień meczowy na telefonie; Telefon"
+2. sedzia2@ otwiera tę samą drużynę.";"sedzia2@ widzi „Drużyna innego sędziego” i nie może podejmować decyzji. Drugą drużynę może zająć.";Średni;"Dzień meczowy na telefonie; Telefon; Pilotaż"
 PZB;"Dzień meczowy";"Protokół organizacyjny na telefonie: kara i Zakończ mecz";"Konto sędziego zapisowego albo głównego z obsady meczu, na telefonie.";"1. Menu → „Protokół organizacyjny” (telefon), wybierz mecz.
 2. Wpisz rozpoczęcie, jedną karę z osobą i momentem meczu.
 3. Kliknij „Zakończ mecz”, wpisz wynik.
@@ -39,30 +39,30 @@ PZB;"Dzień meczowy";"Podpisy po meczu i wynik w tabeli";"Mecz po „Zakończ me
 3. Otwórz stronę rozgrywek i tabelę.";"Sędzia główny podpisuje ostatni. Po podpisach obu sędziów wynik trafia do tabeli bez zatwierdzania przez biuro. Drużyna bez reakcji w 30 minut jest uznana za akceptującą.";Krytyczny;"Dzień meczowy na telefonie; Pilotaż"
 PZB;"Po meczu";"Protest drużyny w terminie";"Mecz po „Zakończ mecz”. Drużyna wpisała w protokole zamiar protestu.";"1. Jako klub@ otwórz protokół organizacyjny meczu → karta „Zgłaszam…” → protest → wpisz treść i złóż (złożone zgłoszenia są potem w menu „Zgłoszenia meczowe”).
 2. Jako wd@ (Wydział Dyscypliny) otwórz sprawę.
-3. Spróbuj złożyć protest po terminie (60 minut).";"Protest w terminie składa się i trafia do Wydziału Dyscypliny, powstaje kaucja w opłatach klubu. Po terminie system nie pozwala złożyć protestu.";Wysoki;"Pilotaż"
-PZB;"Po meczu";"Walkower";"Konto sędziego z obsady albo wydzial@. Mecz zaplanowany na dziś albo wcześniej (np. mecz pokazowy) — przycisk „Walkower” pojawia się w dniu meczu.";"1. Na karcie meczu „Walkower” → przyczyna „Drużyna nie stawiła się na mecz”.
-2. Jako wydzial@ rozstrzygnij z uzasadnieniem.";"Mecz ma wynik walkowerowy i status walkower. Klub ukarany ma należność za nieprzybycie. Wynik jest w tabeli.";Wysoki;"Pilotaż"
+3. Spróbuj złożyć protest po terminie (60 minut).";"Protest w terminie składa się i trafia do Wydziału Dyscypliny, powstaje kaucja w opłatach klubu. Po terminie system nie pozwala złożyć protestu.";Wysoki;Pilotaż
+PZB;"Po meczu";Walkower;"Konto sędziego z obsady albo wydzial@. Mecz zaplanowany na dziś albo wcześniej (np. mecz pokazowy) — przycisk „Walkower” pojawia się w dniu meczu.";"1. Na karcie meczu „Walkower” → przyczyna „Drużyna nie stawiła się na mecz”.
+2. Jako wydzial@ rozstrzygnij z uzasadnieniem.";"Mecz ma wynik walkowerowy i status walkower. Klub ukarany ma należność za nieprzybycie. Wynik jest w tabeli.";Wysoki;Pilotaż
 PZB;"Po meczu";"Mecz przerwany";"Mecz w trakcie (protokół rozpoczęty).";"1. W protokole „Mecz przerwany” → zmiana, wynik, powód (np. deszcz).
-2. Jako wydzial@ wybierz skutek (rozstrzygnięty albo dokończenie z nowym terminem).";"System podpowiada skutek według liczby rozegranych zmian. Dokończenie zachowuje kadrę meczową z pierwszego terminu.";Średni;"Pilotaż"
-PZB;"Terminy";"Zmiana terminu meczu z propozycją systemu";"Konta klub@ (BORSUKI, członek zarządu) i wydzial@. Mecz BORSUKI z KORMORANAMI za więcej niż 7 dni. Wniosek i odpowiedź składa zarząd klubu — klub2@ to kierownik drużyny KORMORANÓW, więc odpowiedzi nie złoży (to też warto sprawdzić).";"1. Jako klub@ złóż wniosek z 1–3 terminami.
+2. Jako wydzial@ wybierz skutek (rozstrzygnięty albo dokończenie z nowym terminem).";"System podpowiada skutek według liczby rozegranych zmian. Dokończenie zachowuje kadrę meczową z pierwszego terminu.";Średni;Pilotaż
+PZB;Terminy;"Zmiana terminu meczu z propozycją systemu";"Konta klub@ (BORSUKI, członek zarządu) i wydzial@. Mecz BORSUKI z KORMORANAMI za więcej niż 7 dni. Wniosek i odpowiedź składa zarząd klubu — klub2@ to kierownik drużyny KORMORANÓW, więc odpowiedzi nie złoży (to też warto sprawdzić).";"1. Jako klub@ złóż wniosek z 1–3 terminami.
 2. Za KORMORANY nikt nie odpowiada (klub2@ nie ma przycisku odpowiedzi).
-3. Jako wydzial@ otwórz wniosek po terminie odpowiedzi.";"Bez odpowiedzi przeciwnika wniosek przechodzi w „propozycję systemu” z terminem, który nie koliduje z innymi meczami i boiskiem. Wydział zatwierdza, sędziowie dostają nowe zapytanie o obsadę.";Wysoki;"Pilotaż"
-PZB;"Sędziowie";"Obsada z potwierdzeniem przez sędziego";"Konta kolegium@ i sedzia@. Mecz za więcej niż 3 dni bez obsady.";"1. Jako kolegium@ → „Obsada meczów” → zaproponuj sędziego i wyślij do potwierdzenia.
+3. Jako wydzial@ otwórz wniosek po terminie odpowiedzi.";"Bez odpowiedzi przeciwnika wniosek przechodzi w „propozycję systemu” z terminem, który nie koliduje z innymi meczami i boiskiem. Wydział zatwierdza, sędziowie dostają nowe zapytanie o obsadę.";Wysoki;Pilotaż
+PZB;Sędziowie;"Obsada z potwierdzeniem przez sędziego";"Konta kolegium@ i sedzia@. Mecz za więcej niż 3 dni bez obsady.";"1. Jako kolegium@ → „Obsada meczów” → zaproponuj sędziego i wyślij do potwierdzenia.
 2. Jako sedzia@ → „Moje obsady” (albo pulpit → „Mecze do potwierdzenia”) → Potwierdzam.
-3. Sprawdź, kiedy klub widzi skład sędziów.";"Sędzia dostaje powiadomienie, potwierdzenie wpisuje go do obsady. Klub widzi skład sędziów dopiero 48 godzin przed meczem.";Wysoki;"Pilotaż"
-PZB;"Sędziowie";"Delegacja z noclegiem i podpisem palcem";"Konto sedzia@ z rozegranym meczem i delegacją.";"1. Jako sedzia@ otwórz delegację, wpisz kilometry (system podpowiada) i nocleg z fakturą.
+3. Sprawdź, kiedy klub widzi skład sędziów.";"Sędzia dostaje powiadomienie, potwierdzenie wpisuje go do obsady. Klub widzi skład sędziów dopiero 48 godzin przed meczem.";Wysoki;Pilotaż
+PZB;Sędziowie;"Delegacja z noclegiem i podpisem palcem";"Konto sedzia@ z rozegranym meczem i delegacją.";"1. Jako sedzia@ otwórz delegację, wpisz kilometry (system podpowiada) i nocleg z fakturą.
 2. Podpisz palcem na telefonie.
 3. Jako wydzial@ sprawdź delegację i rozlicz.";"Nocleg do limitu jest zwracany według faktury, ponad limit czeka na decyzję biura. Podpis widać na dokumencie. Rozliczona delegacja trafia do wypłat do PIT.";Wysoki;"Pilotaż; Telefon"
-PZB;"Licencje";"Odnowienie licencji całej drużyny";"Konto klub@. Sezon planowany otwarty.";"1. Menu „Odnowienie licencji” → zaznacz zawodników → złóż paczkę.
-2. Jako wydzial@ → paczki wniosków → „Zatwierdź wnioski bez uwag”.";"Paczka ma numer i sumę opłat, klub ma należność. Wnioski z uwagami (badania, NNW, obywatelstwo) zostają do decyzji. Klub dostaje powiadomienie po rozpatrzeniu.";Wysoki;"Pilotaż"
-PZB;"Licencje";"Badania i NNW: wgranie skanu i weryfikacja";"Konta klub@ i wydzial@. Zawodnik bez aktualnych badań.";"1. Jako klub@ w kartotece → Badania → wgraj zdjęcie orzeczenia z datą ważności.
-2. Jako wydzial@ zweryfikuj albo poproś o lepsze zdjęcie.";"Prośba o lepsze zdjęcie wraca do klubu z powodem. Po weryfikacji zawodnik jest uprawniony (także na e-licencji). Otwarcie skanu przez biuro jest w rejestrze zdarzeń.";Wysoki;"Pilotaż"
-PZB;"Opłaty";"Opłaty klubu i przelew z kodem QR";"Konto klub@.";"1. Menu „Opłaty klubu” → otwórz należność.
+PZB;Licencje;"Odnowienie licencji całej drużyny";"Konto klub@. Sezon planowany otwarty.";"1. Menu „Odnowienie licencji” → zaznacz zawodników → złóż paczkę.
+2. Jako wydzial@ → paczki wniosków → „Zatwierdź wnioski bez uwag”.";"Paczka ma numer i sumę opłat, klub ma należność. Wnioski z uwagami (badania, NNW, obywatelstwo) zostają do decyzji. Klub dostaje powiadomienie po rozpatrzeniu.";Wysoki;Pilotaż
+PZB;Licencje;"Badania i NNW: wgranie skanu i weryfikacja";"Konta klub@ i wydzial@. Zawodnik bez aktualnych badań.";"1. Jako klub@ w kartotece → Badania → wgraj zdjęcie orzeczenia z datą ważności.
+2. Jako wydzial@ zweryfikuj albo poproś o lepsze zdjęcie.";"Prośba o lepsze zdjęcie wraca do klubu z powodem. Po weryfikacji zawodnik jest uprawniony (także na e-licencji). Otwarcie skanu przez biuro jest w rejestrze zdarzeń.";Wysoki;Pilotaż
+PZB;Opłaty;"Opłaty klubu i przelew z kodem QR";"Konto klub@.";"1. Menu „Opłaty klubu” → otwórz należność.
 2. Sprawdź dane do przelewu i kod QR.
-3. Jako wydzial@ zaksięguj wpłatę.";"Należność ma numer konta, tytuł NAL-… i kod QR do zeskanowania w aplikacji banku. Po zaksięgowaniu stan zmienia się na zapłacona.";Średni;"Pilotaż"
-PZB;"Uprawnienia";"Trener i rodzic nie widzą spraw klubu";"Konta trener@ i rodzic@.";"1. Jako trener@ spróbuj otworzyć opłaty klubu i wniosek o zmianę terminu meczu. Otwórz „Zgłoszenia meczowe” swojej drużyny.
-2. Jako rodzic@ otwórz kartotekę dziecka i spróbuj otworzyć innego zawodnika.";"Trener widzi i składa zgłoszenia po meczu swojej drużyny (protest, wniosek o ukaranie), ale nie widzi opłat klubu ani wniosku o zmianę terminu. Rodzic widzi tylko swoje dziecko. Odmowa pokazuje okno z informacją, kto to robi.";Krytyczny;"Pilotaż"
+3. Jako wydzial@ zaksięguj wpłatę.";"Należność ma numer konta, tytuł NAL-… i kod QR do zeskanowania w aplikacji banku. Po zaksięgowaniu stan zmienia się na zapłacona.";Średni;Pilotaż
+PZB;Uprawnienia;"Trener i rodzic nie widzą spraw klubu";"Konta trener@ i rodzic@.";"1. Jako trener@ spróbuj otworzyć opłaty klubu i wniosek o zmianę terminu meczu. Otwórz „Zgłoszenia meczowe” swojej drużyny.
+2. Jako rodzic@ otwórz kartotekę dziecka i spróbuj otworzyć innego zawodnika.";"Trener widzi i składa zgłoszenia po meczu swojej drużyny (protest, wniosek o ukaranie), ale nie widzi opłat klubu ani wniosku o zmianę terminu. Rodzic widzi tylko swoje dziecko. Odmowa pokazuje okno z informacją, kto to robi.";Krytyczny;Pilotaż
 PZB;"Strona rozgrywek";"Strona rozgrywek bez danych prywatnych";"Bez logowania, test-pzball.fullbase.pl → odnośnik „Strona rozgrywek”.";"1. Otwórz terminarz, tabelę, mecz z wynikiem, stronę zawodnika.
-2. Poszukaj daty urodzenia, PESEL-u, adresu.";"Wyniki tylko zatwierdzone, tabela z formą, statystyki. Nigdzie nie ma PESEL-u, daty urodzenia ani kontaktu. Strony PLB, PLSK i Pucharu pokazują tylko swoje rozgrywki.";Wysoki;"Pilotaż"
-PZB;"Teksty";"Spójność tekstów z Pomocą";"Dowolne konto. Menu konta → Pomoc.";"1. Otwórz trzy tematy Pomocy dla swojej roli i przejdź opisane kroki.
-2. Porównaj nazwy przycisków i pozycji menu z tekstem Pomocy.";"Kroki w Pomocy prowadzą do tych samych przycisków i pozycji menu. Zgłoś każdą różnicę nazwy, literówkę i niejasne zdanie jako „kosmetyka”.";Średni;"Pilotaż"
+2. Poszukaj daty urodzenia, PESEL-u, adresu.";"Wyniki tylko zatwierdzone, tabela z formą, statystyki. Nigdzie nie ma PESEL-u, daty urodzenia ani kontaktu. Strony PLB, PLSK i Pucharu pokazują tylko swoje rozgrywki.";Wysoki;Pilotaż
+PZB;Teksty;"Spójność tekstów z Pomocą";"Dowolne konto. Menu konta → Pomoc.";"1. Otwórz trzy tematy Pomocy dla swojej roli i przejdź opisane kroki.
+2. Porównaj nazwy przycisków i pozycji menu z tekstem Pomocy.";"Kroki w Pomocy prowadzą do tych samych przycisków i pozycji menu. Zgłoś każdą różnicę nazwy, literówkę i niejasne zdanie jako „kosmetyka”.";Średni;Pilotaż

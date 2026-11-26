@@ -1,0 +1,162 @@
+﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet;Zestawy
+PZB;"Mecze i wyniki";"Mecz się nie odbył (deszcz) — wpis w protokole i podpisy";"Konto sedzia@ (sędzia główny meczu na dziś albo meczu pokazowego); klub2@ — kierownik drużyny gości.";"1. Na telefonie zaloguj się jako sedzia@ i otwórz protokół organizacyjny meczu.
+2. Wybierz „Mecz się nie odbył”, powód „Boisko niezdatne do gry (pogoda)”, „czekano od” — godzina z terminarza, decyzja o odwołaniu — 2 godziny później, zaznacz obie drużyny obecne.
+3. Zapisz. Jako klub2@ otwórz ten sam protokół i kliknij „Akceptuję”.
+4. Jako sedzia@ podpisz wpis.";"Mecz ma status „przełożony”, wpis pokazuje obie godziny; drużyny i sędziowie dostają powiadomienie; brak przycisków protestu i wniosku o ukaranie; druk protokołu pokazuje wpis i podpisy. Biuro widzi mecz do ustalenia nowego terminu.";Wysoki;"Pilotaż; Telefon; Dzień meczowy na telefonie"
+PZB;"Mecze i wyniki";"Mecz się nie odbył — drużyna się nie stawiła, propozycja walkowera";"Konto sedzia@ jak wyżej.";"1. W protokole wybierz „Mecz się nie odbył”, powód „Drużyna nie stawiła się”, zaznacz obecną tylko drużynę gospodarzy.
+2. Zapisz i sprawdź propozycję systemu.
+3. Kliknij „Zgłoś walkower”. Jako wydzial@ otwórz Walkowery i rozstrzygnij.";"System tylko proponuje walkower (sam go nie wpisuje); po zgłoszeniu i decyzji biura mecz ma wynik walkowerowy, a klub, który się nie stawił, dostaje należność. Mecz bez zgłoszenia zostaje zaplanowany.";Wysoki;"Pilotaż; Dzień meczowy na telefonie"
+PZB;"Mecze i wyniki";"Ostrzeżenie 15 minut przed meczem o brakach";"Mecz pokazowy na dziś (Ustawienia → Tryb demonstracyjny); gospodarz bez wpisanego medyka; jedna drużyna niezweryfikowana.";"1. Ustaw mecz tak, by zaczynał się za ok. 15 minut (biuro: karta meczu → godzina).
+2. Jako sedzia@ otwórz protokół organizacyjny tego meczu; jako klub@ — powiadomienia.";"Na protokole ramka z brakami (medyk, drużyna bez weryfikacji); gospodarz i sędziowie mają powiadomienie; po uzupełnieniu medyka brak znika.";Średni;"Pilotaż; Telefon; Dzień meczowy na telefonie"
+PZB;"Mecze i wyniki";"Weryfikacja po meczu z pliku iScore";"Mecz z wgranym box score (Wgraj statystyki iScore); w pliku zawodnik, którego nie było w kadrze meczowej.";"1. Jako wydzial@ otwórz Rozbieżności weryfikacji → „Weryfikacja po meczu”.
+2. Znajdź mecz i rozbieżność „zawodnik spoza kadry”; wpisz wyjaśnienie, potem je cofnij.";"Rozbieżność jest na liście z rodzajem; „Wyjaśnione” zapisuje uwagę, cofnięcie przywraca; system nie zmienia wyniku sam.";Średni;Pilotaż
+PZB;"Mecze i wyniki";"Wniosek o ukaranie i skarga na sędziego po meczu";"Mecz zakończony w systemie dziś; klub@ — zarząd drużyny.";"1. Jako klub@ na protokole kliknij „Zgłaszam…” → „Wniosek o ukaranie”, wskaż zawodnika drużyny przeciwnej, opisz, złóż.
+2. Złóż też skargę na sędziego.
+3. Jako wydzial@ (albo wd@) rozstrzygnij wniosek, jako zarzad@ — skargę.";"Wniosek przyjęty w terminie 120 minut od „Zakończ mecz”, po terminie oznaczony; rozstrzygnięcie trafia do klubów komunikatem z potwierdzeniem przeczytania; kaucja jako należność klubu.";Średni;Pilotaż
+PZB;"Mecze i wyniki";"Awaryjny Transfer Medyczny (ATM)";"klub@ — zarząd; zawodnik z zatwierdzoną pozycją listy ligowej z wymaganymi występami.";"1. Na liście startowej kliknij „ATM” przy zawodniku, zaznacz zgodę zawodnika, wgraj dokument (PDF), złóż.
+2. Sprawdź należność ATM w Opłatach klubu.
+3. Jako zarzad@ (Zarząd związku) otwórz wniosek: najpierw bez wpłaty, potem po zaznaczeniu wpłaty — zatwierdź.
+4. Jako lekarz@ otwórz dokumentację; jako wydzial@ spróbuj ją otworzyć.";"Zgoda możliwa dopiero po wpłacie; zawodnik „wycofany w trybie ATM”; dokumentację otwiera Zarząd i lekarz (wpis w rejestrze), Wydział Gier — brak dostępu; klub widzi tylko liczbę plików.";Wysoki;Pilotaż
+PZB;"Licencje zawodników";"Biuro wnioskuje o licencję sędziego";"wydzial@; osoba bez klubu z kartoteką.";"1. Kartoteka osoby → Licencje → wniosek o licencję sędziego (dyscyplina), zatwierdź.
+2. Wygeneruj kod e-licencji i wyślij e-mailem.";"Licencja sędziego bez klubu; kod można wygenerować; e-licencja sędziego pokazuje zakres „Może sędziować”.";Średni;Pilotaż
+PZB;"Licencje zawodników";"Licencje z pliku (dane startowe biura)";"wydzial@; szablon z ekranu „Licencje z pliku”.";"1. Licencje → „Z pliku”: pobierz szablon, dopisz 3 wiersze (jeden z błędnym PESEL-em), wczytaj.
+2. Sprawdź podgląd, zapisz dobre wiersze.";"Podgląd pokazuje błąd przy złym wierszu, zapis tylko dobrych; numer licencji stały dla osoby; w rejestrze zdarzeń brak PESEL-u.";Średni;Pilotaż
+PZB;"Licencje zawodników";"Badania: prośba o lepsze zdjęcie";"klub@ wgrał skan badań zawodnika; wydzial@ weryfikuje.";"1. Jako wydzial@ otwórz badanie do weryfikacji → „Poproś klub o lepsze zdjęcie”, zaznacz powód.
+2. Jako klub@ otwórz powiadomienie, wgraj nowe zdjęcie w tym samym wpisie (na telefonie — zdjęcie z aparatu).";"Badanie „do poprawy”, zawodnik bez prawa gry z opisem; po nowym zdjęciu wpis wraca do kolejki biura; stary plik znika.";Wysoki;"Pilotaż; Telefon"
+PZB;"Licencje zawodników";"Badania z pliku (biuro)";wydzial@.;"1. Badania → „Z pliku”: szablon, wczytaj 2 wiersze, zapisz.";"Zapisany tylko wynik (bez rozpoznań); badania widać w kartotekach.";Niski;Pilotaż
+PZB;"Finanse i opłaty";"Polisy NNW z pliku od ubezpieczyciela";"klub@; drużyna z listą startową.";"1. NNW → „Z pliku”: wpisz polisę z kodem drużyny i drugą z PESEL-em zawodnika, wczytaj, zapisz.
+2. Jako wydzial@ zweryfikuj polisę.";"Polisa grupowa obejmuje całą listę drużyny; do weryfikacji biura; po weryfikacji warunek NNW spełniony.";Średni;Pilotaż
+PZB;Kluby;"Wypożyczenie zawodnika";"klub@ (BORSUKI) i klub2@ (KORMORANY).";"1. Jako klub2@ złóż wniosek o wypożyczenie zawodnika BORSUKÓW na sezon.
+2. Jako klub@ wyraź zgodę; jako wydzial@ zatwierdź.
+3. Otwórz stronę rozgrywek → Wypożyczenia.";"Zawodnik może grać w KORMORANACH w okresie wypożyczenia; ostrzeżenie przy klasie rozgrywek spoza zasad sezonu; wypożyczenie na publicznej liście.";Średni;Pilotaż
+PZB;Kluby;"Zmiana barw zawodnika bez PESEL-u (urodzony za granicą)";"Zawodnik innego klubu z zaznaczonym „bez PESEL-u” i stałym numerem licencji.";"1. Jako klub2@ → Zmiany barw → „Nowy wniosek” → zawodnik innego klubu bez PESEL-u: numer licencji i data urodzenia.
+2. Spróbuj z błędną datą.";"Trafienie tylko przy zgodnym numerze i dacie; zła data — „nie znaleziono” bez ujawniania danych; wyszukiwanie w rejestrze zdarzeń.";Średni;Pilotaż
+PZB;Kluby;"Prośba zawodnika o zmianę barw";"rodzic@ albo konto zawodnika (osoba).";"1. Jako rodzic@ → Zmiana barw → poproś klub docelowy.
+2. Jako zarząd klubu docelowego wejdź z prośby w wniosek.";"Prośba trafia do klubu docelowego; wniosek formalny dalej składa klub.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Rozgrywki i terminarze";"Kreator ligi: kalendarz, udział klubów i format";"wydzial@; sezon planowany otwarty.";"1. Rozgrywki → klasa D1 → Kreator: kalendarz (od–do, dni gry, daty zablokowane, terminy rezerwowe).
+2. Krok „Potwierdzenie udziału”: wyślij prośbę do klubów z terminem.
+3. Jako klub@ → „Udział w rozgrywkach” → potwierdź z nazwą drużyny; jako klub2@ — rezygnacja z powodem.
+4. W kreatorze krok Format: dwie grupy, dwumecze, play-off.";"Odpowiedzi klubów widoczne w kreatorze („odpowiedziało N z M”); Format podpowiada tylko kluby potwierdzone; wersja robocza niewidoczna publicznie.";Wysoki;Pilotaż
+PZB;"Rozgrywki i terminarze";"Kreator ligi: terminy klubów, daty sporne, generator i publikacja";"Klasa po kroku Format.";"1. Wyślij prośbę o terminy; jako klub@ zgłoś datę „u siebie nie gramy” z powodem.
+2. Jako wydzial@ rozstrzygnij datę sporną (Kreator sezonu albo Daty sporne).
+3. Wygeneruj warianty terminarza, wybierz wariant, przestaw jeden mecz (sprawdzenie na żywo).
+4. Wyślij do uwag klubów, rozpatrz uwagę, zatwierdź i opublikuj.";"Generator nie układa meczu w dacie „klub nie gra”; ostrzeżenia na żywo; po publikacji mecze widać w terminarzu, na stronie rozgrywek i w kalendarzu klubów; przed publikacją — nigdzie.";Wysoki;Pilotaż
+PZB;"Rozgrywki i terminarze";"Kolejność w tabeli i decyzja Wydziału przy remisie";"Rozgrywki z dwiema drużynami o tym samym bilansie.";"1. Rozgrywki → „Kolejność w tabeli”: sprawdź kryteria sezonu, zmień kolejność kryteriów (z podstawą, jeśli zasady przyjęte).
+2. Na karcie rozgrywek przy remisie wpisz decyzję Wydziału.";"Miejsca się nie powtarzają; „wymaga decyzji Wydziału” przy remisie po ostatnim meczu; zasady jawne pod tabelą i na stronie rozgrywek.";Średni;Pilotaż
+PZB;"Rozgrywki i terminarze";"Schemat awansów play-off i zatwierdzenie pary";"Faza grupowa D1 zakończona (dane pokazowe).";"1. Kreator → Play-off: wzór PLB D1, propozycja par z tabel.
+2. Zatwierdź parę, zmień gospodarza z powodem.";"Mecze serii powstają według układu; drużyna z remisu w tabeli nie wchodzi bez decyzji; zwycięzca przechodzi dalej po wynikach.";Średni;Pilotaż
+PZB;"Sezony i ustawienia";"Kreator sezonu: zasady, cennik, przyjęcie uchwałą";"wydzial@ (albo admin@); sezon planowany.";"1. Menu „Kreator sezonu”: przejdź kroki 1–6; w „Zasady sezonu” zatwierdź działy ustawień.
+2. Cennik opłat: zmień kwotę.
+3. Przyjmij zasady uchwałą (numer i data).
+4. Spróbuj potem zmienić ustawienie sezonu bez podstawy, potem z podstawą „od jutra” i komunikatem do klubów.";"Po przyjęciu zmiana tylko z podstawą; zmiana od jutra czeka do dnia; kluby dostają komunikat „pole: było → jest” z potwierdzeniem przeczytania.";Wysoki;Pilotaż
+PZB;"Sezony i ustawienia";"Zamknięcie sezonu i blokada zapisu";"admin@; środowisko testowe (operacja zmienia sezon!) — tylko po uzgodnieniu.";"1. Sezony → „Zamknij sezon”: przeczytaj podgląd i ostrzeżenia.
+2. Po zamknięciu spróbuj zmienić listę startową zamkniętego sezonu.
+3. Przywróć sezon do edycji z powodem.";"Zamknięcie otwiera następny sezon (jeśli nie było planowanego); w zamkniętym sezonie zapis zablokowany z komunikatem; przywrócenie w rejestrze.";Niski;Pilotaż
+PZB;"Sędziowie i obsada";"Wytyczne obsady przyjęte decyzją Wydziału";"kolegium@ (Wydział ds. Sędziów).";"1. Sędziowie → Wytyczne obsady: zmień najdłuższy dojazd i kolejność kryteriów, przyjmij decyzją.
+2. Otwórz obsadę meczu i sprawdź grupy kandydatów.";"Kandydaci w grupach „Polecani / Poza wytycznymi / Niezalecani” według nowych wytycznych; zmiana w historii.";Średni;Pilotaż
+PZB;"Sędziowie i obsada";"Zakres sędziego i podpowiedź z klasy";kolegium@.;"1. Profil sędziego → Zakres rozgrywek: dodaj zakres z podpowiedzi klasy i wyjątek „bez uprawnień” dla jednych rozgrywek.
+2. Jako sedzia@ otwórz e-licencję sędziego.";"E-licencja pokazuje „Może sędziować” z klasami; sędzia poza zakresem jest w obsadzie „tylko świadomie” z ostrzeżeniem.";Średni;Pilotaż
+PZB;"Sędziowie i obsada";"Bilet zamiast kilometrówki";"sedzia@ z podpisaną obsadą i delegacją do podpisu.";"1. W delegacji wybierz bilet (kolej), kwota, zdjęcie biletu.
+2. Jako kolegium@ → Koszty sędziów → bilety: przyjmij do limitu.";"Do decyzji podpis czeka; po przyjęciu bilet zastępuje kilometry w pokwitowaniu i PIT.";Średni;"Pilotaż; Telefon"
+PZB;"Sędziowie i obsada";"Koszty sędziów: należność klubu i rozliczenie";"wydzial@; dwumecz z pełnym składem.";"1. Sędziowie → Koszty sędziów: nalicz należność za zawody.
+2. Jako klub@ → Koszty sędziów: sprawdź kwoty bez nazwisk sędziów.
+3. Po podpisaniu delegacji — „Rozlicz”.";"Należność raz, termin — ostatni dzień roboczy przed meczem; rozliczenie koryguje kwotę do kosztu z delegacji.";Średni;Pilotaż
+PZB;"Sędziowie i obsada";"Roczne oświadczenie sędziego o funkcjach w klubie";sedzia@.;"1. Moje sędziowanie → Oświadczenie: wpisz funkcję trenera w klubie, zapisz.
+2. Jako kolegium@ otwórz obsadę meczu tego klubu.";"Sędzia z oświadczeniem ma konflikt interesów z klubem w obsadzie.";Niski;Pilotaż
+PZB;"Sędziowie i obsada";"Kandydat na sędziego z formularza publicznego";"Bez logowania; potem kolegium@.";"1. Otwórz publiczny formularz kandydata na sędziego, wyślij zgłoszenie z e-mailem.
+2. Potwierdź link z e-maila.
+3. Jako kolegium@ → Kandydaci na sędziów: przyjmij kandydata (stopień, kurs).";"Kandydat potwierdzony linkiem; przyjęcie zakłada kartotekę, wniosek o licencję i zaproszenie do konta.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Finanse i opłaty";"Cennik opłat sezonu i progi dat";"wydzial@; klub@.";"1. Cennik opłat: zmień stawkę licencji zawodnika w progu po dacie.
+2. Jako klub@ otwórz Cennik opłat (tylko odczyt).";"Zmiana zapisana tylko tam, gdzie inna; klub widzi cennik bez formularza; należności naliczone wcześniej się nie zmieniają.";Średni;Pilotaż
+PZB;"Finanse i opłaty";"Wyciąg z banku: wpłaty klubów";"wydzial@ (albo admin@); plik CSV z tytułem NAL-<numer>.";"1. Należności → „Wyciąg z banku”: wczytaj plik, sprawdź dopasowanie po numerze i kwocie.
+2. Zatwierdź dopasowane, jedną wpłatę przypisz ręcznie; wczytaj plik drugi raz.";"Wpłaty zaksięgowane raz (drugi raz — bez dubli); należności zapłacone; klub widzi wpłatę.";Średni;Pilotaż
+PZB;"Finanse i opłaty";"Składka członkowska klubu w związku";"wydzial@; klub@.";"1. Kluby → karta klubu: składka opłacona do; finanse — zestawienie.
+2. Jako klub@ sprawdź swoją kartę.";"Data składki na karcie i liście klubów; klub widzi swoją, innych — nie.";Niski;Pilotaż
+PZB;"Sprawy i kary";"Zawieszenie ręczne i uchylenie";"wd@ albo wydzial@.";"1. Kartoteka zawodnika → Zawieszenia: wpisz zawieszenie na 2 mecze w rozgrywkach.
+2. Sprawdź protokół uprawnień najbliższego meczu jego drużyny i e-licencję.
+3. Uchyl zawieszenie z powodem.";"Zawodnik nieuprawniony z powodem „zawieszenie”; e-licencja „Nieuprawniony”; po uchyleniu wraca prawo gry.";Wysoki;Pilotaż
+PZB;"Sprawy i kary";"Raport sędziego do Wydziału Dyscypliny";"sedzia@ z obsadą meczu zakończonego.";"1. Na protokole „Raport do Wydziału Dyscypliny”: wskaż osobę z listy, opisz.
+2. Jako wd@ otwórz sprawę.";"Sprawa w toku u Wydziału; klub nie widzi sprawy w toku, tylko orzeczenia.";Średni;Pilotaż
+PZB;"Sprawy i kary";"Rejestr orzeczeń do Excela i orzeczenie do druku";wd@.;"1. Sprawy dyscyplinarne → eksport rejestru.
+2. Otwórz orzeczenie → druk/PDF.";"Eksport bez uzasadnień i opisów; wpis eksportu w rejestrze; dokument ze składem orzekającym.";Niski;Pilotaż
+PZB;"Strona rozgrywek / redakcja";"Osobne strony PLB, PLSK i Pucharu Polski";"Bez logowania.";"1. Otwórz adresy /plb, /plsk i /pp.
+2. Na każdej sprawdź terminarz, tabele, statystyki i kluby; na PLSK — napisy „Zawodniczki”, „Seniorki”.";"Każda strona tylko ze swoimi rozgrywkami; formy żeńskie tylko na PLSK; stopka z linkami do pozostałych stron.";Wysoki;"Pilotaż; Telefon"
+PZB;"Strona rozgrywek / redakcja";"Kalendarz kibica, RSS i widżet na stronę klubu";"Bez logowania; potem redaktor@.";"1. Na stronie drużyny „Dodaj mecze do kalendarza” — dodaj do kalendarza w telefonie.
+2. Otwórz kanał RSS aktualności.
+3. Jako redaktor@ → Gotowość strony → skopiuj kod widżetu, otwórz adres widżetu.";"Kalendarz z meczami drużyny (odwołane jako odwołane); RSS z opublikowanymi tekstami; widżet bez formularzy, działa w ramce.";Niski;"Pilotaż; Telefon"
+PZB;"Strona rozgrywek / redakcja";"Strona zawodnika i statystyki na stronie";"Bez logowania; redaktor@.";"1. Otwórz stronę zawodnika z tabeli statystyk.
+2. Jako redaktor@ → Statystyki na stronie: ukryj kolumnę OPS w młodzieży.";"Zawodnik z liczbami sezonu i miejscem w lidze, bez daty urodzenia i PESEL-u; ukryta kolumna znika tylko w młodzieży.";Średni;Pilotaż
+PZB;"Strona rozgrywek / redakcja";"Szkice tekstów pisane przez system";"redaktor@; kolejka z kompletem zatwierdzonych wyników.";"1. Redakcja strony: otwórz szkic „Podsumowanie kolejki”, popraw i opublikuj.";"Szkic powstaje sam i czeka na redaktora; nic nie trafia na stronę bez publikacji.";Niski;"Poza pilotażem; Zamrożone"
+PZB;Kluby;"Start klubu: link konta i władze klubu";"admin@; nowy klub z adresem e-mail (w demo poczta do pliku — link z podglądu).";"1. Kluby → Dodaj klub z e-mailem → link do konta klubu.
+2. Otwórz link, załóż konto (imię, nazwisko, funkcja, hasło).
+3. Przejdź Start klubu: władze klubu (zarząd), pokaz „Co klub zrobi w systemie”.";"Do końca startu klub widzi tylko kroki startu; po zakończeniu — pełne menu; biuro widzi stan startu klubów.";Wysoki;Pilotaż
+PZB;"Członkowie / osoby";"Osoby z pliku (dane startowe klubu)";klub@.;"1. Osoby → „Osoby z pliku”: szablon, 3 osoby (dorosły, niepełnoletni z opiekunem, osoba bez PESEL-u z datą i płcią), wczytaj, zapisz.";"Podgląd z zamaskowanym PESEL-em; data i płeć z PESEL-u; opiekun dopisany; osoba z innego klubu — błąd bez ujawniania danych.";Wysoki;Pilotaż
+PZB;"Członkowie / osoby";"Zaproszenie kierownika do konta";klub@.;"1. Kartoteka osoby → „Zaproś do systemu” z rolą kierownika.
+2. Otwórz link z e-maila, ustaw hasło, zaloguj się.";"Konto z rolą kierownika w klubie; zaproszenie na liście „Zaproszenia” jako przyjęte; link drugi raz nie działa.";Średni;Pilotaż
+PZB;"Członkowie / osoby";"Zgłoszenie zmiany danych przez osobę";"rodzic@ (dziecko w kartotece).";"1. Kartoteka dziecka → zakładka Dane → zgłoś zmianę telefonu.
+2. Jako klub@ → Zmiany danych → przyjmij.";"Kartoteka zmieniona dopiero po przyjęciu; rodzic dostaje powiadomienie; PESEL-u nie da się zgłosić.";Niski;Pilotaż
+PZB;"Powiadomienia i ankiety";"Zapytanie do klubów i ankieta z wynikami";"Dane pokazowe: „Stan klubu przed sezonem” i „Pilotaż — gotowość klubu”.";"1. Jako klub2@ → Ankiety → wypełnij zapytanie (sprawdź podpowiedź „W systemie: N”).
+2. Jako wydzial@ otwórz wyniki obu ankiet, eksport do Excela.
+3. Utwórz nową ankietę z szablonu i pytaniem warunkowym, otwórz ją.";"Jedna odpowiedź na klub; wyniki z liczbami; pytanie warunkowe pokazuje się tylko przy wybranej odpowiedzi; powiadomienie do adresatów.";Średni;Pilotaż
+PZB;"Powiadomienia i ankiety";"Komunikat biura do klubów w rozgrywkach";wydzial@.;"1. Komunikaty → nowy: grupa „Kluby w rozgrywkach”, potwierdzenie przeczytania z terminem, załącznik PDF, opublikuj.
+2. Jako klub@ przeczytaj i potwierdź; jako wydzial@ sprawdź listę odbiorców i eksport.";"Odbiorcy z migawki; klub bez konta — e-mail na adres klubu; po potwierdzeniu przypomnienia znikają.";Średni;Pilotaż
+PZB;"Rozgrywki i terminarze";"Spotkanie w kalendarzu z zaproszonymi";wydzial@.;"1. Kalendarz → „Dodaj wydarzenie” → spotkanie, zaproś kolegium@ i klub@.
+2. Jako kolegium@ odpowiedz „przyjmuję”; jako wydzial@ zmień godzinę, potem odwołaj.";"Zaproszenie, zmiana i odwołanie — powiadomienia; odpowiedzi widoczne u zapraszającego.";Niski;Pilotaż
+PZB;Kluby;"Obiekty i boiska: weryfikacja boiska";"admin@ albo komisja licencyjna; klub@.";"1. Obiekty i boiska → obiekt klubu: dodaj boisko, godziny dostępności, wyłączenie.
+2. Wpisz weryfikację boiska z datą ważności przed meczem.
+3. Otwórz kartę meczu na tym boisku.";"Ostrzeżenie na karcie meczu o wygasłej weryfikacji i kolizji; klub zmienia tylko swoje obiekty.";Niski;Pilotaż
+PZB;"Panel administracyjny";"Role klubów wspólne dla wszystkich klubów";"admin@; klub@.";"1. Role i uprawnienia: odbierz trenerowi „listy startowe” dla wszystkich klubów.
+2. Jako trener@ otwórz listę startową.
+3. Jako klub@ otwórz Role i uprawnienia.";"Trener bez zapisu listy, okno „Brak dostępu” z informacją, kto to robi; klub nie zmienia ról w związku.";Średni;Pilotaż
+PZB;"Logowanie i konta";"Odcisk palca (klucz dostępu) i nowe urządzenie";"Dowolne konto; telefon z czytnikiem.";"1. Zaloguj się hasłem na telefonie — w oknie „Logować się odciskiem palca?” wybierz „Tak”.
+2. Wyloguj się i zaloguj odciskiem palca.
+3. Zaloguj się na drugim urządzeniu; otwórz Moje konto → Bezpieczeństwo.";"Logowanie odciskiem bez hasła; e-mail o nowym urządzeniu; lista urządzeń z „Usuń”; „Wyloguj na innych urządzeniach” działa.";Wysoki;"Pilotaż; Telefon"
+PZB;"Logowanie i konta";"Kto oglądał moje dane";"rodzic@ i klub@.";"1. Jako klub@ otwórz kartotekę dziecka rodzica.
+2. Jako rodzic@ → Moje konto → Bezpieczeństwo → „Kto oglądał moje dane”.";"Wpis z rolą i klubem, bez nazwiska pracownika; własne wejścia rodzica się nie liczą.";Niski;Pilotaż
+PZB;"Logowanie i konta";"Pomoc w systemie dla każdej roli";"Kolejno: klub@, klub2@, sedzia@, wydzial@, kolegium@, rodzic@.";"1. Menu konta → Pomoc: przejrzyj tematy, kliknij „Przejdź” przy dwóch.";"Każda rola widzi tylko swoje tematy; „Przejdź” otwiera właściwy ekran; treść zgodna z ekranem (zgłoś każdą różnicę).";Średni;"Pilotaż; Telefon"
+PZB;"Aplikacja mobilna";"E-licencja po angielsku";"Telefon z aktywną e-licencją.";"1. Karta → Więcej → język English.
+2. Pokaż kod sędziemu do skanu.";"Teksty po angielsku, nazwy własne bez zmian; kod QR ten sam i przechodzi skan.";Niski;"Pilotaż; Telefon"
+PZB;"Aplikacja mobilna";"Powiadomienia push na telefonie";"Konto sedzia@ na telefonie z zainstalowaną aplikacją.";"1. Moje konto → Telefon / Powiadomienia: włącz powiadomienia push.
+2. Jako kolegium@ wyślij sędziemu zapytanie o obsadę.";"Na telefonie powiadomienie; dotknięcie otwiera sprawę; liczba na ikonie aplikacji.";Średni;"Pilotaż; Telefon"
+PZB;Turnieje;"Mistrzostwa: skład na turniej i weryfikacja komisji";"Dane pokazowe: Mistrzostwa Polski Kadetów U15 (przed turniejem); klub@ z drużyną.";"1. Jako klub@ → turniej → Skład: dodaj zawodników, sprawdź warunki gry.
+2. Jako komisja techniczna (admin@) zweryfikuj osoby i zatwierdź drużynę.
+3. Wydrukuj listę do podpisu.";"Po terminie składów zmienia tylko komisja; osoba nieuprawniona oznaczona; lista do druku z podpisami.";Średni;"Poza pilotażem; Telefon"
+PZB;Turnieje;"Mistrzostwa: weryfikacja składu bez sieci";"Konto komisji technicznej; telefon; zawodnicy z e-licencją.";"1. Otwórz „Weryfikacja składu” mistrzostw, pobierz turniej.
+2. Włącz tryb samolotowy, zeskanuj e-licencję zawodnika.
+3. Wyłącz tryb samolotowy.";"Skan działa bez sieci; decyzja wysyła się po powrocie sieci; drużyna zweryfikowana.";Średni;"Poza pilotażem; Telefon"
+PZB;Turnieje;"Harmonogram, akceptacja związku i raport";"Turniej klubu w kalendarzu związku.";"1. Organizator układa harmonogram (warianty), wysyła do akceptacji.
+2. Związek akceptuje; organizator wpisuje wyniki i klasyfikację, wysyła.
+3. Otwórz raport dzienny i końcowy, dyplomy.";"Publicznie tylko zaakceptowany harmonogram; po zatwierdzeniu wyników poprawia tylko związek; raport i dyplomy do druku.";Niski;"Poza pilotażem"
+PZB;"Kadra narodowa";"Narzędzia sztabu i skład na zawody";"admin@ (albo selekcjoner).";"1. Kadra narodowa → kadra → Narzędzia sztabu: notatka o zawodniku, obserwowany spoza kadry.
+2. Zgrupowanie → skład na zawody z limitem, ogłoś skład.
+3. Jako klub@ sprawdź „Powołania do kadry”; jako rodzic@ — „Moja reprezentacja”.";"Notatki widzi tylko sztab tej kadry; ogłoszony skład — powiadomienia; klub widzi tylko swoich zawodników.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Organy i komisje";"Pismo do klubów przez system";"wydzial@ (Kancelaria).";"1. Kancelaria → „Pismo do klubów przez system”: treść, adresaci — kluby w rozgrywkach, termin odpowiedzi, wyślij.
+2. Jako klub@ → Pisma ze związkiem: otwórz pismo, odpowiedz.";"Numer pisma nadany przy wysłaniu; doręczenie i odpowiedź widoczne u związku; treść po wysłaniu niezmienna.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Organy i komisje";"Pismo z firmówką do druku";wydzial@.;"1. Kancelaria → nowe pismo pisane w systemie z firmówką, zatwierdź numer, druk.";"Wersja robocza bez numeru; po numerze treść zablokowana; druk A4 z firmówką.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Organy i komisje";"Rozmowy grup związku (komunikator)";"kolegium@ i sedzia@.";"1. Rozmowy → rozmowa „Sędziowie”: kolegium@ pisze ważną wiadomość ze zdjęciem.
+2. Jako sedzia@ na telefonie: przeczytaj, zareaguj, spróbuj napisać.
+3. Wycisz rozmowę; napisz wiadomość do kolegium@ (rozmowa dwóch osób).";"Sędzia czyta, nie pisze w rozmowie sędziów; chmurka push; „Przeczytane”; wyciszona rozmowa bez liczby w menu; kluby nie mają rozmów.";Niski;"Poza pilotażem; Zamrożone; Telefon"
+PZB;"Organy i komisje";"Posiedzenie zarządu z głosowaniem na telefonach";"Moduł posiedzeń włączony (demo); prezes@, sekretarz@, czlonek@.";"1. Jako admin@ zwołaj posiedzenie Zarządu kreatorem (porządek, materiały, zaproszeni).
+2. Rozpocznij, obecność, głosowanie na telefonach — członkowie głosują.
+3. Zakończ, protokół do druku; głosowanie obiegowe uchwały.";"Kworum liczone; uchwała z numerem w rejestrze; tajne — bez imiennych głosów; protokół z wynikami.";Niski;"Poza pilotażem; Zamrożone; Telefon"
+PZB;"Organy i komisje";"Walny zjazd: delegaci klubów i rejestracja na sali";"Moduł walne włączony; delegat@.";"1. Jako klub@ → „Delegaci na walny zjazd”: wpisz delegata.
+2. Jako admin@ otwórz ekran rejestracji na rzutnik; delegat@ skanuje kod telefonem i potwierdza.
+3. Głosowanie jawne w mandatach.";"Kworum i obecni bez nazwisk na ekranie; kod zmienia się co kilka sekund; uchwała w rejestrze.";Niski;"Poza pilotażem; Zamrożone; Telefon"
+PZB;"Organy i komisje";"Komisja Rewizyjna: kontrola i zalecenie";"kr@ (Komisja Rewizyjna).";"1. Komisja Rewizyjna → nowa kontrola, ustalenia, zalecenie z terminem.
+2. Jako zarzad@ odpowiedz na zalecenie; jako kr@ oceń odpowiedź.";"Zalecenie z odpowiedzią „czeka na ocenę komisji”; wgląd komisji tylko do odczytu; wpisy w rejestrze.";Niski;"Poza pilotażem; Zamrożone"
+PZB;Szkolenia;"Kurs z płatnikiem, egzaminem i zaświadczeniem";"admin@; klub@.";"1. Szkolenia → nowy kurs trenerów z opłatą „do wyboru”, otwórz zapisy.
+2. Jako klub@ zapisz trenera (płaci klub); drugą osobę — płaci uczestnik.
+3. Obecność, wynik egzaminu, zakończ kurs, zaświadczenie.";"Należność klubu tylko za płacącego klub; uczestnik ma dane do przelewu; zaświadczenie z numerem; stopień w kartotece.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Organy i komisje";"Przepisy: nowa wersja i uwagi klubów";"admin@; klub@.";"1. Przepisy → nowa wersja regulaminu, uwagi klubów do terminu.
+2. Jako klub@ dodaj uwagę.
+3. Przyjmij wersję, porównaj z poprzednią.";"Porównanie słowo po słowie; przyjęta wersja opublikowana na stronie rozgrywek.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Organy i komisje";"Dotacje: projekt, koszty z systemu, sprawozdanie";admin@.;"1. Dotacje → nowy projekt z budżetem i harmonogramem.
+2. Koszty: dodaj podpowiedź z delegacji sędziów.
+3. Wskaźniki: przelicz; sprawozdanie do druku i Excela.";"Ten sam koszt nie wchodzi dwa razy; wskaźniki z danych systemu; sprawozdanie bez nazwisk sędziów.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Panel administracyjny";"Asystent: szkic komunikatu";"admin@; asystent z kluczem w konfiguracji (bez klucza — podpowiedź).";"1. Asystent → napisz szkic komunikatu do klubów.";"Szkic do poprawy, nic się nie zapisuje samo; procent puli; bez klucza — jasna informacja.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Członkowie / osoby";"Rozwój zawodnika: testy i karta";"admin@ albo trener kadry.";"1. Rozwój zawodnika → wynik testu, ocena umiejętności.
+2. Karta zawodnika do druku.";"Porównanie z rówieśnikami tej samej płci; karta bez danych o zdrowiu.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Członkowie / osoby";"Ochrona małoletnich w związku";"admin@; klub@.";"1. Ochrona małoletnich → osoby związku pracujące z dziećmi: wpis weryfikacji.
+2. Jako klub@ → Standardy ochrony: wgraj standardy klubu.";"Wpisy tylko biura; klub tylko standardy, bez danych z rejestru i KRK.";Niski;"Poza pilotażem; Zamrożone"
+PZB;Kluby;"Import danych z klubów (paczka)";"admin@; paczka eksportu z FULLBASE dla klubów.";"1. Import z klubów → wczytaj paczkę, sprawdź osoby, zatwierdź.";"Osoby dopasowane po PESEL-u; nic nie zapisuje się bez zatwierdzenia.";Niski;"Poza pilotażem; Zamrożone"
+PZB;"Panel administracyjny";"Zamrożone i użycie modułów";"Konto operatora FULLBASE.";"1. Operator → Zamrożone: obie zakładki.";"Lista zamrożonych z „co by odmroziło”, stan w instalacji i w pilotażu, użycie z 8 tygodni.";Niski;"Poza pilotażem"
