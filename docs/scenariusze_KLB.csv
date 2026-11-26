@@ -1,0 +1,117 @@
+﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet;Zestawy
+KLB;"Logowanie i konta";"Logowanie każdej roli i menu";"Konta demo (hasło w menedżerze haseł).";"1. Zaloguj się kolejno: prezes@, sekretarz@, skarbnik@, trener@, rodzic@, zawodnik@.
+2. Na każdym obejrzyj menu i pulpit.";"Prezes i sekretarz — pełne menu zarządu; skarbnik — finanse, bez planów treningów; trener — swoje sekcje, zajęcia, treningi; rodzic — dzieci, zajęcia, opłaty, dokumenty; zawodnik — swoje sprawy.";Krytyczny;"Szybki test; Pełna regresja"
+KLB;"Logowanie i konta";"Rodzic nie widzi innych dzieci";rodzic@.;"1. Otwórz kartotekę swojego dziecka.
+2. Zmień w adresie numer osoby na inny.";"Kartoteka cudzego dziecka — brak dostępu; rodzic widzi tylko swoje dzieci.";Krytyczny;"Szybki test; Pełna regresja"
+KLB;"Logowanie i konta";"Zaproszenie rodzica do konta";"sekretarz@; dziecko bez konta rodzica.";"1. Kartoteka dziecka → „Zaproś do systemu” (opiekun z e-mailem).
+2. Otwórz link, ustaw hasło, zaloguj się.";"Konto rodzica z dostępem do dziecka; link drugi raz nie działa.";Wysoki;"Szybki test; Pełna regresja"
+KLB;"Logowanie i konta";"Odcisk palca na telefonie";"Dowolne konto, telefon z czytnikiem.";"1. Zaloguj się hasłem — „Logować się odciskiem palca?” → Tak.
+2. Wyloguj i zaloguj odciskiem.";"Logowanie bez hasła; nowe urządzenie w Moje konto → Bezpieczeństwo.";Średni;"Pełna regresja; Telefon"
+KLB;"Ludzie / członkowie";"Dodanie zawodnika z rodzicem";sekretarz@.;"1. Osoby → „Dodaj osobę”: dziecko 10 lat, sekcja, rodzic z telefonem.
+2. Zakładka Rodzice: osoba upoważniona do odbioru, samodzielny powrót.";"Kartoteka z członkostwem w sekcji i rodzicem; data i płeć z PESEL-u; odbiór widoczny u trenera.";Krytyczny;"Szybki test; Pełna regresja"
+KLB;"Ludzie / członkowie";"Osoby z pliku";sekretarz@.;"1. Osoby → „Osoby z pliku”: szablon, 5 osób z grupą i opiekunem, jeden błędny wiersz.
+2. Zapisz dobre wiersze.";"Podgląd z błędem przy wierszu, PESEL zamaskowany; osoby w grupach; opiekunowie dopisani.";Wysoki;"Pełna regresja"
+KLB;"Ludzie / członkowie";"Pełnoletność: rodzic traci wgląd";"Zawodnik, który skończył 18 lat (albo zmiana daty w danych testowych).";"1. Jako rodzic@ otwórz kartotekę pełnoletniego dziecka.
+2. Jako zawodnik — „Pokaż moje dane” rodzicowi.";"Bez zgody dorosłego rodzic nie widzi danych; po „Pokaż” — widzi; cofnięcie działa.";Średni;"Pełna regresja"
+KLB;"Ludzie / członkowie";"Zgłoszenie zmiany danych przez rodzica";"rodzic@; sekretarz@.";"1. Rodzic: kartoteka dziecka → zgłoś zmianę telefonu.
+2. Sekretarz: Zmiany danych → przyjmij.";"Zmiana dopiero po przyjęciu; rodzic dostaje powiadomienie.";Średni;"Pełna regresja"
+KLB;"Ludzie / członkowie";"Ewidencja członków stowarzyszenia i uchwała zbiorcza";"sekretarz@ (moduł ewidencja członków).";"1. Ewidencja członków: kandydaci, uchwała zbiorcza o przyjęciu.
+2. Podejmij uchwałę na posiedzeniu zarządu.";"Po podjęciu uchwały członkowie z numerami; poniżej 16 lat — wymagana zgoda rodzica.";Niski;"Pełna regresja; Zamrożone"
+KLB;"Sekcje i zespoły";"Sekcja, zespół i trener";prezes@.;"1. Sekcje i zespoły → „Dodaj sekcję” (dyscyplina), „Dodaj zespół”.
+2. Dopisz trenera i zawodników.
+3. Zarchiwizuj zespół.";"Trener widzi tylko swoje grupy; archiwum kończy przypisania, historia zostaje.";Wysoki;"Szybki test; Pełna regresja"
+KLB;"Sekcje i zespoły";"Trener widzi tylko swoje sekcje";trener@.;"1. Otwórz Osoby i Zajęcia.
+2. Spróbuj otworzyć zawodnika innej sekcji adresem.";"Tylko zawodnicy swoich sekcji; inne — brak dostępu.";Krytyczny;"Szybki test; Pełna regresja"
+KLB;"Kalendarz i treningi";"Zajęcia: seria, „Będzie / Nie będzie”, obecność";"trener@ i rodzic@.";"1. Trener: Zajęcia → nowa seria (dzień tygodnia, obiekt).
+2. Rodzic: „Nie będzie” przy dziecku.
+3. Trener po zajęciach — lista obecności.";"Deklaracja rodzica widoczna u trenera; obecność zapisana; frekwencja liczy się.";Krytyczny;"Szybki test; Pełna regresja; Telefon"
+KLB;"Kalendarz i treningi";"Obecność na telefonie bez sieci";"trener@ na telefonie.";"1. Otwórz obecność na telefonie, pobierz zajęcia.
+2. Tryb samolotowy, zaznacz obecność.
+3. Włącz sieć.";"Obecność wysyła się po powrocie sieci; „Kto odbiera” przy dziecku.";Wysoki;"Pełna regresja; Telefon"
+KLB;"Kalendarz i treningi";"Grafik obiektów i kolizja";prezes@.;"1. Dodaj zajęcia na tym samym boisku w tym samym czasie co inna grupa.
+2. Obecność → Grafik obiektów.";"Ostrzeżenie o kolizji (zapis i tak możliwy); grafik tygodnia z godzinami i kosztem wynajmu.";Średni;"Pełna regresja"
+KLB;"Kalendarz i treningi";"Plan treningu z biblioteki i dziennik zajęć";trener@.;"1. Treningi: plan zajęć z blokami z biblioteki ćwiczeń.
+2. Po zajęciach dziennik: realizacja bloków, notatka.";"Plan przy zajęciach; ostrzeżenie, gdy plan dłuższy niż zajęcia; realizacja w raporcie trenera.";Średni;"Pełna regresja; Zamrożone"
+KLB;"Kalendarz i treningi";"Zagrania i znaki drużyny (zeszyt zawodnika)";"trener@; zawodnik@.";"1. Trener: zagranie z kilkoma klatkami, udostępnij grupie; zestaw znaków.
+2. Zawodnik: zeszyt zagrań i quiz znaków na telefonie.";"Zawodnik widzi tylko udostępnione; quiz działa na telefonie.";Niski;"Pełna regresja; Zamrożone; Telefon"
+KLB;"Kalendarz i treningi";"Rozwój zawodnika: wysiłek, testy, karta";"trener@; rodzic@.";"1. Rodzic: „Jak było na treningu?” — wysiłek 1–10.
+2. Trener: wynik testu, karta zawodnika do druku.";"Obciążenie tygodnia dopiero po 3 tygodniach danych; porównanie z rówieśnikami tej samej płci.";Niski;"Pełna regresja; Zamrożone"
+KLB;"Kalendarz i treningi";"Ligi i mistrzostwa drużyny klubu";prezes@.;"1. Rozgrywki → Ligi i mistrzostwa: dodaj ligę i mecz „do zajęć”.
+2. Rodzic: „Mecze drużyny”.
+3. Skład na mecz i publikacja.";"Mecz w kalendarzu z „Będzie / Nie będzie”; rodzic widzi terminarz i wyniki.";Średni;"Pełna regresja"
+KLB;"Kalendarz i treningi";"Turniej organizowany przez klub";prezes@.;"1. Turnieje → nowe zawody: drużyny, harmonogram (warianty), wyniki.
+2. Otwórz publiczną stronę turnieju.";"Harmonogram na boiska bez kolizji; strona publiczna bez danych osób, odświeża się.";Niski;"Pełna regresja"
+KLB;"Kalendarz i treningi";"Obozy i półkolonie: zapis i płatności";"prezes@; rodzic@.";"1. Obozy: nowy wyjazd z zaliczką.
+2. Rodzic zapisuje dziecko; zarząd kwalifikuje.
+3. Karta kwalifikacyjna do druku.";"Należności zaliczki i dopłaty; karta bez danych o zdrowiu; lista rezerwowa przy limicie.";Średni;"Pełna regresja"
+KLB;"Kalendarz i treningi";"Nabór online";"Bez logowania; sekretarz@.";"1. Publiczny formularz naboru: zgłoś dziecko, potwierdź e-mailem.
+2. Sekretarz: przyjmij zgłoszenie do grupy.";"Po przyjęciu kartoteka dziecka, opiekun i zaproszenie rodzica; bez PESEL-u w formularzu.";Średni;"Pełna regresja"
+KLB;"Kalendarz i treningi";"Kontuzje i badania sportowe";"trener@; rodzic@.";"1. Rodzic zgłasza przerwę dziecka.
+2. Trener: dopuszczenie po kontuzji; badania sportowe — data ważności.";"Plakietka w kartotece i na liście; bez opisu urazu; przypomnienie przed końcem badań.";Średni;"Pełna regresja"
+KLB;"Składki i wpłaty";"Naliczenie składek i zniżka rodzinna";skarbnik@.;"1. Składki → naliczenie miesięczne dla sekcji (zniżka dla rodzeństwa).
+2. Sprawdź podgląd i zapisz.";"Raty dla członków; rodzeństwo ze zniżką; ostrzeżenie o osobach spoza ewidencji przy składce członkowskiej.";Krytyczny;"Szybki test; Pełna regresja"
+KLB;"Składki i wpłaty";"Rodzic: jeden przelew za wszystko";"rodzic@ z dwiema zaległościami.";"1. Opłaty → „Jeden przelew za wszystko” (kod QR).
+2. Skarbnik wczytuje wyciąg z tytułem RODZ-.";"Wpłata rozbita na należności od najstarszej; nadwyżka na ostatniej; wyciąg drugi raz bez dubli.";Wysoki;"Pełna regresja; Telefon"
+KLB;"Składki i wpłaty";"Gotówka u trenera";"trener@; skarbnik@.";"1. Trener: Gotówka od rodziców → przyjmij wpłatę.
+2. Skarbnik: odbierz gotówkę od trenera.";"Rodzic widzi wpłatę od razu; skarbnik widzi „u trenera” do odbioru.";Średni;"Pełna regresja"
+KLB;"Składki i wpłaty";"Płatności online od rodziców (konfiguracja)";"prezes@ (administrator).";"1. Płatności od rodziców: wybierz operatora i wpisz dane testowe.
+2. Rodzic: „Zapłać online”.";"Przekierowanie do bramki w trybie testowym; po powrocie wpłata raz; klucz zapisany zaszyfrowany.";Średni;"Pełna regresja"
+KLB;"Składki i wpłaty";"Biuro prezesa: koszt z paragonem";"trener@; prezes@; skarbnik@.";"1. Trener: zgłoś koszt z zdjęciem paragonu (telefon).
+2. Prezes zatwierdza; skarbnik wypłaca.";"Paragon widzi zgłaszający, prezes i skarbnik; koszt w „Przychody i koszty”.";Średni;"Pełna regresja; Telefon; Zamrożone"
+KLB;"Składki i wpłaty";"Sponsorzy: umowa, świadczenia, raport";prezes@.;"1. Sponsorzy: firma, umowa z pakietu, świadczenia, wpływ.
+2. Raport dla firmy i podziękowanie do druku.";"Numer umowy SP/…; przypomnienie o końcu umowy; raport z okresu umowy.";Niski;"Pełna regresja; Zamrożone"
+KLB;"Składki i wpłaty";"Dotacje: projekt i sprawozdanie";prezes@.;"1. Dotacje: projekt z budżetem, koszty, wskaźniki z obecności.
+2. Sprawozdanie do druku.";"Wskaźniki z danych systemu; ten sam koszt nie wchodzi dwa razy.";Niski;"Pełna regresja; Zamrożone"
+KLB;Komunikacja;"Komunikator grupy i ogłoszenie z potwierdzeniem";"trener@; rodzic@.";"1. Trener: ogłoszenie z potwierdzeniem i terminem w rozmowie zespołu.
+2. Rodzic: przeczytaj, potwierdź, odpowiedz (telefon).";"Lista potwierdzeń u trenera; chmurka push; kontakty uczestników niewidoczne; niepełnoletni bez dostępu.";Krytyczny;"Szybki test; Pełna regresja; Telefon"
+KLB;Komunikacja;"Komunikat zarządu do rodziców";sekretarz@.;"1. Komunikaty: grupa rodzice sekcji, potwierdzenie przeczytania, opublikuj.
+2. Lista odbiorców i eksport.";"Przypomnienia dla nieczytających; rodzic potwierdza raz.";Wysoki;"Pełna regresja"
+KLB;Komunikacja;"Ankieta anonimowa";"sekretarz@; rodzice.";"1. Ankiety → z szablonu „Jak oceniasz zajęcia?” (anonimowa), otwórz.
+2. Kilku rodziców odpowiada.";"Wyniki dopiero od 5 odpowiedzi; brak informacji, kto co odpowiedział.";Niski;"Pełna regresja"
+KLB;Komunikacja;"Wolontariat: dyżur i kod na miejscu";"prezes@; wolontariusz z kontem.";"1. Grafik dyżurów: dyżur z miejscami, kod na miejsce.
+2. Wolontariusz zapisuje się i skanuje kod na początku i końcu.";"Godziny dyżuru zapisane jako wykonane; zaświadczenie z godzinami.";Niski;"Pełna regresja; Telefon"
+KLB;Dokumenty;"Dokument do potwierdzenia kodem z e-maila";"sekretarz@; rodzic@.";"1. Dokumenty: regulamin dla grupy z potwierdzeniem.
+2. Rodzic potwierdza za dziecko kodem.
+3. Nowa wersja z ponowną akceptacją.";"Potwierdzenie konkretnej wersji z datą; lista brakujących potwierdzeń; osoba bez konta — link.";Wysoki;"Szybki test; Pełna regresja"
+KLB;Dokumenty;"Ochrona małoletnich: standardy i weryfikacje";prezes@.;"1. Ochrona małoletnich: standardy klubu, weryfikacja osoby z kadry.
+2. Ponowienie.";"Lista osób z kadry ze stanem; dokument standardów do druku.";Średni;"Pełna regresja"
+KLB;Dokumenty;"Kancelaria klubu: pismo przychodzące";"sekretarz@ (moduł wyłączony na start — włącz w Ustawienia → Moduły).";"1. Kancelaria: pismo z gminy ze skanem i terminem.
+2. Odpowiedź.";"Numer w rejestrze klubu; przypomnienie o terminie; skan tylko dla zarządu.";Niski;"Pełna regresja"
+KLB;"Sprzęt i obiekty";"Sprzęt: wydanie i zwrot";"prezes@; trener@.";"1. Sprzęt: pozycja w ewidencji, wydaj zawodnikowi.
+2. Zwrot.";"Zakładka „Sprzęt” w kartotece zawodnika; nie wydasz więcej sztuk niż jest.";Niski;"Pełna regresja; Zamrożone"
+KLB;"Sprzęt i obiekty";"Obiekty klubu i dostępność";prezes@.;"1. Obiekty: obiekt z boiskami, godziny, wyłączenie (wakacje).
+2. Zajęcia w czasie wyłączenia.";"Ostrzeżenie o niedostępności obiektu.";Niski;"Pełna regresja"
+KLB;Raporty;"Kokpit zarządu i raport miesięczny";prezes@.;"1. Kokpit: wskaźniki miesiąca z porównaniem.
+2. Raport miesięczny do druku.";"Zmiany do poprzedniego miesiąca i roku; „Czeka na decyzję”.";Średni;"Pełna regresja"
+KLB;Raporty;"Lista obecności dla gminy i zaświadczenie";"skarbnik@ albo trener@.";"1. Obecność → raport dla gminy, lista do druku i Excel.
+2. Zaświadczenie o uczestnictwie.";"Mieszkańcy gminy z kartoteki, bez adresów; lista z podpisami.";Średni;"Pełna regresja"
+KLB;Raporty;"Ewidencja godzin trenerów";"trener@; prezes@.";"1. Trener: godziny z zajęć w miesiącu, złóż.
+2. Prezes: zatwierdź ze stawką albo zwróć.";"Zatwierdzony miesiąc z kwotą w „Przychody i koszty”.";Niski;"Pełna regresja"
+KLB;Raporty;"Komisja Rewizyjna: kontrola i zalecenie";"kr@demo.fullbase.pl (włącz moduł w Ustawienia → Moduły, jeśli wyłączony).";"1. Nowa kontrola, zalecenie z terminem.
+2. Prezes odpowiada; komisja ocenia.";"Wgląd komisji tylko do odczytu; zalecenie „czeka na ocenę komisji”.";Niski;"Pełna regresja"
+KLB;Raporty;"Posiedzenie zarządu i walne zebranie";prezes@.;"1. Posiedzenie: kreator, głosowanie na telefonach.
+2. Walne: lista uprawnionych z ewidencji, rejestracja kodem, uchwała.";"Kworum, uchwała z numerem; protokół do druku.";Niski;"Pełna regresja; Telefon; Zamrożone"
+KLB;"Strona klubu";"Strona WWW klubu i widżet";"prezes@ (pakiet Klub Pro).";"1. Redakcja strony WWW: wpis, publikacja.
+2. Otwórz stronę klubu i widżet terminarza.";"Strona tylko po publikacji; widżet bez formularzy; pakiet niższy — strona niedostępna.";Niski;"Pełna regresja; Zamrożone"
+KLB;"Strona klubu";"Strefa kibica: wynik na żywo i typowanie";"trener@; kibic bez konta w systemie.";"1. Trener: wynik na żywo z telefonu.
+2. Kibic: konto e-mailem, typ wyniku, głos na zawodnika meczu.";"Wynik odświeża się u kibica; tylko profile za zgodą; grafika meczu do pobrania.";Niski;"Pełna regresja; Zamrożone; Telefon"
+KLB;"Strona klubu";"Akademia: quiz od trenera";"trener@; zawodnik@.";"1. Trener przypisuje quiz grupie.
+2. Zawodnik rozwiązuje na telefonie.";"Wynik u trenera; zawodnik widzi swój postęp.";Niski;"Pełna regresja; Zamrożone; Telefon"
+KLB;Ustawienia;"Moduły: włączenie modułu wyłączonego na start";"prezes@ (administrator) nowego klubu.";"1. Ustawienia → Moduły: grupa „Do włączenia”.
+2. Włącz Ankiety; wyłącz z powrotem.";"Moduł pojawia się w menu po włączeniu; dane po wyłączeniu zostają; moduły z wyższego pakietu — „W wyższym pakiecie”.";Wysoki;"Szybki test; Pełna regresja"
+KLB;Ustawienia;"Role i uprawnienia klubu";"prezes@ (administrator).";"1. Role i uprawnienia: nadaj skarbnikowi plany treningów.
+2. Zaloguj się jako skarbnik@.";"Skarbnik widzi Treningi dopiero po nadaniu; zmiana w rejestrze.";Średni;"Pełna regresja"
+KLB;Ustawienia;"Zamówienie i kreator startu klubu";"Bez logowania; potem operator@.";"1. Zamów FULLBASE na stronie (kreator doboru pakietu).
+2. Przejdź kreator startu: umowa powierzenia, dane, sekcje, „Co chcesz robić”.";"Klient w okresie próbnym; do końca kreatora tylko jego kroki; moduły z niewybranych zadań wyłączone, moduły wyłączone na start — wyłączone.";Krytyczny;"Szybki test; Pełna regresja; Operator"
+KLB;Ustawienia;"Zmiana pakietu i rezygnacja w panelu";"prezes@ (administrator), klub po okresie próbnym.";"1. Płatności za FULLBASE → Pakiet: wyższy (dopłata), potem niższy (od następnego okresu).
+2. Zakończenie usługi: rezygnacja i cofnięcie.";"Wyższy od razu z rachunkiem dopłaty; niższy zaplanowany; rezygnacja ze skutkiem po opłaconym okresie.";Wysoki;"Pełna regresja; Operator"
+KLB;Ustawienia;"Eksport danych klubu";"prezes@ (administrator).";"1. Eksport danych klubu → pobierz.";"Plik z danymi klubu, bez danych innych klubów; działa też w trybie tylko do odczytu.";Wysoki;"Pełna regresja"
+KLB;Ustawienia;"Panel operatora: klient, faktura, wyciąg";operator@demo.fullbase.pl.;"1. Klienci: karta klienta, wystaw fakturę.
+2. Sprzedaż → Wyciąg z banku: zapłata z tytułu FB/…
+3. Mój dzień: karta „Zadzwoń do klubu”.";"Zapłata przedłuża okres usługi; „Mój dzień” pokazuje klub kończący próbę z telefonem; operator nie widzi danych osób klubu.";Średni;"Pełna regresja; Operator; Telefon"
+KLB;"Aplikacja mobilna";"Instalacja na telefonie i powiadomienia push";"rodzic@ na Androidzie i iPhonie.";"1. Moje konto → Telefon → zainstaluj.
+2. Włącz powiadomienia; trener wysyła ogłoszenie.";"Ikona na ekranie; chmurka; dotknięcie otwiera sprawę.";Wysoki;"Pełna regresja; Telefon"
+KLB;"Aplikacja mobilna";"Menu i tabele na małym ekranie";"Telefon 360 px; prezes@, rodzic@.";"1. Przejdź po pozycjach menu.
+2. Otwórz listy osób, składek, zajęć.";"Nic nie wystaje w bok; przyciski min. 44 px; tabele przewijają się w karcie.";Średni;"Pełna regresja; Telefon"
+KLB;"Aplikacja mobilna";"„Udostępnij do FULLBASE” (zdjęcie paragonu)";"trener@ na Androidzie z zainstalowaną aplikacją.";"1. W galerii: Udostępnij → FULLBASE.
+2. Wybierz „Zgłoś koszt”.";"Plik trafia do formularza kosztu.";Niski;"Pełna regresja; Telefon"
