@@ -784,12 +784,12 @@ if ($action === 'export') {
     $o = fopen('php://output', 'w');
     fwrite($o, "\xEF\xBB\xBF");
     $safe = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v; // ochrona przed formułami w Excelu
-    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Powód odrzucenia', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Sugestia naprawy', 'Środowisko', 'Wersja', 'Naprawiono w wersji', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';');
+    fputcsv($o, ['Numer', 'Projekt', 'Rodzaj', 'Tytuł', 'Obszar', 'Waga', 'Priorytet', 'Status', 'Powód odrzucenia', 'Opis', 'Kroki do odtworzenia problemu', 'Oczekiwane', 'Sugestia naprawy', 'Środowisko', 'Wersja', 'Naprawiono w wersji', 'Rola w testowanym systemie', 'Konto testowe', 'Urządzenie', 'Przeglądarka', 'Adres', 'Rozwiązanie', 'Zgłosił', 'Naprawia', 'Utworzono', 'Zmieniono', 'Zamknięto'], ';', '"', '');
     foreach ($rows as $r) {
         $r = cast_issue($r);
         fputcsv($o, array_map($safe, [$r['key'], $r['project_name'], QA_KINDS[$r['kind']] ?? $r['kind'], $r['title'], $r['module'], QA_SEVERITIES[$r['severity']] ?? '', QA_PRIORITIES[$r['priority']] ?? '', QA_STATUSES[$r['status']] ?? '', (QA_REJECT_REASONS[$r['reject_reason']] ?? '') . ($r['duplicate_of'] ? ' ' . ($r['duplicate_key'] ?? '#' . $r['duplicate_of']) : ''),
             $r['description'], $r['steps'], $r['expected'], $r['suggestion'], $r['environment'], $r['version'], $r['fixed_in'], $r['sys_role'], $r['sys_account'], $r['device'], $r['browser'], $r['url'], $r['solution'],
-            $r['reporter_name'], $r['assignee_name'] ?? '', $r['created_at'], $r['updated_at'], $r['closed_at'] ?? '']), ';');
+            $r['reporter_name'], $r['assignee_name'] ?? '', $r['created_at'], $r['updated_at'], $r['closed_at'] ?? '']), ';', '"', '');
     }
     exit;
 }
