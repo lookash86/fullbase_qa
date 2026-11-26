@@ -6,7 +6,7 @@ Dane dostępu do serwera: Bitwarden, wpis „Serwer OVH”.
 | Co | Stan |
 |---|---|
 | Adres | https://testy.fullbase.pl (certyfikat Let's Encrypt, http → https) |
-| Kod | commit `b2dd6e2` (stan z komputera; na GitHub wysyła właściciel) |
+| Kod | commit `6972b6f` (stan z komputera, ten sam kod aplikacji; na GitHub wysyła właściciel) |
 | Katalog | `/srv/fullbase-qa/app` (właściciel `fb-qa`), `data/` i `config.php` poza `public/` — z WWW 404 |
 | Baza | SQLite `data/qa.sqlite` |
 | PHP | pula `fb-qa` (`/etc/php/8.5/fpm/pool.d/fb-qa.conf`), upload 12M, post 64M, log `/srv/fullbase-qa/logi/php.log` |
