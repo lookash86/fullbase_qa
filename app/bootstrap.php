@@ -142,3 +142,5 @@ function qa_password_problem(string $pw): ?string
     if (mb_strlen($pw) > 200) return 'Hasło jest za długie.';
     return null;
 }
+
+require __DIR__ . '/zestawy.php';
