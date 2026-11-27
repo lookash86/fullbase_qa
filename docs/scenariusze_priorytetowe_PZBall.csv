@@ -53,7 +53,7 @@ PZB;"Mecze i wyniki";Walkower;"Konto biura; drużyna nie stawiła się.";"1. Ust
 PZB;"Mecze i wyniki";"Import statystyk z iScore";"Konto biura; zakończony mecz; plik iScore (CSV) z box score.";"1. Mecz → import pliku iScore.
 2. Sprawdź „Weryfikacja po meczu” (box score a kadra meczowa).";"Statystyki zawodników zaimportowane; rozbieżności (zawodnik spoza kadry, nieuprawniony) są pokazane.";Krytyczny;"Pełna regresja; Dzień meczowy; Pilotaż"
 PZB;"Strona rozgrywek / redakcja";"Wynik pojawia się na stronie rozgrywek";"Mecz z zatwierdzonym wynikiem; brak logowania.";"1. Otwórz stronę rozgrywek → Start i Terminarz.
-2. Otwórz stronę meczu.";"Wynik widoczny w „ostatnich wynikach”, w terminarzu i na stronie meczu — bez ręcznego przepisywania.";Krytyczny;"Pełna regresja; Dzień meczowy; Pilotaż"
+2. Otwórz stronę meczu.";"Wynik widoczny w „Ostatnie wyniki”, w terminarzu i na stronie meczu — bez ręcznego przepisywania.";Krytyczny;"Pełna regresja; Dzień meczowy; Pilotaż"
 PZB;"Strona rozgrywek / redakcja";"Tabela na stronie rozgrywek po nowym wyniku";"Jak wyżej.";"1. Zapisz miejsca w tabeli przed wynikiem.
 2. Po zatwierdzeniu wyniku odśwież Tabele.";"Tabela i wykres miejsc uwzględniają nowy wynik.";Krytyczny;"Pełna regresja; Dzień meczowy; Pilotaż"
 PZB;"Strona rozgrywek / redakcja";"Statystyki zawodników po imporcie iScore";"Mecz z zaimportowanym plikiem iScore.";"1. Strona rozgrywek → Statystyki.

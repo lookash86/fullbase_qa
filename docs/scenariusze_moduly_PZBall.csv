@@ -1,6 +1,6 @@
 ﻿Projekt;Obszar;Tytuł;"Warunki wstępne";Kroki;"Oczekiwany wynik";Priorytet;Zestawy
 PZB;"Mecze i wyniki";"Mecz się nie odbył (deszcz) — wpis w protokole i podpisy";"Konto sedzia@ (sędzia główny meczu na dziś albo meczu pokazowego); klub2@ — kierownik drużyny gości.";"1. Na telefonie zaloguj się jako sedzia@ i otwórz protokół organizacyjny meczu.
-2. Wybierz „Mecz się nie odbył”, powód „Boisko niezdatne do gry (pogoda)”, „czekano od” — godzina z terminarza, decyzja o odwołaniu — 2 godziny później, zaznacz obie drużyny obecne.
+2. Wybierz „Mecz się nie odbył”, powód „Warunki atmosferyczne (deszcz, burza)”, „czekano od” — godzina z terminarza, decyzja o odwołaniu — 2 godziny później, zaznacz obie drużyny obecne.
 3. Zapisz. Jako klub2@ otwórz ten sam protokół i kliknij „Akceptuję”.
 4. Jako sedzia@ podpisz wpis.";"Mecz ma status „przełożony”, wpis pokazuje obie godziny; drużyny i sędziowie dostają powiadomienie; brak przycisków protestu i wniosku o ukaranie; druk protokołu pokazuje wpis i podpisy. Biuro widzi mecz do ustalenia nowego terminu.";Wysoki;"Pilotaż; Telefon; Dzień meczowy na telefonie"
 PZB;"Mecze i wyniki";"Mecz się nie odbył — drużyna się nie stawiła, propozycja walkowera";"Konto sedzia@ jak wyżej.";"1. W protokole wybierz „Mecz się nie odbył”, powód „Drużyna nie stawiła się”, zaznacz obecną tylko drużynę gospodarzy.
@@ -9,7 +9,7 @@ PZB;"Mecze i wyniki";"Mecz się nie odbył — drużyna się nie stawiła, propo
 PZB;"Mecze i wyniki";"Ostrzeżenie 15 minut przed meczem o brakach";"Mecz pokazowy na dziś (Ustawienia → Tryb demonstracyjny); gospodarz bez wpisanego medyka; jedna drużyna niezweryfikowana.";"1. Ustaw mecz tak, by zaczynał się za ok. 15 minut (biuro: karta meczu → godzina).
 2. Jako sedzia@ otwórz protokół organizacyjny tego meczu; jako klub@ — powiadomienia.";"Na protokole ramka z brakami (medyk, drużyna bez weryfikacji); gospodarz i sędziowie mają powiadomienie; po uzupełnieniu medyka brak znika.";Średni;"Pilotaż; Telefon; Dzień meczowy na telefonie"
 PZB;"Mecze i wyniki";"Weryfikacja po meczu z pliku iScore";"Mecz z wgranym box score (Wgraj statystyki iScore); w pliku zawodnik, którego nie było w kadrze meczowej.";"1. Jako wydzial@ otwórz Rozbieżności weryfikacji → „Weryfikacja po meczu”.
-2. Znajdź mecz i rozbieżność „zawodnik spoza kadry”; wpisz wyjaśnienie, potem je cofnij.";"Rozbieżność jest na liście z rodzajem; „Wyjaśnione” zapisuje uwagę, cofnięcie przywraca; system nie zmienia wyniku sam.";Średni;Pilotaż
+2. Znajdź mecz i rozbieżność „Zagrał bez sprawdzenia przez sędziego”; wpisz wyjaśnienie, potem je cofnij.";"Rozbieżność jest na liście z rodzajem; „Wyjaśnione” zapisuje uwagę, cofnięcie przywraca; system nie zmienia wyniku sam.";Średni;Pilotaż
 PZB;"Mecze i wyniki";"Wniosek o ukaranie i skarga na sędziego po meczu";"Mecz zakończony w systemie dziś; klub@ — zarząd drużyny.";"1. Jako klub@ na protokole kliknij „Zgłaszam…” → „Wniosek o ukaranie”, wskaż zawodnika drużyny przeciwnej, opisz, złóż.
 2. Złóż też skargę na sędziego.
 3. Jako wydzial@ (albo wd@) rozstrzygnij wniosek, jako zarzad@ — skargę.";"Wniosek przyjęty w terminie 120 minut od „Zakończ mecz”, po terminie oznaczony; rozstrzygnięcie trafia do klubów komunikatem z potwierdzeniem przeczytania; kaucja jako należność klubu.";Średni;Pilotaż
@@ -37,7 +37,7 @@ PZB;"Rozgrywki i terminarze";"Kreator ligi: kalendarz, udział klubów i format"
 2. Krok „Potwierdzenie udziału”: wyślij prośbę do klubów z terminem.
 3. Jako klub@ → „Udział w rozgrywkach” → potwierdź z nazwą drużyny; jako klub2@ — rezygnacja z powodem.
 4. W kreatorze krok Format: dwie grupy, dwumecze, play-off.";"Odpowiedzi klubów widoczne w kreatorze („odpowiedziało N z M”); Format podpowiada tylko kluby potwierdzone; wersja robocza niewidoczna publicznie.";Wysoki;Pilotaż
-PZB;"Rozgrywki i terminarze";"Kreator ligi: terminy klubów, daty sporne, generator i publikacja";"Klasa po kroku Format.";"1. Wyślij prośbę o terminy; jako klub@ zgłoś datę „u siebie nie gramy” z powodem.
+PZB;"Rozgrywki i terminarze";"Kreator ligi: terminy klubów, daty sporne, generator i publikacja";"Klasa po kroku Format.";"1. Wyślij prośbę o terminy; jako klub@ zgłoś datę „Nie możemy tylko u siebie” z powodem.
 2. Jako wydzial@ rozstrzygnij datę sporną (Kreator sezonu albo Daty sporne).
 3. Wygeneruj warianty terminarza, wybierz wariant, przestaw jeden mecz (sprawdzenie na żywo).
 4. Wyślij do uwag klubów, rozpatrz uwagę, zatwierdź i opublikuj.";"Generator nie układa meczu w dacie „klub nie gra”; ostrzeżenia na żywo; po publikacji mecze widać w terminarzu, na stronie rozgrywek i w kalendarzu klubów; przed publikacją — nigdzie.";Wysoki;Pilotaż
@@ -55,7 +55,7 @@ PZB;"Sezony i ustawienia";"Zamknięcie sezonu i blokada zapisu";"admin@; środow
 PZB;"Sędziowie i obsada";"Wytyczne obsady przyjęte decyzją Wydziału";"kolegium@ (Wydział ds. Sędziów).";"1. Sędziowie → Wytyczne obsady: zmień najdłuższy dojazd i kolejność kryteriów, przyjmij decyzją.
 2. Otwórz obsadę meczu i sprawdź grupy kandydatów.";"Kandydaci w grupach „Polecani / Poza wytycznymi / Niezalecani” według nowych wytycznych; zmiana w historii.";Średni;Pilotaż
 PZB;"Sędziowie i obsada";"Zakres sędziego i podpowiedź z klasy";kolegium@.;"1. Profil sędziego → Zakres rozgrywek: dodaj zakres z podpowiedzi klasy i wyjątek „bez uprawnień” dla jednych rozgrywek.
-2. Jako sedzia@ otwórz e-licencję sędziego.";"E-licencja pokazuje „Może sędziować” z klasami; sędzia poza zakresem jest w obsadzie „tylko świadomie” z ostrzeżeniem.";Średni;Pilotaż
+2. Jako sedzia@ otwórz e-licencję sędziego.";"E-licencja pokazuje „Może sędziować” z klasami; sędzia poza zakresem jest w obsadzie w grupie „Poza wytycznymi” z ostrzeżeniem.";Średni;Pilotaż
 PZB;"Sędziowie i obsada";"Bilet zamiast kilometrówki";"sedzia@ z podpisaną obsadą i delegacją do podpisu.";"1. W delegacji wybierz bilet (kolej), kwota, zdjęcie biletu.
 2. Jako kolegium@ → Koszty sędziów → bilety: przyjmij do limitu.";"Do decyzji podpis czeka; po przyjęciu bilet zastępuje kilometry w pokwitowaniu i PIT.";Średni;"Pilotaż; Telefon"
 PZB;"Sędziowie i obsada";"Koszty sędziów: należność klubu i rozliczenie";"wydzial@; dwumecz z pełnym składem.";"1. Sędziowie → Koszty sędziów: nalicz należność za zawody.
@@ -95,7 +95,7 @@ PZB;"Członkowie / osoby";"Zaproszenie kierownika do konta";klub@.;"1. Kartoteka
 2. Otwórz link z e-maila, ustaw hasło, zaloguj się.";"Konto z rolą kierownika w klubie; zaproszenie na liście „Zaproszenia” jako przyjęte; link drugi raz nie działa.";Średni;Pilotaż
 PZB;"Członkowie / osoby";"Zgłoszenie zmiany danych przez osobę";"rodzic@ (dziecko w kartotece).";"1. Kartoteka dziecka → zakładka Dane → zgłoś zmianę telefonu.
 2. Jako klub@ → Zmiany danych → przyjmij.";"Kartoteka zmieniona dopiero po przyjęciu; rodzic dostaje powiadomienie; PESEL-u nie da się zgłosić.";Niski;Pilotaż
-PZB;"Powiadomienia i ankiety";"Zapytanie do klubów i ankieta z wynikami";"Dane pokazowe: „Stan klubu przed sezonem” i „Pilotaż — gotowość klubu”.";"1. Jako klub2@ → Ankiety → wypełnij zapytanie (sprawdź podpowiedź „W systemie: N”).
+PZB;"Powiadomienia i ankiety";"Zapytanie do klubów i ankieta z wynikami";"Dane pokazowe: „Stan klubu przed sezonem” i „Pilotaż 2027 — gotowość klubu”.";"1. Jako klub2@ → Ankiety → wypełnij zapytanie (sprawdź podpowiedź „W systemie: N”).
 2. Jako wydzial@ otwórz wyniki obu ankiet, eksport do Excela.
 3. Utwórz nową ankietę z szablonu i pytaniem warunkowym, otwórz ją.";"Jedna odpowiedź na klub; wyniki z liczbami; pytanie warunkowe pokazuje się tylko przy wybranej odpowiedzi; powiadomienie do adresatów.";Średni;Pilotaż
 PZB;"Powiadomienia i ankiety";"Komunikat biura do klubów w rozgrywkach";wydzial@.;"1. Komunikaty → nowy: grupa „Kluby w rozgrywkach”, potwierdzenie przeczytania z terminem, załącznik PDF, opublikuj.

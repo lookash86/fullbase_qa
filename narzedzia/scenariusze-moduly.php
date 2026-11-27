@@ -19,7 +19,7 @@ $dodaj = function (string $obszar, string $tytul, string $warunki, array $kroki,
 /* ---------------- Dzień meczowy — nowe ---------------- */
 $dodaj('Mecze i wyniki', 'Mecz się nie odbył (deszcz) — wpis w protokole i podpisy', 'Konto sedzia@ (sędzia główny meczu na dziś albo meczu pokazowego); klub2@ — kierownik drużyny gości.', [
     'Na telefonie zaloguj się jako sedzia@ i otwórz protokół organizacyjny meczu.',
-    'Wybierz „Mecz się nie odbył”, powód „Boisko niezdatne do gry (pogoda)”, „czekano od” — godzina z terminarza, decyzja o odwołaniu — 2 godziny później, zaznacz obie drużyny obecne.',
+    'Wybierz „Mecz się nie odbył”, powód „Warunki atmosferyczne (deszcz, burza)”, „czekano od” — godzina z terminarza, decyzja o odwołaniu — 2 godziny później, zaznacz obie drużyny obecne.',
     'Zapisz. Jako klub2@ otwórz ten sam protokół i kliknij „Akceptuję”.',
     'Jako sedzia@ podpisz wpis.',
 ], 'Mecz ma status „przełożony”, wpis pokazuje obie godziny; drużyny i sędziowie dostają powiadomienie; brak przycisków protestu i wniosku o ukaranie; druk protokołu pokazuje wpis i podpisy. Biuro widzi mecz do ustalenia nowego terminu.', 'Wysoki', [P, T, D]);
@@ -34,7 +34,7 @@ $dodaj('Mecze i wyniki', 'Ostrzeżenie 15 minut przed meczem o brakach', 'Mecz p
 ], 'Na protokole ramka z brakami (medyk, drużyna bez weryfikacji); gospodarz i sędziowie mają powiadomienie; po uzupełnieniu medyka brak znika.', 'Średni', [P, T, D]);
 $dodaj('Mecze i wyniki', 'Weryfikacja po meczu z pliku iScore', 'Mecz z wgranym box score (Wgraj statystyki iScore); w pliku zawodnik, którego nie było w kadrze meczowej.', [
     'Jako wydzial@ otwórz Rozbieżności weryfikacji → „Weryfikacja po meczu”.',
-    'Znajdź mecz i rozbieżność „zawodnik spoza kadry”; wpisz wyjaśnienie, potem je cofnij.',
+    'Znajdź mecz i rozbieżność „Zagrał bez sprawdzenia przez sędziego”; wpisz wyjaśnienie, potem je cofnij.',
 ], 'Rozbieżność jest na liście z rodzajem; „Wyjaśnione” zapisuje uwagę, cofnięcie przywraca; system nie zmienia wyniku sam.', 'Średni', [P]);
 $dodaj('Mecze i wyniki', 'Wniosek o ukaranie i skarga na sędziego po meczu', 'Mecz zakończony w systemie dziś; klub@ — zarząd drużyny.', [
     'Jako klub@ na protokole kliknij „Zgłaszam…” → „Wniosek o ukaranie”, wskaż zawodnika drużyny przeciwnej, opisz, złóż.',
@@ -89,7 +89,7 @@ $dodaj('Rozgrywki i terminarze', 'Kreator ligi: kalendarz, udział klubów i for
     'W kreatorze krok Format: dwie grupy, dwumecze, play-off.',
 ], 'Odpowiedzi klubów widoczne w kreatorze („odpowiedziało N z M”); Format podpowiada tylko kluby potwierdzone; wersja robocza niewidoczna publicznie.', 'Wysoki', [P]);
 $dodaj('Rozgrywki i terminarze', 'Kreator ligi: terminy klubów, daty sporne, generator i publikacja', 'Klasa po kroku Format.', [
-    'Wyślij prośbę o terminy; jako klub@ zgłoś datę „u siebie nie gramy” z powodem.',
+    'Wyślij prośbę o terminy; jako klub@ zgłoś datę „Nie możemy tylko u siebie” z powodem.',
     'Jako wydzial@ rozstrzygnij datę sporną (Kreator sezonu albo Daty sporne).',
     'Wygeneruj warianty terminarza, wybierz wariant, przestaw jeden mecz (sprawdzenie na żywo).',
     'Wyślij do uwag klubów, rozpatrz uwagę, zatwierdź i opublikuj.',
@@ -122,7 +122,7 @@ $dodaj('Sędziowie i obsada', 'Wytyczne obsady przyjęte decyzją Wydziału', 'k
 $dodaj('Sędziowie i obsada', 'Zakres sędziego i podpowiedź z klasy', 'kolegium@.', [
     'Profil sędziego → Zakres rozgrywek: dodaj zakres z podpowiedzi klasy i wyjątek „bez uprawnień” dla jednych rozgrywek.',
     'Jako sedzia@ otwórz e-licencję sędziego.',
-], 'E-licencja pokazuje „Może sędziować” z klasami; sędzia poza zakresem jest w obsadzie „tylko świadomie” z ostrzeżeniem.', 'Średni', [P]);
+], 'E-licencja pokazuje „Może sędziować” z klasami; sędzia poza zakresem jest w obsadzie w grupie „Poza wytycznymi” z ostrzeżeniem.', 'Średni', [P]);
 $dodaj('Sędziowie i obsada', 'Bilet zamiast kilometrówki', 'sedzia@ z podpisaną obsadą i delegacją do podpisu.', [
     'W delegacji wybierz bilet (kolej), kwota, zdjęcie biletu.',
     'Jako kolegium@ → Koszty sędziów → bilety: przyjmij do limitu.',
@@ -197,7 +197,7 @@ $dodaj('Członkowie / osoby', 'Zgłoszenie zmiany danych przez osobę', 'rodzic@
     'Kartoteka dziecka → zakładka Dane → zgłoś zmianę telefonu.',
     'Jako klub@ → Zmiany danych → przyjmij.',
 ], 'Kartoteka zmieniona dopiero po przyjęciu; rodzic dostaje powiadomienie; PESEL-u nie da się zgłosić.', 'Niski', [P]);
-$dodaj('Powiadomienia i ankiety', 'Zapytanie do klubów i ankieta z wynikami', 'Dane pokazowe: „Stan klubu przed sezonem” i „Pilotaż — gotowość klubu”.', [
+$dodaj('Powiadomienia i ankiety', 'Zapytanie do klubów i ankieta z wynikami', 'Dane pokazowe: „Stan klubu przed sezonem” i „Pilotaż 2027 — gotowość klubu”.', [
     'Jako klub2@ → Ankiety → wypełnij zapytanie (sprawdź podpowiedź „W systemie: N”).',
     'Jako wydzial@ otwórz wyniki obu ankiet, eksport do Excela.',
     'Utwórz nową ankietę z szablonu i pytaniem warunkowym, otwórz ją.',

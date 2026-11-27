@@ -19,7 +19,7 @@ PZB;"Mecze i wyniki";"Sędzia pobiera mecz do telefonu";"Konto sedzia@ na telefo
 PZB;"Mecze i wyniki";"Weryfikacja zawodnika kodem QR bez sieci";"Mecz pobrany na telefon sędziego, okno weryfikacji otwarte. Drugi telefon z e-licencją zawodnika z listy startowej.";"1. Na telefonie sędziego włącz tryb samolotowy.
 2. Przejdź do „Skanuj” i zeskanuj kod QR z e-licencji zawodnika.
 3. Dopuść zawodnika.
-4. Wyłącz tryb samolotowy i odczekaj minutę.";"Bez sieci wynik pokazuje się od razu: UPRAWNIONY ze zdjęciem i danymi. Po dopuszczeniu decyzja czeka na wysłanie („Do wysłania: 1 · czeka na sieć”). Po powrocie sieci wysyła się sama („Wysłano do systemu”).";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
+4. Wyłącz tryb samolotowy i odczekaj minutę.";"Bez sieci wynik pokazuje się od razu: UPRAWNIONY ze zdjęciem i danymi. Po dopuszczeniu decyzja czeka na wysłanie („Do wysłania:” z liczbą i „czeka na sieć”). Po powrocie sieci wysyła się sama („Wysłano do systemu”).";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
 PZB;"Mecze i wyniki";"Zrzut ekranu e-licencji jest odrzucony";"Mecz pobrany, okno otwarte. Zrzut ekranu kodu QR zrobiony co najmniej 3 minuty wcześniej.";"1. Pokaż sędziemu zrzut ekranu zamiast żywej e-licencji.
 2. Zeskanuj go.";"Wynik: KOD ODRZUCONY z powodem (stary kod). Odrzucony kod trafia do systemu i Wydział Gier widzi go na stronie rozbieżności.";Krytyczny;"Dzień meczowy na telefonie; Telefon; Pilotaż"
 PZB;"Mecze i wyniki";"Zawodnik nieuprawniony — powód i niedopuszczenie";"Mecz pobrany. Zawodnik na liście startowej bez ważnych badań albo zawieszony.";"1. Zeskanuj jego e-licencję albo wybierz go ręcznie ze składu drużyny.

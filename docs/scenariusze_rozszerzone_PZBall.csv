@@ -60,7 +60,7 @@ PZB;"Sędziowie i obsada";"Obsada całego okresu jednym kliknięciem";"Konto kol
 PZB;"Sędziowie i obsada";"Delegacja sędziego: podpis i PDF";"Konto sedzia@ z podpisanym protokołem meczu.";"1. Moje delegacje → otwórz delegację.
 2. Podpisz palcem.
 3. „Drukuj / PDF”.";"Podpis zapisany; PDF zawiera dane i podpis.";Średni;"Pełna regresja; Pilotaż"
-PZB;"Sędziowie i obsada";"Delegacja nie powstaje bez podpisu protokołu";"Konto biura; mecz z niepodpisanym protokołem.";"1. Delegacje → „Wystaw wszystkie”.
+PZB;"Sędziowie i obsada";"Delegacja nie powstaje bez podpisu protokołu";"Konto biura; mecz z niepodpisanym protokołem.";"1. Delegacje → „Wystaw delegacje”.
 2. Sprawdź komunikat dla meczu bez podpisu.";"Delegacja dla tego sędziego nie powstaje; komunikat mówi, kto czeka i dlaczego.";Średni;"Pełna regresja; Pilotaż"
 PZB;"Sędziowie i obsada";"Ocena sędziów przez klub";"Konto klub@; zakończony mecz.";"1. Po meczu otwórz ocenę sędziów.
 2. Wystaw ocenę i zapisz.
@@ -113,7 +113,7 @@ PZB;"Strona rozgrywek / redakcja";"Tryb ciemny i wyszukiwarka";"Brak logowania."
 PZB;"Panel administracyjny";"Konta i role: nadanie roli";"Konto admin@.";"1. Konta → wybierz konto bez roli.
 2. Nadaj rolę trenera w klubie.
 3. Zaloguj się na to konto.";"Konto widzi menu trenera; zmiana w rejestrze zdarzeń.";Wysoki;"Pełna regresja; Pilotaż"
-PZB;"Panel administracyjny";"Stan systemu i kopie zapasowe";"Konto admin@.";"1. Ustawienia → „Stan systemu, kopie zapasowe…”.
+PZB;"Panel administracyjny";"Stan systemu i kopie zapasowe";"Konto admin@.";"1. Ustawienia → „Stan systemu”.
 2. Sprawdź wersję, ostatni cron, wiek kopii.
 3. „Pełny eksport danych”.";"Wszystkie informacje widoczne; ostrzeżenie, gdy kopia starsza niż 2 dni; ZIP do pobrania.";Średni;"Pełna regresja; Pilotaż"
 PZB;"Panel administracyjny";"Rejestr zdarzeń";"Konto admin@.";"1. Zmień ustawienie sezonu.
@@ -127,7 +127,7 @@ PZB;"Powiadomienia i ankiety";"Dzwonek: powiadomienia";"Dowolne konto z nowymi p
 3. „Oznacz wszystkie jako przeczytane”.";"Powiadomienie prowadzi do właściwej strony; licznik się zeruje.";Średni;"Pełna regresja; Pilotaż"
 PZB;"Powiadomienia i ankiety";"Komunikat z potwierdzeniem przeczytania";"Konto biura i klub@.";"1. Jako biuro wyślij komunikat do klubów w rozgrywkach.
 2. Jako klub@ przeczytaj.
-3. Jako biuro sprawdź listę „przeczytał / nie przeczytał”.";"Lista pokazuje BORSUKI jako „przeczytał”.";Średni;"Pełna regresja; Pilotaż"
+3. Jako biuro sprawdź listę „Przeczytane / Nieprzeczytane”.";"Lista pokazuje BORSUKI jako „przeczytał”.";Średni;"Pełna regresja; Pilotaż"
 PZB;"Aplikacja mobilna";"Praca bez sieci: weryfikacja i wysyłka po powrocie zasięgu";"Konto sedzia@ na telefonie (HTTPS), mecz na dziś.";"1. Pobierz mecz.
 2. Włącz tryb samolotowy, zweryfikuj zawodnika, podpisz protokół.
 3. Wyłącz tryb samolotowy.";"Dane czekają w telefonie i wysyłają się same po powrocie sieci; nic nie ginie.";Wysoki;"Pełna regresja; Telefon; Pilotaż"
